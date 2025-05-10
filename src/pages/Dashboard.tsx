@@ -21,10 +21,10 @@ const initialPlayers = [
 
 // Mock data for courts
 const initialCourts = [
-  { id: 1, name: "Court 1", status: "occupied", players: ["Mark", "Jane", "Alex", "Susan"], timeRemaining: 8 },
-  { id: 2, name: "Court 2", status: "available", players: [], timeRemaining: 0 },
-  { id: 3, name: "Court 3", status: "occupied", players: ["Robert", "Carol", "Steve", "Amy"], timeRemaining: 4 },
-  { id: 4, name: "Court 4", status: "occupied", players: ["Kevin", "Linda", "Paul", "Maria"], timeRemaining: 12 },
+  { id: 1, name: "Court 1", status: "occupied" as const, players: ["Mark", "Jane", "Alex", "Susan"], timeRemaining: 8 },
+  { id: 2, name: "Court 2", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 3, name: "Court 3", status: "occupied" as const, players: ["Robert", "Carol", "Steve", "Amy"], timeRemaining: 4 },
+  { id: 4, name: "Court 4", status: "occupied" as const, players: ["Kevin", "Linda", "Paul", "Maria"], timeRemaining: 12 },
 ];
 
 export default function Dashboard() {
@@ -50,7 +50,7 @@ export default function Dashboard() {
         if (court.id === courtId) {
           return {
             ...court,
-            status: "occupied",
+            status: "occupied" as const,
             players: nextGamePlayers.map(p => p.name),
             timeRemaining: 15
           };
@@ -80,7 +80,7 @@ export default function Dashboard() {
         if (court.id === courtId) {
           return {
             ...court,
-            status: "available",
+            status: "available" as const,
             players: [],
             timeRemaining: 0
           };
@@ -97,8 +97,62 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Manage players and courts for the current session</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
+      {/* New layout for portrait orientation on tablets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left column: Courts */}
+        <div className="flex flex-col space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <h2 className="text-xl font-semibold mb-4">Court Status</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {courts.map(court => (
+                <CourtStatus 
+                  key={court.id}
+                  court={court}
+                  onAssign={() => assignToFreeCourt(court.id)}
+                  onEndGame={() => endGame(court.id)}
+                  nextGameReady={nextGamePlayers.length === 4}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Right column: Next Game and Player Queue */}
+        <div className="flex flex-col space-y-6">
+          {/* Top of right column: Next Game */}
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <h2 className="text-xl font-semibold mb-4">Next Game</h2>
+            <NextGame 
+              players={nextGamePlayers}
+              onClear={() => {
+                // Put players back in the queue
+                setQueue([...queue, ...nextGamePlayers]);
+                setNextGamePlayers([]);
+              }}
+            />
+            <div className="mt-4 flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => generateNextGame(true)}
+                disabled={queue.length < 4}
+              >
+                Auto-Select Players
+              </Button>
+              <Button 
+                disabled={nextGamePlayers.length !== 4 || !courts.some(c => c.status === "available")} 
+                onClick={() => {
+                  const freeCourt = courts.find(c => c.status === "available");
+                  if (freeCourt) {
+                    assignToFreeCourt(freeCourt.id);
+                  }
+                }}
+              >
+                Assign to Free Court
+              </Button>
+            </div>
+          </div>
+          
+          {/* Bottom of right column: Player Queue */}
           <div className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Player Queue</h2>
@@ -113,57 +167,6 @@ export default function Dashboard() {
                 }
               }}
             />
-          </div>
-        </div>
-        
-        <div className="md:col-span-2">
-          <div className="grid gap-6">
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <h2 className="text-xl font-semibold mb-4">Next Game</h2>
-              <NextGame 
-                players={nextGamePlayers}
-                onClear={() => {
-                  // Put players back in the queue
-                  setQueue([...queue, ...nextGamePlayers]);
-                  setNextGamePlayers([]);
-                }}
-              />
-              <div className="mt-4 flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={() => generateNextGame(true)}
-                  disabled={queue.length < 4}
-                >
-                  Auto-Select Players
-                </Button>
-                <Button 
-                  disabled={nextGamePlayers.length !== 4 || !courts.some(c => c.status === "available")} 
-                  onClick={() => {
-                    const freeCourt = courts.find(c => c.status === "available");
-                    if (freeCourt) {
-                      assignToFreeCourt(freeCourt.id);
-                    }
-                  }}
-                >
-                  Assign to Free Court
-                </Button>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <h2 className="text-xl font-semibold mb-4">Court Status</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courts.map(court => (
-                  <CourtStatus 
-                    key={court.id}
-                    court={court}
-                    onAssign={() => assignToFreeCourt(court.id)}
-                    onEndGame={() => endGame(court.id)}
-                    nextGameReady={nextGamePlayers.length === 4}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
