@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, CircleDot } from "lucide-react";
 
 interface CourtPlayer {
   name: string;
@@ -62,10 +62,12 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
           {court.players.map((player, idx) => (
             <div 
               key={idx} 
-              className={`text-sm py-1 px-3 rounded-full text-center text-white
-                ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}
+              className="flex items-center gap-2 text-sm py-1 px-3 rounded-full bg-gray-100"
             >
-              {player.name}
+              <CircleDot 
+                className={`h-3 w-3 ${player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'}`} 
+              />
+              <span>{player.name}</span>
             </div>
           ))}
         </div>
