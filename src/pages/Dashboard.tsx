@@ -5,39 +5,15 @@ import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
 
-// Mock data for players with gender added
-const initialPlayers = [
-  { id: 1, name: "Sarah Johnson", skill: "advanced", waitingTime: 12, gender: "female" as const },
-  { id: 2, name: "Mike Smith", skill: "intermediate", waitingTime: 8, gender: "male" as const },
-  { id: 3, name: "Emma Wilson", skill: "beginner", waitingTime: 5, gender: "female" as const, isGuest: true },
-  { id: 4, name: "John Davis", skill: "advanced", waitingTime: 15, gender: "male" as const },
-  { id: 5, name: "Lisa Brown", skill: "intermediate", waitingTime: 10, gender: "female" as const },
-  { id: 6, name: "David Lee", skill: "beginner", waitingTime: 3, gender: "male" as const, isGuest: true },
-  { id: 7, name: "Karen White", skill: "intermediate", waitingTime: 7, gender: "female" as const },
-  { id: 8, name: "Tom Jackson", skill: "advanced", waitingTime: 9, gender: "male" as const },
-];
+// Starting with no players in the queue
+const initialPlayers: any[] = [];
 
 // Mock data for courts with gender added to players
 const initialCourts = [
-  { id: 1, name: "Court 1", status: "occupied" as const, players: [
-    {name: "Mark", gender: "male" as const}, 
-    {name: "Jane", gender: "female" as const}, 
-    {name: "Alex", gender: "male" as const}, 
-    {name: "Susan", gender: "female" as const}
-  ], timeRemaining: 8 },
+  { id: 1, name: "Court 1", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 2, name: "Court 2", status: "available" as const, players: [], timeRemaining: 0 },
-  { id: 3, name: "Court 3", status: "occupied" as const, players: [
-    {name: "Robert", gender: "male" as const}, 
-    {name: "Carol", gender: "female" as const}, 
-    {name: "Steve", gender: "male" as const, isGuest: true}, 
-    {name: "Amy", gender: "female" as const}
-  ], timeRemaining: 4 },
-  { id: 4, name: "Court 4", status: "occupied" as const, players: [
-    {name: "Kevin", gender: "male" as const}, 
-    {name: "Linda", gender: "female" as const, isGuest: true}, 
-    {name: "Paul", gender: "male" as const}, 
-    {name: "Maria", gender: "female" as const}
-  ], timeRemaining: 12 },
+  { id: 3, name: "Court 3", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 4, name: "Court 4", status: "available" as const, players: [], timeRemaining: 0 },
 ];
 
 export default function Dashboard() {
