@@ -12,13 +12,13 @@ const SplashScreen = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-shuttle-blue to-shuttle-darkBlue text-white p-6">
+    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-app-primary-500 to-app-primary-700 text-neutral-000 p-6">
       <div className="text-center animate-fade-in">
         <div className="flex justify-center mb-6">
-          <div className="bg-white p-3 rounded-full">
+          <div className="bg-neutral-000 p-3 rounded-full">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 6L7 12H17L12 6Z" fill="#4361EE" />
-              <path d="M12 18L7 12H17L12 18Z" fill="#4361EE" />
+              <path d="M12 6L7 12H17L12 6Z" fill="#00702A" />
+              <path d="M12 18L7 12H17L12 18Z" fill="#00702A" />
             </svg>
           </div>
         </div>
@@ -33,7 +33,7 @@ const SplashScreen = () => {
           
           <Button 
             onClick={handleStartSession} 
-            className="w-full py-6 text-lg bg-white text-shuttle-blue hover:bg-gray-100 transition-colors hover:text-shuttle-darkBlue"
+            className="w-full py-6 text-lg bg-neutral-000 text-app-primary-700 hover:bg-neutral-100 transition-colors"
           >
             Start Session
           </Button>

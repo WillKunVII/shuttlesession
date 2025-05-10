@@ -10,7 +10,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto p-2 bg-shuttle-gray">
+      <main className="flex-1 overflow-y-auto p-2 bg-neutral-100">
         {children}
       </main>
     </div>

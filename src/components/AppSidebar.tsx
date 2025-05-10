@@ -36,17 +36,17 @@ export function AppSidebar() {
   return (
     <div 
       className={cn(
-        "bg-shuttle-blue text-white flex flex-col h-screen transition-all duration-300",
+        "bg-app-primary-700 text-neutral-000 flex flex-col h-screen transition-all duration-300",
         collapsed ? "w-20" : "w-64"
       )}
     >
       <div className="flex items-center p-4 justify-between">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="bg-white p-1 rounded">
+            <div className="bg-neutral-000 p-1 rounded">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 6L7 12H17L12 6Z" fill="#4361EE" />
-                <path d="M12 18L7 12H17L12 18Z" fill="#4361EE" />
+                <path d="M12 6L7 12H17L12 6Z" fill="#00702A" />
+                <path d="M12 18L7 12H17L12 18Z" fill="#00702A" />
               </svg>
             </div>
             <span className="font-bold text-lg">ShuttleSession</span>
@@ -56,7 +56,7 @@ export function AppSidebar() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="hover:bg-shuttle-darkBlue text-white"
+          className="hover:bg-app-primary-900 text-neutral-000"
           onClick={() => setCollapsed(!collapsed)}
         >
           {collapsed ? <Menu size={20} /> : <X size={20} />}
@@ -71,8 +71,8 @@ export function AppSidebar() {
             className={({ isActive }) => cn(
               "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
               isActive 
-                ? "bg-white text-shuttle-blue" 
-                : "hover:bg-shuttle-darkBlue",
+                ? "bg-neutral-000 text-app-primary-700" 
+                : "hover:bg-app-primary-900",
               collapsed ? "justify-center" : "justify-start"
             )}
           >
@@ -86,7 +86,7 @@ export function AppSidebar() {
         <Button 
           variant="ghost" 
           className={cn(
-            "text-white hover:bg-shuttle-darkBlue w-full",
+            "text-neutral-000 hover:bg-app-primary-900 w-full",
             collapsed ? "justify-center" : "justify-start"
           )}
         >

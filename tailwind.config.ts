@@ -63,17 +63,32 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				neutral: {
+					'000': '#FFFFFF',
+					'100': '#F5F5F5',
+					'300': '#C2C2C2',
+					'500': '#666666',
+					'700': '#383838',
+					'900': '#292929'
+				},
+				app: {
+					'primary-100': '#F1F9F4',
+					'primary-300': '#A9DABC',
+					'primary-500': '#33995A',
+					'primary-700': '#00702A',
+					'primary-900': '#00521F'
+				},
 				shuttle: {
-					blue: '#4361EE',
-					darkBlue: '#3A56D4',
-					lightBlue: '#EEF2FF',
-					green: '#2DCE89',
-					red: '#F5365C',
-					yellow: '#FCC419',
-					gray: '#F8F9FA',
-					darkGray: '#343A40',
-					mediumGray: '#ADB5BD',
-					primary: '#00702A'
+					blue: '#33995A', // Changed to primary-500
+					darkBlue: '#00702A', // Changed to primary-700
+					lightBlue: '#F1F9F4', // Changed to primary-100
+					green: '#33995A', // Changed to primary-500
+					red: '#F5365C', // Keeping this for alerts
+					yellow: '#FCC419', // Keeping this for warnings
+					gray: '#F5F5F5', // Changed to neutral-100
+					darkGray: '#383838', // Changed to neutral-700
+					mediumGray: '#C2C2C2', // Changed to neutral-300
+					primary: '#00702A' // Changed to primary-700
 				}
 			},
 			fontFamily: {
@@ -100,11 +115,22 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					from: {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					to: {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out'
 			}
 		}
 	},
