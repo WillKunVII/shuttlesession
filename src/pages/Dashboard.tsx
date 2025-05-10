@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -108,6 +109,20 @@ export default function Dashboard() {
     setQueue(queue.filter(player => player.id !== playerId));
   };
 
+  // Add function to handle adding a new player
+  const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
+    const newPlayer = {
+      id: Date.now(),
+      name: player.name,
+      gender: player.gender,
+      isGuest: player.isGuest,
+      skill: "intermediate", // Default skill level
+      waitingTime: 0
+    };
+    
+    setQueue([...queue, newPlayer]);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Left column: Courts - stacked vertically */}
@@ -138,6 +153,7 @@ export default function Dashboard() {
               variant="outline" 
               onClick={() => generateNextGame(true)}
               disabled={queue.length < 4}
+              size="sm"
             >
               Auto-Select Players
             </Button>
@@ -154,7 +170,6 @@ export default function Dashboard() {
         
         {/* Bottom of right column: Player Queue */}
         <div className="bg-white rounded-xl shadow-sm p-3">
-          <h2 className="text-xl font-semibold mb-3">Player Queue</h2>
           <PlayerQueue 
             players={queue} 
             onPlayerSelect={(selectedPlayers) => {
@@ -164,6 +179,7 @@ export default function Dashboard() {
               }
             }}
             onPlayerLeave={handlePlayerLeave}
+            onAddPlayer={handleAddPlayer}
           />
         </div>
       </div>

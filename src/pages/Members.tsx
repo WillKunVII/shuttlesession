@@ -5,27 +5,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Mock data
-const members = [
-  { id: 1, name: "Sarah Johnson", status: "active", level: "advanced", gender: "female" },
-  { id: 2, name: "Mike Smith", status: "active", level: "intermediate", gender: "male" },
-  { id: 3, name: "Emma Wilson", status: "inactive", level: "beginner", gender: "female" },
-  { id: 4, name: "John Davis", status: "active", level: "advanced", gender: "male" },
-  { id: 5, name: "Lisa Brown", status: "active", level: "intermediate", gender: "female" },
+const initialMembers = [
+  { id: 1, name: "Sarah Johnson", status: "active", level: "advanced", gender: "female", isGuest: false },
+  { id: 2, name: "Mike Smith", status: "active", level: "intermediate", gender: "male", isGuest: false },
+  { id: 3, name: "Emma Wilson", status: "inactive", level: "beginner", gender: "female", isGuest: true },
+  { id: 4, name: "John Davis", status: "active", level: "advanced", gender: "male", isGuest: false },
+  { id: 5, name: "Lisa Brown", status: "active", level: "intermediate", gender: "female", isGuest: false },
 ];
 
 export default function Members() {
+  const [members, setMembers] = useState(initialMembers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberGender, setNewMemberGender] = useState<"male" | "female">("male");
+  const [isGuest, setIsGuest] = useState(false);
 
   const handleAddMember = () => {
-    // Here you would add the new member to your state or database
-    setIsDialogOpen(false);
-    setNewMemberName("");
-    setNewMemberGender("male");
+    if (newMemberName) {
+      const newMember = {
+        id: Date.now(),
+        name: newMemberName,
+        gender: newMemberGender,
+        status: "active",
+        level: "intermediate", // Default level
+        isGuest
+      };
+      
+      setMembers([...members, newMember]);
+      setIsDialogOpen(false);
+      setNewMemberName("");
+      setNewMemberGender("male");
+      setIsGuest(false);
+    }
   };
 
   return (
@@ -40,38 +56,49 @@ export default function Members() {
       </div>
       
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="border-b">
-              <tr>
-                <th className="px-6 py-3 text-sm font-semibold">Name</th>
-                <th className="px-6 py-3 text-sm font-semibold">Status</th>
-                <th className="px-6 py-3 text-sm font-semibold">Level</th>
-                <th className="px-6 py-3 text-sm font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {members.map(member => (
-                <tr key={member.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{member.name}</td>
-                  <td className="px-6 py-4">
-                    <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
-                      {member.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant="outline">
-                      {member.level}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </td>
+        <ScrollArea className="h-[calc(100vh-16rem)]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="border-b">
+                <tr>
+                  <th className="px-6 py-3 text-sm font-semibold">Name</th>
+                  <th className="px-6 py-3 text-sm font-semibold">Status</th>
+                  <th className="px-6 py-3 text-sm font-semibold">Level</th>
+                  <th className="px-6 py-3 text-sm font-semibold">Gender</th>
+                  <th className="px-6 py-3 text-sm font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y">
+                {members.map(member => (
+                  <tr key={member.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium">
+                      {member.name}
+                      {member.isGuest && (
+                        <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
+                        {member.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline">
+                        {member.level}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-block h-3 w-3 rounded-full ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Button variant="ghost" size="sm">Edit</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ScrollArea>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -106,6 +133,15 @@ export default function Members() {
                   <Label htmlFor="female">Female</Label>
                 </div>
               </RadioGroup>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="guest" 
+                checked={isGuest}
+                onCheckedChange={(checked) => setIsGuest(checked === true)}
+              />
+              <Label htmlFor="guest">Guest</Label>
             </div>
           </div>
           

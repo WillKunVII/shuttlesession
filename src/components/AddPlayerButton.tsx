@@ -13,25 +13,39 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
+  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean}) => void;
 }
 
-export function AddPlayerButton({ variant = "default" }: AddPlayerButtonProps) {
+export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerButtonProps) {
   const [name, setName] = useState("");
-  const [skill, setSkill] = useState("");
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [isGuest, setIsGuest] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleAddPlayer = () => {
+    if (name && onAddPlayer) {
+      onAddPlayer({
+        name,
+        gender,
+        isGuest
+      });
+      
+      // Reset form
+      setName("");
+      setGender("male");
+      setIsGuest(false);
+      setIsOpen(false);
+    }
+  };
   
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button size="sm" variant={variant}>
           <Plus size={16} className="mr-2" />
@@ -58,26 +72,34 @@ export function AddPlayerButton({ variant = "default" }: AddPlayerButtonProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="skill">Skill Level</Label>
-            <Select value={skill} onValueChange={setSkill}>
-              <SelectTrigger id="skill">
-                <SelectValue placeholder="Select skill level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="beginner">Beginner</SelectItem>
-                <SelectItem value="intermediate">Intermediate</SelectItem>
-                <SelectItem value="advanced">Advanced</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Gender</Label>
+            <RadioGroup value={gender} onValueChange={(value) => setGender(value as "male" | "female")}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="male" id="male" />
+                <Label htmlFor="male">Male</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="female" id="female" />
+                <Label htmlFor="female">Female</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="guest" 
+              checked={isGuest}
+              onCheckedChange={(checked) => setIsGuest(checked === true)}
+            />
+            <Label htmlFor="guest">Guest</Label>
           </div>
         </div>
         
         <SheetFooter>
-          <SheetClose asChild>
-            <Button type="submit" disabled={!name || !skill}>
-              Add to Queue
-            </Button>
-          </SheetClose>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button type="submit" onClick={handleAddPlayer} disabled={!name}>
+            Add to Queue
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

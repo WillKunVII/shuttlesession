@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { CircleDot } from "lucide-react";
 
 interface Player {
   id: number;
@@ -27,9 +26,7 @@ export function NextGame({ players, onClear }: NextGameProps) {
           <div className="grid grid-cols-2 gap-4">
             {players.map((player) => (
               <div key={player.id} className="flex items-center gap-2 text-sm py-1 px-3 rounded-full bg-gray-100">
-                <CircleDot 
-                  className={`h-3 w-3 ${player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'}`} 
-                />
+                <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
                 <span>{player.name}</span>
               </div>
             ))}
