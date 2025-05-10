@@ -6,24 +6,45 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
-// Mock data
-const initialMembers = [
-  { id: 1, name: "Sarah Johnson", status: "active", level: "advanced", gender: "female", isGuest: false },
-  { id: 2, name: "Mike Smith", status: "active", level: "intermediate", gender: "male", isGuest: false },
-  { id: 3, name: "Emma Wilson", status: "inactive", level: "beginner", gender: "female", isGuest: true },
-  { id: 4, name: "John Davis", status: "active", level: "advanced", gender: "male", isGuest: false },
-  { id: 5, name: "Lisa Brown", status: "active", level: "intermediate", gender: "female", isGuest: false },
-];
+// Empty initial members list
+const initialMembers: Member[] = [];
+
+export type Member = {
+  id: number;
+  name: string;
+  status: "active" | "inactive";
+  level: "beginner" | "intermediate" | "advanced";
+  gender: "male" | "female";
+  isGuest: boolean;
+};
 
 export default function Members() {
-  const [members, setMembers] = useState(initialMembers);
+  const [members, setMembers] = useState<Member[]>(initialMembers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberGender, setNewMemberGender] = useState<"male" | "female">("male");
   const [isGuest, setIsGuest] = useState(false);
+
+  // Load members from localStorage on component mount
+  useEffect(() => {
+    const savedMembers = localStorage.getItem("clubMembers");
+    if (savedMembers) {
+      try {
+        setMembers(JSON.parse(savedMembers));
+      } catch (e) {
+        console.error("Error parsing members from localStorage", e);
+      }
+    }
+  }, []);
+
+  // Save members to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("clubMembers", JSON.stringify(members));
+  }, [members]);
 
   const handleAddMember = () => {
     if (newMemberName) {
@@ -31,8 +52,8 @@ export default function Members() {
         id: Date.now(),
         name: newMemberName,
         gender: newMemberGender,
-        status: "active",
-        level: "intermediate", // Default level
+        status: "active" as const,
+        level: "intermediate" as const, // Default level
         isGuest
       };
       
@@ -41,6 +62,8 @@ export default function Members() {
       setNewMemberName("");
       setNewMemberGender("male");
       setIsGuest(false);
+      
+      toast.success("Member added successfully");
     }
   };
 

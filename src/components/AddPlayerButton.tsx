@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Member } from "@/pages/Members";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
@@ -27,6 +30,20 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   const [gender, setGender] = useState<"male" | "female">("male");
   const [isGuest, setIsGuest] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [membersList, setMembersList] = useState<Member[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Load members from localStorage
+  useEffect(() => {
+    const savedMembers = localStorage.getItem("clubMembers");
+    if (savedMembers) {
+      try {
+        setMembersList(JSON.parse(savedMembers));
+      } catch (e) {
+        console.error("Error parsing members from localStorage", e);
+      }
+    }
+  }, [isOpen]); // Reload when sheet opens
   
   const handleAddPlayer = () => {
     if (name && onAddPlayer) {
@@ -43,6 +60,17 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       setIsOpen(false);
     }
   };
+
+  const selectMember = (member: Member) => {
+    setName(member.name);
+    setGender(member.gender);
+    setIsGuest(member.isGuest);
+    setShowSuggestions(false);
+  };
+
+  const filteredMembers = membersList.filter(member => 
+    member.name.toLowerCase().includes(name.toLowerCase())
+  );
   
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -63,12 +91,36 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
         <div className="py-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Player Name</Label>
-            <Input 
-              id="name" 
-              placeholder="Enter player name" 
-              value={name}
-              onChange={e => setName(e.target.value)}
-            />
+            <div className="relative">
+              <Input 
+                id="name" 
+                placeholder="Enter player name" 
+                value={name}
+                onChange={e => {
+                  setName(e.target.value);
+                  setShowSuggestions(e.target.value.length > 0);
+                }}
+                onFocus={() => setShowSuggestions(name.length > 0)}
+              />
+              
+              {showSuggestions && filteredMembers.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                  {filteredMembers.map(member => (
+                    <div 
+                      key={member.id}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center"
+                      onClick={() => selectMember(member)}
+                    >
+                      <span className={`h-2 w-2 rounded-full mr-2 ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
+                      <span className="font-medium">{member.name}</span>
+                      {member.isGuest && (
+                        <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="space-y-2">
