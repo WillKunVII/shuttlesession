@@ -2,11 +2,9 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { 
-  CalendarDays, 
   Home, 
   Users, 
   Settings, 
-  Clock, 
   LogOut, 
   Menu,
   X
@@ -16,19 +14,9 @@ import { Button } from "@/components/ui/button";
 
 const navItems = [
   { 
-    name: "Dashboard", 
+    name: "Session", 
     path: "/", 
     icon: Home 
-  },
-  { 
-    name: "Book Courts", 
-    path: "/book", 
-    icon: CalendarDays 
-  },
-  { 
-    name: "My Bookings", 
-    path: "/my-bookings", 
-    icon: Clock 
   },
   { 
     name: "Members", 
@@ -61,7 +49,7 @@ export function AppSidebar() {
                 <path d="M12 18L7 12H17L12 18Z" fill="#4361EE" />
               </svg>
             </div>
-            <span className="font-bold text-lg">ShuttleCourts</span>
+            <span className="font-bold text-lg">ShuttleSession</span>
           </div>
         )}
         
