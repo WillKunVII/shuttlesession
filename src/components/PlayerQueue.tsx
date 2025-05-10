@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Check, CircleDot, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface Player {
   id: number;
   name: string;
-  skill: string;
   waitingTime: number;
   gender: "male" | "female";
   isGuest?: boolean;
