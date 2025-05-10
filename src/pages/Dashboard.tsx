@@ -96,9 +96,10 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Manage players and courts for the current session</p>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column: Courts */}
-        <div className="flex flex-col space-y-6">
+      {/* Updated grid layout - allowing columns to be side by side on smaller screens */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left column: Courts - now stacked vertically */}
+        <div className="flex flex-col space-y-4">
           <div className="bg-white rounded-xl shadow-sm p-4">
             <h2 className="text-xl font-semibold mb-4">Court Status</h2>
             <div className="flex flex-col space-y-4">

@@ -40,9 +40,10 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          {/* Updated to stack players in a single column */}
+          <div className="space-y-2 mb-3">
             {court.players.map((player, idx) => (
-              <div key={idx} className="bg-shuttle-gray text-sm py-1 px-3 rounded-full text-center truncate">
+              <div key={idx} className="bg-shuttle-gray text-sm py-1 px-3 rounded-full text-center">
                 {player}
               </div>
             ))}

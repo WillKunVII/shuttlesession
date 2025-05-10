@@ -58,7 +58,7 @@ export function AppHeader() {
                   : "hover:bg-gray-100"
               )}
             >
-              <item.icon size={20} className="mr-2" />
+              <item.icon className="mr-2 h-5 w-5" />
               <span>{item.name}</span>
             </NavLink>
           ))}
@@ -78,7 +78,7 @@ export function AppHeader() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
-              <Bell size={18} />
+              <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-shuttle-red rounded-full"></span>
             </Button>
           </DropdownMenuTrigger>
@@ -108,21 +108,21 @@ export function AppHeader() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
-              <Menu size={20} />
+              <MenuIcon className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {navItems.map((item) => (
               <DropdownMenuItem key={item.path} asChild>
                 <NavLink to={item.path} className="flex items-center cursor-pointer">
-                  <item.icon size={18} className="mr-2" />
+                  <item.icon className="mr-2 h-5 w-5" />
                   {item.name}
                 </NavLink>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer">
-              <LogOut size={18} className="mr-2" />
+              <LogOut className="mr-2 h-5 w-5" />
               Log Out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -153,8 +153,8 @@ export function AppHeader() {
   );
 }
 
-// Missing Menu icon component
-function Menu(props: React.SVGProps<SVGSVGElement>) {
+// Menu icon component
+function MenuIcon({ className }: { className?: string }) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -166,7 +166,7 @@ function Menu(props: React.SVGProps<SVGSVGElement>) {
       strokeWidth="2" 
       strokeLinecap="round" 
       strokeLinejoin="round" 
-      {...props}
+      className={className}
     >
       <line x1="4" x2="20" y1="12" y2="12" />
       <line x1="4" x2="20" y1="6" y2="6" />
