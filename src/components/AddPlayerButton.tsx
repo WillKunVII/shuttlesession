@@ -22,14 +22,18 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-export function AddPlayerButton() {
+interface AddPlayerButtonProps {
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
+}
+
+export function AddPlayerButton({ variant = "default" }: AddPlayerButtonProps) {
   const [name, setName] = useState("");
   const [skill, setSkill] = useState("");
   
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" variant={variant}>
           <Plus size={16} className="mr-2" />
           Add Player
         </Button>

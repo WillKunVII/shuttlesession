@@ -1,6 +1,5 @@
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -56,16 +55,7 @@ export function AppHeader() {
         </nav>
       </div>
       
-      <div className="flex items-center gap-4">
-        <div className="relative w-full max-w-md hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search..." 
-            className="pl-8"
-          />
-        </div>
-        
+      <div className="flex items-center">
         {/* Mobile menu trigger */}
         <div className="md:hidden">
           <Button variant="ghost" size="icon">
@@ -77,27 +67,5 @@ export function AppHeader() {
   );
 }
 
-// Menu icon component
-function MenuIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <line x1="4" x2="20" y1="12" y2="12" />
-      <line x1="4" x2="20" y1="6" y2="6" />
-      <line x1="4" x2="20" y1="18" y2="18" />
-    </svg>
-  );
-}
-
-// Missing import for icons
+// Import icons
 import { Home, Users, Settings } from "lucide-react";

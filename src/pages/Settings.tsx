@@ -1,9 +1,8 @@
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 // Mock settings data
 const settings = [
@@ -40,6 +39,25 @@ export default function Settings() {
               </div>
             </div>
           ))}
+
+          <div className="flex justify-between items-center border-b pb-4">
+            <div>
+              <h3 className="font-medium">Court Ordering</h3>
+              <p className="text-sm text-muted-foreground">Order courts by number</p>
+            </div>
+            <div>
+              <RadioGroup defaultValue="ascending" className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="ascending" id="ascending" />
+                  <Label htmlFor="ascending">Ascending</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="descending" id="descending" />
+                  <Label htmlFor="descending">Descending</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
         </div>
       </div>
     </div>

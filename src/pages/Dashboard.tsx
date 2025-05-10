@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
-import { AddPlayerButton } from "@/components/AddPlayerButton";
 
 // Mock data for players with gender added
 const initialPlayers = [
@@ -129,7 +127,16 @@ export default function Dashboard() {
       <div className="flex flex-col space-y-6">
         {/* Top of right column: Next Game */}
         <div className="bg-white rounded-xl shadow-sm p-4">
-          <h2 className="text-xl font-semibold mb-4">Next Game</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Next Game</h2>
+            <Button 
+              variant="outline" 
+              onClick={() => generateNextGame(true)}
+              disabled={queue.length < 4}
+            >
+              Auto-Select Players
+            </Button>
+          </div>
           <NextGame 
             players={nextGamePlayers}
             onClear={() => {
@@ -138,14 +145,7 @@ export default function Dashboard() {
               setNextGamePlayers([]);
             }}
           />
-          <div className="mt-4 flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => generateNextGame(true)}
-              disabled={queue.length < 4}
-            >
-              Auto-Select Players
-            </Button>
+          <div className="mt-4 text-right">
             <Button 
               disabled={nextGamePlayers.length !== 4 || !courts.some(c => c.status === "available")} 
               onClick={() => {

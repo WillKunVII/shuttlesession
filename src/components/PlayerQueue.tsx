@@ -29,27 +29,27 @@ export function PlayerQueue({ players, onPlayerSelect }: PlayerQueueProps) {
   };
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[calc(100vh-24rem)]">
       <div className="flex justify-between items-center mb-4">
-        <AddPlayerButton />
+        <AddPlayerButton variant="outline" />
         
-        {selected.length > 0 && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {selected.length > 0 && (
             <div className="text-sm">
               {selected.length} of 4 players
             </div>
-            <Button
-              size="sm"
-              disabled={selected.length !== 4}
-              onClick={() => {
-                onPlayerSelect(selected);
-                setSelected([]);
-              }}
-            >
-              Create Game
-            </Button>
-          </div>
-        )}
+          )}
+          <Button
+            size="sm"
+            disabled={selected.length !== 4}
+            onClick={() => {
+              onPlayerSelect(selected);
+              setSelected([]);
+            }}
+          >
+            Create Game
+          </Button>
+        </div>
       </div>
       
       {players.length === 0 ? (
@@ -57,7 +57,7 @@ export function PlayerQueue({ players, onPlayerSelect }: PlayerQueueProps) {
           No players in queue
         </div>
       ) : (
-        <div className="space-y-2 max-h-[calc(100vh-24rem)] overflow-y-auto">
+        <div className="space-y-2 overflow-y-auto">
           {players.map((player) => (
             <div 
               key={player.id} 
@@ -71,6 +71,13 @@ export function PlayerQueue({ players, onPlayerSelect }: PlayerQueueProps) {
               <div className="flex items-center gap-2">
                 <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
                 <span className="font-medium">{player.name}</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+                >
+                  Leave
+                </Button>
               </div>
               {selected.some(p => p.id === player.id) && (
                 <div className="h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center">
