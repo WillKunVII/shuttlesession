@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
 
 // Starting with no players in the queue
@@ -7,6 +7,23 @@ const initialPlayers: Player[] = [];
 
 export function usePlayerQueue() {
   const [queue, setQueue] = useState<Player[]>(initialPlayers);
+
+  // Load queue from localStorage on component mount
+  useEffect(() => {
+    const savedQueue = localStorage.getItem("playerQueue");
+    if (savedQueue) {
+      try {
+        setQueue(JSON.parse(savedQueue));
+      } catch (e) {
+        console.error("Error parsing queue from localStorage", e);
+      }
+    }
+  }, []);
+
+  // Save queue to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("playerQueue", JSON.stringify(queue));
+  }, [queue]);
 
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "skill" | "waitingTime">) => {

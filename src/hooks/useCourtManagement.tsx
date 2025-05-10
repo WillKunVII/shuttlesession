@@ -23,13 +23,27 @@ export function useCourtManagement() {
   const [courts, setCourts] = useState<Court[]>(initialCourts);
   const [courtOrdering, setCourtOrdering] = useState<CourtOrdering>("ascending");
 
-  // Load court ordering settings from localStorage
+  // Load courts from localStorage on component mount
   useEffect(() => {
+    const savedCourts = localStorage.getItem("courts");
+    if (savedCourts) {
+      try {
+        setCourts(JSON.parse(savedCourts));
+      } catch (e) {
+        console.error("Error parsing courts from localStorage", e);
+      }
+    }
+    
     const savedOrdering = localStorage.getItem("courtOrdering");
     if (savedOrdering === "ascending" || savedOrdering === "descending") {
       setCourtOrdering(savedOrdering as CourtOrdering);
     }
   }, []);
+
+  // Save courts to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("courts", JSON.stringify(courts));
+  }, [courts]);
 
   // Get courts sorted based on the courtOrdering setting
   const getSortedCourts = () => {
