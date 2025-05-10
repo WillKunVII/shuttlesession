@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 interface Player {
   id: number;
   name: string;
-  skill: string;
   waitingTime: number;
   gender: "male" | "female";
   isGuest?: boolean;

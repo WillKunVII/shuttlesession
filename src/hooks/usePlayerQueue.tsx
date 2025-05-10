@@ -26,13 +26,12 @@ export function usePlayerQueue() {
   }, [queue]);
 
   // Add player to queue
-  const addPlayerToQueue = (player: Omit<Player, "id" | "skill" | "waitingTime">) => {
+  const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
     const newPlayer: Player = {
       id: Date.now(),
       name: player.name,
       gender: player.gender,
       isGuest: player.isGuest,
-      skill: "intermediate", // Default skill level
       waitingTime: 0
     };
     

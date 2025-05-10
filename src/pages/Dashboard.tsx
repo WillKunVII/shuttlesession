@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -45,7 +44,6 @@ export default function Dashboard() {
         id: Date.now() + idx,
         name: player.name,
         gender: player.gender as "male" | "female",
-        skill: ["beginner", "intermediate", "advanced"][Math.floor(Math.random() * 3)],
         waitingTime: 0,
         isGuest: player.isGuest
       }));

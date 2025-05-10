@@ -17,7 +17,6 @@ export type Member = {
   id: number;
   name: string;
   status: "active" | "inactive";
-  level: "beginner" | "intermediate" | "advanced";
   gender: "male" | "female";
   isGuest: boolean;
 };
@@ -53,7 +52,6 @@ export default function Members() {
         name: newMemberName,
         gender: newMemberGender,
         status: "active" as const,
-        level: "intermediate" as const, // Default level
         isGuest
       };
       
@@ -86,7 +84,6 @@ export default function Members() {
                 <tr>
                   <th className="px-6 py-3 text-sm font-semibold">Name</th>
                   <th className="px-6 py-3 text-sm font-semibold">Status</th>
-                  <th className="px-6 py-3 text-sm font-semibold">Level</th>
                   <th className="px-6 py-3 text-sm font-semibold">Gender</th>
                   <th className="px-6 py-3 text-sm font-semibold">Actions</th>
                 </tr>
@@ -103,11 +100,6 @@ export default function Members() {
                     <td className="px-6 py-4">
                       <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                         {member.status}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline">
-                        {member.level}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">

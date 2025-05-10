@@ -5,7 +5,6 @@ export type Player = {
   id: number;
   name: string;
   gender: "male" | "female";
-  skill: string;
   waitingTime: number;
   isGuest?: boolean;
 }
