@@ -1,83 +1,47 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
-
-// Starting with no players in the queue
-const initialPlayers: any[] = [];
-
-// Mock data for courts with gender added to players
-const initialCourts = [
-  { id: 1, name: "Court 1", status: "available" as const, players: [], timeRemaining: 0 },
-  { id: 2, name: "Court 2", status: "available" as const, players: [], timeRemaining: 0 },
-  { id: 3, name: "Court 3", status: "available" as const, players: [], timeRemaining: 0 },
-  { id: 4, name: "Court 4", status: "available" as const, players: [], timeRemaining: 0 },
-];
+import { useCourtManagement } from "@/hooks/useCourtManagement";
+import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
+import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 
 export default function Dashboard() {
-  const [queue, setQueue] = useState(initialPlayers);
-  const [nextGamePlayers, setNextGamePlayers] = useState<any[]>([]);
-  const [courts, setCourts] = useState(initialCourts);
-  const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
+  // Use our custom hooks
+  const { queue, addPlayerToQueue, removePlayerFromQueue, addPlayersToQueue, removePlayersFromQueue, autoSelectPlayers } = usePlayerQueue();
+  const { nextGamePlayers, setNextGame, clearNextGame, isNextGameReady } = useGameAssignment();
+  const { getSortedCourts, assignPlayersToCourtById, endGameOnCourt } = useCourtManagement();
 
-  // Load settings on component mount
-  useEffect(() => {
-    const savedOrdering = localStorage.getItem("courtOrdering");
-    if (savedOrdering === "ascending" || savedOrdering === "descending") {
-      setCourtOrdering(savedOrdering);
-    }
-  }, []);
+  // Get sorted courts
+  const sortedCourts = getSortedCourts();
 
-  // Sort courts based on courtOrdering setting
-  const sortedCourts = [...courts].sort((a, b) => {
-    if (courtOrdering === "ascending") {
-      return a.id - b.id;
-    } else {
-      return b.id - a.id;
+  // Function to generate next game players (auto mode)
+  const generateNextGame = () => {
+    if (queue.length >= 4) {
+      const selectedPlayers = autoSelectPlayers(4);
+      setNextGame(selectedPlayers);
     }
-  });
-
-  // Function to generate next game players (manual or auto)
-  const generateNextGame = (auto = false) => {
-    // For auto mode, just take the top 4 players in the queue
-    if (auto && queue.length >= 4) {
-      const nextPlayers = queue.slice(0, 4);
-      setNextGamePlayers(nextPlayers);
-      setQueue(queue.slice(4));
-    }
-    // Manual mode is handled by PlayerQueue component
   };
 
   // Function to assign next game to a court
   const assignToFreeCourt = (courtId: number) => {
-    if (nextGamePlayers.length === 4) {
-      setCourts(courts.map(court => {
-        if (court.id === courtId) {
-          return {
-            ...court,
-            status: "occupied" as const,
-            players: nextGamePlayers.map(p => ({
-              name: p.name, 
-              gender: p.gender,
-              isGuest: p.isGuest
-            })),
-            timeRemaining: 15
-          };
-        }
-        return court;
-      }));
-      setNextGamePlayers([]);
+    if (isNextGameReady()) {
+      const success = assignPlayersToCourtById(courtId, nextGamePlayers);
+      if (success) {
+        clearNextGame();
+      }
     }
   };
 
   // Function to end a game on a court
   const endGame = (courtId: number) => {
-    const courtToEnd = courts.find(c => c.id === courtId);
-    if (courtToEnd && courtToEnd.status === "occupied") {
-      // Add players back to the queue
-      const playerObjects = courtToEnd.players.map((player, idx) => ({
+    const releasedPlayers = endGameOnCourt(courtId);
+    
+    if (releasedPlayers.length > 0) {
+      // Add players back to the queue with proper properties
+      const playerObjects: Player[] = releasedPlayers.map((player, idx) => ({
         id: Date.now() + idx,
         name: player.name,
         gender: player.gender as "male" | "female",
@@ -86,40 +50,19 @@ export default function Dashboard() {
         isGuest: player.isGuest
       }));
       
-      setQueue([...queue, ...playerObjects]);
-      
-      // Update court status
-      setCourts(courts.map(court => {
-        if (court.id === courtId) {
-          return {
-            ...court,
-            status: "available" as const,
-            players: [],
-            timeRemaining: 0
-          };
-        }
-        return court;
-      }));
+      addPlayersToQueue(playerObjects);
     }
   };
 
-  // Add function to handle player leaving the queue
-  const handlePlayerLeave = (playerId: number) => {
-    setQueue(queue.filter(player => player.id !== playerId));
-  };
-
-  // Add function to handle adding a new player
-  const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
-    const newPlayer = {
-      id: Date.now(),
-      name: player.name,
-      gender: player.gender,
-      isGuest: player.isGuest,
-      skill: "intermediate", // Default skill level
-      waitingTime: 0
-    };
-    
-    setQueue([...queue, newPlayer]);
+  // Handle player selection for next game
+  const handlePlayerSelect = (selectedPlayers: Player[]) => {
+    if (selectedPlayers.length === 4) {
+      setNextGame(selectedPlayers);
+      
+      // Remove selected players from queue
+      const playerIds = selectedPlayers.map(p => p.id);
+      removePlayersFromQueue(playerIds);
+    }
   };
 
   return (
@@ -135,7 +78,7 @@ export default function Dashboard() {
                 court={court}
                 onAssign={() => assignToFreeCourt(court.id)}
                 onEndGame={() => endGame(court.id)}
-                nextGameReady={nextGamePlayers.length === 4}
+                nextGameReady={isNextGameReady()}
               />
             ))}
           </div>
@@ -150,7 +93,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold">Next Game</h2>
             <Button 
               variant="outline" 
-              onClick={() => generateNextGame(true)}
+              onClick={() => generateNextGame()}
               disabled={queue.length < 4}
               size="sm"
             >
@@ -161,8 +104,7 @@ export default function Dashboard() {
             players={nextGamePlayers}
             onClear={() => {
               // Put players back in the queue
-              setQueue([...queue, ...nextGamePlayers]);
-              setNextGamePlayers([]);
+              addPlayersToQueue(clearNextGame());
             }}
           />
         </div>
@@ -171,14 +113,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-3">
           <PlayerQueue 
             players={queue} 
-            onPlayerSelect={(selectedPlayers) => {
-              if (selectedPlayers.length === 4) {
-                setNextGamePlayers(selectedPlayers);
-                setQueue(queue.filter(p => !selectedPlayers.includes(p)));
-              }
-            }}
-            onPlayerLeave={handlePlayerLeave}
-            onAddPlayer={handleAddPlayer}
+            onPlayerSelect={handlePlayerSelect}
+            onPlayerLeave={removePlayerFromQueue}
+            onAddPlayer={(player) => addPlayerToQueue(player)}
           />
         </div>
       </div>
