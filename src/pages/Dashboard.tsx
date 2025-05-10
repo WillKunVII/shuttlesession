@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
@@ -9,10 +9,10 @@ import { CourtStatus } from "@/components/CourtStatus";
 const initialPlayers = [
   { id: 1, name: "Sarah Johnson", skill: "advanced", waitingTime: 12, gender: "female" as const },
   { id: 2, name: "Mike Smith", skill: "intermediate", waitingTime: 8, gender: "male" as const },
-  { id: 3, name: "Emma Wilson", skill: "beginner", waitingTime: 5, gender: "female" as const },
+  { id: 3, name: "Emma Wilson", skill: "beginner", waitingTime: 5, gender: "female" as const, isGuest: true },
   { id: 4, name: "John Davis", skill: "advanced", waitingTime: 15, gender: "male" as const },
   { id: 5, name: "Lisa Brown", skill: "intermediate", waitingTime: 10, gender: "female" as const },
-  { id: 6, name: "David Lee", skill: "beginner", waitingTime: 3, gender: "male" as const },
+  { id: 6, name: "David Lee", skill: "beginner", waitingTime: 3, gender: "male" as const, isGuest: true },
   { id: 7, name: "Karen White", skill: "intermediate", waitingTime: 7, gender: "female" as const },
   { id: 8, name: "Tom Jackson", skill: "advanced", waitingTime: 9, gender: "male" as const },
 ];
@@ -29,12 +29,12 @@ const initialCourts = [
   { id: 3, name: "Court 3", status: "occupied" as const, players: [
     {name: "Robert", gender: "male" as const}, 
     {name: "Carol", gender: "female" as const}, 
-    {name: "Steve", gender: "male" as const}, 
+    {name: "Steve", gender: "male" as const, isGuest: true}, 
     {name: "Amy", gender: "female" as const}
   ], timeRemaining: 4 },
   { id: 4, name: "Court 4", status: "occupied" as const, players: [
     {name: "Kevin", gender: "male" as const}, 
-    {name: "Linda", gender: "female" as const}, 
+    {name: "Linda", gender: "female" as const, isGuest: true}, 
     {name: "Paul", gender: "male" as const}, 
     {name: "Maria", gender: "female" as const}
   ], timeRemaining: 12 },
@@ -44,6 +44,24 @@ export default function Dashboard() {
   const [queue, setQueue] = useState(initialPlayers);
   const [nextGamePlayers, setNextGamePlayers] = useState<any[]>([]);
   const [courts, setCourts] = useState(initialCourts);
+  const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
+
+  // Load settings on component mount
+  useEffect(() => {
+    const savedOrdering = localStorage.getItem("courtOrdering");
+    if (savedOrdering === "ascending" || savedOrdering === "descending") {
+      setCourtOrdering(savedOrdering);
+    }
+  }, []);
+
+  // Sort courts based on courtOrdering setting
+  const sortedCourts = [...courts].sort((a, b) => {
+    if (courtOrdering === "ascending") {
+      return a.id - b.id;
+    } else {
+      return b.id - a.id;
+    }
+  });
 
   // Function to generate next game players (manual or auto)
   const generateNextGame = (auto = false) => {
@@ -64,7 +82,11 @@ export default function Dashboard() {
           return {
             ...court,
             status: "occupied" as const,
-            players: nextGamePlayers.map(p => ({name: p.name, gender: p.gender})),
+            players: nextGamePlayers.map(p => ({
+              name: p.name, 
+              gender: p.gender,
+              isGuest: p.isGuest
+            })),
             timeRemaining: 15
           };
         }
@@ -84,7 +106,8 @@ export default function Dashboard() {
         name: player.name,
         gender: player.gender as "male" | "female",
         skill: ["beginner", "intermediate", "advanced"][Math.floor(Math.random() * 3)],
-        waitingTime: 0
+        waitingTime: 0,
+        isGuest: player.isGuest
       }));
       
       setQueue([...queue, ...playerObjects]);
@@ -130,7 +153,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-3">
           <h2 className="text-xl font-semibold mb-3">Court Status</h2>
           <div className="flex flex-col space-y-3">
-            {courts.map(court => (
+            {sortedCourts.map(court => (
               <CourtStatus 
                 key={court.id}
                 court={court}

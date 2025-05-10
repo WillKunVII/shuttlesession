@@ -6,6 +6,7 @@ import { X, CircleDot } from "lucide-react";
 interface CourtPlayer {
   name: string;
   gender: "male" | "female";
+  isGuest?: boolean;
 }
 
 interface Court {
@@ -64,10 +65,11 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
               key={idx} 
               className="flex items-center gap-2 text-sm py-1 px-3 rounded-full bg-gray-100"
             >
-              <CircleDot 
-                className={`h-3 w-3 ${player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'}`} 
-              />
+              <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
               <span>{player.name}</span>
+              {player.isGuest && (
+                <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+              )}
             </div>
           ))}
         </div>
