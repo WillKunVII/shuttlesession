@@ -72,7 +72,8 @@ export default {
 					yellow: '#FCC419',
 					gray: '#F8F9FA',
 					darkGray: '#343A40',
-					mediumGray: '#ADB5BD'
+					mediumGray: '#ADB5BD',
+					primary: '#00702A'
 				}
 			},
 			fontFamily: {

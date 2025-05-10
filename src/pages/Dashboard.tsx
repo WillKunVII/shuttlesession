@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
@@ -97,13 +96,12 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Manage players and courts for the current session</p>
       </div>
       
-      {/* New layout for portrait orientation on tablets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column: Courts */}
         <div className="flex flex-col space-y-6">
           <div className="bg-white rounded-xl shadow-sm p-4">
             <h2 className="text-xl font-semibold mb-4">Court Status</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-4">
               {courts.map(court => (
                 <CourtStatus 
                   key={court.id}
@@ -146,6 +144,7 @@ export default function Dashboard() {
                     assignToFreeCourt(freeCourt.id);
                   }
                 }}
+                className="bg-shuttle-primary hover:bg-shuttle-primary/90"
               >
                 Assign to Free Court
               </Button>
