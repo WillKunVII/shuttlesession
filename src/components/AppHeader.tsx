@@ -1,6 +1,4 @@
 
-import { MenuIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, Users, Settings } from "lucide-react";
@@ -36,7 +34,8 @@ export function AppHeader() {
         <span className="font-bold text-lg hidden sm:inline-block text-neutral-900">ShuttleSession</span>
       </div>
       
-      <nav className="hidden md:flex items-center gap-2">
+      {/* Show navigation on tablet and desktop - changed from md:flex to sm:flex */}
+      <nav className="hidden sm:flex items-center gap-2">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -54,11 +53,15 @@ export function AppHeader() {
         ))}
       </nav>
 
-      {/* Mobile menu trigger */}
-      <div className="md:hidden">
-        <Button variant="ghost" size="icon" className="text-neutral-700">
-          <MenuIcon className="h-5 w-5" />
-        </Button>
+      {/* Mobile menu trigger - changed from md:hidden to sm:hidden */}
+      <div className="sm:hidden">
+        <button className="p-2 text-neutral-700 hover:bg-neutral-100 rounded-md">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </div>
     </header>
   );
