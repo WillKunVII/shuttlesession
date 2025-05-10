@@ -65,7 +65,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <>
       {/* Left column: Courts - stacked vertically */}
       <div className="flex flex-col space-y-3">
         <div className="bg-white rounded-xl shadow-sm p-3">
@@ -118,6 +118,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-    </div>
+    </>
   );
 }
