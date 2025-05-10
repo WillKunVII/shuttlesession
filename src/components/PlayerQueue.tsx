@@ -8,6 +8,7 @@ interface Player {
   name: string;
   skill: string;
   waitingTime: number;
+  gender: "male" | "female";
 }
 
 interface PlayerQueueProps {
@@ -42,6 +43,10 @@ export function PlayerQueue({ players, onPlayerSelect }: PlayerQueueProps) {
                   selected.some(p => p.id === player.id) 
                     ? "bg-shuttle-lightBlue border-shuttle-blue" 
                     : "hover:bg-gray-50"
+                } ${
+                  player.gender === 'male' 
+                    ? 'border-l-4 border-l-blue-500' 
+                    : 'border-l-4 border-l-pink-500'
                 }`}
                 onClick={() => togglePlayerSelection(player)}
               >
