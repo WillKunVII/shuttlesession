@@ -8,7 +8,7 @@ import { Home, Users, Settings } from "lucide-react";
 const navItems = [
   { 
     name: "Session", 
-    path: "/", 
+    path: "/session", 
     icon: Home 
   },
   { 

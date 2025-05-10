@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { 
     name: "Session", 
-    path: "/", 
+    path: "/session", 
     icon: Home 
   },
   { 
