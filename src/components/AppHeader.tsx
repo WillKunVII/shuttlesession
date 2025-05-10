@@ -3,6 +3,7 @@ import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Home, Users, Settings } from "lucide-react";
 
 const navItems = [
   { 
@@ -24,7 +25,7 @@ const navItems = [
 
 export function AppHeader() {
   return (
-    <header className="flex items-center justify-between p-4 bg-white border-b">
+    <header className="flex items-center justify-between p-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <div className="bg-shuttle-primary p-1 rounded">
@@ -66,6 +67,3 @@ export function AppHeader() {
     </header>
   );
 }
-
-// Import icons
-import { Home, Users, Settings } from "lucide-react";

@@ -25,7 +25,7 @@ interface CourtStatusProps {
 
 export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: CourtStatusProps) {
   return (
-    <div className={`border rounded-lg p-4 ${court.status === 'available' ? 'border-shuttle-primary' : ''}`}>
+    <div className={`border rounded-lg p-3 ${court.status === 'available' ? 'border-shuttle-primary' : ''}`}>
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold">{court.name}</h3>
@@ -48,7 +48,7 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
       </div>
       
       {court.status === 'available' ? (
-        <div className="text-center py-3">
+        <div className="text-center py-2">
           <Button 
             className="w-full bg-shuttle-primary hover:bg-shuttle-primary/90" 
             disabled={!nextGameReady}
@@ -58,7 +58,7 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
           </Button>
         </div>
       ) : (
-        <div className="space-y-2 mb-3">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           {court.players.map((player, idx) => (
             <div 
               key={idx} 

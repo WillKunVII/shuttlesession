@@ -103,13 +103,18 @@ export default function Dashboard() {
     }
   };
 
+  // Add function to handle player leaving the queue
+  const handlePlayerLeave = (playerId: number) => {
+    setQueue(queue.filter(player => player.id !== playerId));
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Left column: Courts - stacked vertically */}
-      <div className="flex flex-col space-y-4">
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h2 className="text-xl font-semibold mb-4">Court Status</h2>
-          <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-3">
+        <div className="bg-white rounded-xl shadow-sm p-3">
+          <h2 className="text-xl font-semibold mb-3">Court Status</h2>
+          <div className="flex flex-col space-y-3">
             {courts.map(court => (
               <CourtStatus 
                 key={court.id}
@@ -124,10 +129,10 @@ export default function Dashboard() {
       </div>
       
       {/* Right column: Next Game and Player Queue */}
-      <div className="flex flex-col space-y-6">
+      <div className="flex flex-col space-y-3">
         {/* Top of right column: Next Game */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="flex justify-between items-center mb-4">
+        <div className="bg-white rounded-xl shadow-sm p-3">
+          <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-semibold">Next Game</h2>
             <Button 
               variant="outline" 
@@ -145,25 +150,11 @@ export default function Dashboard() {
               setNextGamePlayers([]);
             }}
           />
-          <div className="mt-4 text-right">
-            <Button 
-              disabled={nextGamePlayers.length !== 4 || !courts.some(c => c.status === "available")} 
-              onClick={() => {
-                const freeCourt = courts.find(c => c.status === "available");
-                if (freeCourt) {
-                  assignToFreeCourt(freeCourt.id);
-                }
-              }}
-              className="bg-shuttle-primary hover:bg-shuttle-primary/90"
-            >
-              Assign to Free Court
-            </Button>
-          </div>
         </div>
         
         {/* Bottom of right column: Player Queue */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h2 className="text-xl font-semibold mb-4">Player Queue</h2>
+        <div className="bg-white rounded-xl shadow-sm p-3">
+          <h2 className="text-xl font-semibold mb-3">Player Queue</h2>
           <PlayerQueue 
             players={queue} 
             onPlayerSelect={(selectedPlayers) => {
@@ -172,6 +163,7 @@ export default function Dashboard() {
                 setQueue(queue.filter(p => !selectedPlayers.includes(p)));
               }
             }}
+            onPlayerLeave={handlePlayerLeave}
           />
         </div>
       </div>

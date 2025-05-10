@@ -17,7 +17,7 @@ interface NextGameProps {
 
 export function NextGame({ players, onClear }: NextGameProps) {
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border rounded-lg p-3">
       {players.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           No game ready. Select players from the queue.
