@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Member } from "@/pages/Members";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
@@ -47,6 +48,36 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   
   const handleAddPlayer = () => {
     if (name && onAddPlayer) {
+      // Check if player already exists in members list
+      const existingMember = membersList.find(
+        member => member.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      // If player doesn't exist in members list, add them
+      if (!existingMember) {
+        // Create new member object
+        const newMember: Member = {
+          id: Date.now(),
+          name,
+          gender,
+          status: "active",
+          isGuest,
+          wins: 0,
+          losses: 0
+        };
+        
+        // Add to members list
+        const updatedMembers = [...membersList, newMember];
+        setMembersList(updatedMembers);
+        
+        // Save to localStorage
+        localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
+        
+        // Show toast notification
+        toast.success(`${name} added to members database`);
+      }
+      
+      // Add player to queue (original functionality)
       onAddPlayer({
         name,
         gender,
