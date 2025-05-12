@@ -1,0 +1,72 @@
+
+/**
+ * Utility functions for working with localStorage
+ * Centralizes storage operations and adds error handling
+ */
+
+// Generic get function with type safety
+export function getStorageItem<T>(key: string, defaultValue: T): T {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    console.error(`Error retrieving ${key} from localStorage:`, e);
+    return defaultValue;
+  }
+}
+
+// Generic set function with error handling
+export function setStorageItem<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error saving ${key} to localStorage:`, e);
+  }
+}
+
+// Helper for boolean settings
+export function getSettingEnabled(key: string, defaultValue = false): boolean {
+  return localStorage.getItem(key) === "true" || defaultValue;
+}
+
+// Common application settings
+export function getPlayerPoolSize(): number {
+  return Number(localStorage.getItem("playerPoolSize")) || 8;
+}
+
+export function isScoreKeepingEnabled(): boolean {
+  return localStorage.getItem("scoreKeeping") === "true";
+}
+
+// Specific data getters/setters
+export function getQueue() {
+  return getStorageItem("playerQueue", []);
+}
+
+export function setQueue(queue: any[]) {
+  setStorageItem("playerQueue", queue);
+}
+
+export function getNextGamePlayers() {
+  return getStorageItem("nextGamePlayers", []);
+}
+
+export function setNextGamePlayers(players: any[]) {
+  setStorageItem("nextGamePlayers", players);
+}
+
+export function getCourts() {
+  return getStorageItem("courts", []);
+}
+
+export function setCourts(courts: any[]) {
+  setStorageItem("courts", courts);
+}
+
+export function getMembers() {
+  return getStorageItem("members", []);
+}
+
+export function setMembers(members: any[]) {
+  setStorageItem("members", members);
+}

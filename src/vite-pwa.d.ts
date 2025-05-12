@@ -18,3 +18,4 @@ declare module 'workbox-strategies';
 declare module 'workbox-routing';
 declare module 'workbox-precaching';
 declare module 'workbox-core';
+declare module 'workbox-expiration';

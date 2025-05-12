@@ -17,20 +17,30 @@ const updateSW = registerSW({
   immediate: true
 });
 
-// Add event listener to hide address bar on mobile
-window.addEventListener('load', () => {
-  // Attempt to hide the address bar on mobile
+// Optimize the address bar hiding function for mobile
+const hideAddressBar = () => {
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
   
-  // Scroll to hide address bar - works on most mobile browsers
-  window.scrollTo(0, 1);
-  
-  // Some mobile browsers need a timeout and a slightly higher value
-  setTimeout(() => {
+  // More reliable method to hide address bar
+  if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+    // Only try fullscreen on user interaction (needed for most browsers)
+    document.addEventListener('click', () => {
+      document.documentElement.requestFullscreen().catch(err => {
+        // Fallback to traditional scroll method
+        window.scrollTo(0, 1);
+      });
+    }, { once: true });
+  } else {
+    // Fallback for browsers that don't support fullscreen
     window.scrollTo(0, 1);
-  }, 100);
-});
+    setTimeout(() => window.scrollTo(0, 1), 150);
+  }
+};
+
+// Add event listener to hide address bar on mobile
+window.addEventListener('load', hideAddressBar);
+window.addEventListener('resize', hideAddressBar);
 
 createRoot(document.getElementById("root")!).render(<App />);
