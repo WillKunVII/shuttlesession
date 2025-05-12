@@ -1,14 +1,27 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
   const [autoAssignment, setAutoAssignment] = useState<boolean>(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Load settings on component mount
   useEffect(() => {
@@ -35,11 +48,44 @@ export default function Settings() {
     });
   };
 
+  const handleEndSession = () => {
+    // Navigate back to splash screen
+    navigate("/");
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Settings</h1>
         <p className="text-muted-foreground">Configure application settings</p>
+      </div>
+      
+      {/* End Session - High Priority Action */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border-2 border-destructive/30">
+        <h2 className="text-xl font-semibold mb-4 text-destructive">Session Control</h2>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">End the current badminton session and return to the start screen</p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="lg" className="w-full sm:w-auto">End Session</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>End Current Session?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to end the current session and return to the start screen. 
+                  This action cannot be undone. Player data will remain saved for future sessions.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleEndSession}>
+                  End Session
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm p-6">
