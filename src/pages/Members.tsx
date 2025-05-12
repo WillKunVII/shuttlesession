@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { Edit, Save, X, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 // Empty initial members list
 const initialMembers: Member[] = [];
@@ -24,9 +26,15 @@ export type Member = {
 export default function Members() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberGender, setNewMemberGender] = useState<"male" | "female">("male");
   const [isGuest, setIsGuest] = useState(false);
+  
+  // Edit mode states
+  const [editMode, setEditMode] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
 
   // Load members from localStorage on component mount
   useEffect(() => {
@@ -65,6 +73,62 @@ export default function Members() {
     }
   };
 
+  const handleEditClick = (member: Member) => {
+    setEditingMember(member);
+    setNewMemberName(member.name);
+    setNewMemberGender(member.gender);
+    setIsGuest(member.isGuest);
+    setEditMode(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingMember && newMemberName) {
+      const updatedMembers = members.map(member => 
+        member.id === editingMember.id 
+          ? {
+              ...member,
+              name: newMemberName,
+              gender: newMemberGender,
+              isGuest: isGuest
+            }
+          : member
+      );
+      
+      setMembers(updatedMembers);
+      setIsDialogOpen(false);
+      setEditMode(false);
+      setEditingMember(null);
+      
+      toast.success("Member updated successfully");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsDialogOpen(false);
+    setEditMode(false);
+    setEditingMember(null);
+    // Reset form states
+    setNewMemberName("");
+    setNewMemberGender("male");
+    setIsGuest(false);
+  };
+
+  const confirmDeleteMember = (memberId: number) => {
+    setMemberToDelete(memberId);
+    setIsAlertDialogOpen(true);
+  };
+
+  const handleDeleteMember = () => {
+    if (memberToDelete !== null) {
+      const updatedMembers = members.filter(member => member.id !== memberToDelete);
+      setMembers(updatedMembers);
+      setIsAlertDialogOpen(false);
+      setMemberToDelete(null);
+      toast.success("Member removed successfully");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -73,7 +137,13 @@ export default function Members() {
       </div>
       
       <div className="flex justify-end">
-        <Button onClick={() => setIsDialogOpen(true)}>Add Member</Button>
+        <Button onClick={() => {
+          setEditMode(false);
+          setNewMemberName("");
+          setNewMemberGender("male");
+          setIsGuest(false);
+          setIsDialogOpen(true);
+        }}>Add Member</Button>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -106,7 +176,14 @@ export default function Members() {
                       <span className={`inline-block h-3 w-3 rounded-full ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
                     </td>
                     <td className="px-6 py-4">
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(member)}>
+                          <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => confirmDeleteMember(member.id)}>
+                          <Trash2 className="h-4 w-4 mr-1" /> Remove
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -116,10 +193,11 @@ export default function Members() {
         </ScrollArea>
       </div>
 
+      {/* Add/Edit Member Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Member</DialogTitle>
+            <DialogTitle>{editMode ? "Edit Member" : "Add New Member"}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
@@ -161,15 +239,44 @@ export default function Members() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddMember} disabled={!newMemberName}>
-              Add Member
-            </Button>
+            {editMode ? (
+              <>
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  <X className="h-4 w-4 mr-1" /> Cancel
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={!newMemberName}>
+                  <Save className="h-4 w-4 mr-1" /> Save Changes
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddMember} disabled={!newMemberName}>
+                  Add Member
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently remove the member from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsAlertDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeleteMember}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
