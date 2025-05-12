@@ -49,8 +49,18 @@ export default function Settings() {
   };
 
   const handleEndSession = () => {
+    // Clear player queue and next game data
+    localStorage.removeItem("playerQueue");
+    localStorage.removeItem("nextGamePlayers");
+    
     // Navigate back to splash screen
     navigate("/");
+    
+    // Show success toast
+    toast({
+      title: "Session ended",
+      description: "Player data has been cleared. Member data is preserved."
+    });
   };
 
   return (
@@ -74,7 +84,7 @@ export default function Settings() {
                 <AlertDialogTitle>End Current Session?</AlertDialogTitle>
                 <AlertDialogDescription>
                   You are about to end the current session and return to the start screen. 
-                  This action cannot be undone. Player data will remain saved for future sessions.
+                  This action will clear all player queue data but preserve member information.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
