@@ -34,7 +34,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
     }
   }, [isOpen]);
 
-  const loadAndRankPlayers() {
+  const loadAndRankPlayers = () => {
     // Get all members from localStorage
     const members = localStorage.getItem("members");
     if (!members) {
