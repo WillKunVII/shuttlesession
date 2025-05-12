@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -6,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { PlayerOfSessionDialog } from "@/components/PlayerOfSessionDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ export default function Settings() {
   const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
   const [autoAssignment, setAutoAssignment] = useState<boolean>(false);
   const [scoreKeeping, setScoreKeeping] = useState<boolean>(false);
+  const [showPlayerOfSession, setShowPlayerOfSession] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -57,6 +58,16 @@ export default function Settings() {
   };
 
   const handleEndSession = () => {
+    // Show Player of Session dialog if score keeping is enabled
+    if (scoreKeeping) {
+      setShowPlayerOfSession(true);
+    } else {
+      // Otherwise, just end the session immediately
+      finishEndSession();
+    }
+  };
+
+  const finishEndSession = () => {
     // Clear player queue and next game data
     localStorage.removeItem("playerQueue");
     localStorage.removeItem("nextGamePlayers");
@@ -171,6 +182,15 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      
+      {/* Player of Session Dialog */}
+      <PlayerOfSessionDialog 
+        isOpen={showPlayerOfSession} 
+        onClose={() => {
+          setShowPlayerOfSession(false);
+          finishEndSession();
+        }} 
+      />
     </div>
   );
 }

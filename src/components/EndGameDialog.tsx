@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,47 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   };
   
   const handleSave = () => {
+    // Get all members
+    const membersData = localStorage.getItem("members");
+    let members: any[] = [];
+    
+    if (membersData) {
+      try {
+        members = JSON.parse(membersData);
+      } catch (e) {
+        console.error("Error parsing members data", e);
+      }
+    }
+    
+    // Update wins/losses for all players
+    players.forEach(player => {
+      // Find if this player is in the members list
+      const memberIndex = members.findIndex(m => m.name === player.name);
+      const isWinner = selectedWinners.includes(player.name);
+      
+      if (memberIndex !== -1) {
+        // Update existing member
+        if (isWinner) {
+          members[memberIndex].wins = (members[memberIndex].wins || 0) + 1;
+        } else {
+          members[memberIndex].losses = (members[memberIndex].losses || 0) + 1;
+        }
+      } else {
+        // Add new member with win/loss record
+        members.push({
+          name: player.name,
+          gender: player.gender,
+          isGuest: player.isGuest,
+          wins: isWinner ? 1 : 0,
+          losses: isWinner ? 0 : 1
+        });
+      }
+    });
+    
+    // Save updated members data
+    localStorage.setItem("members", JSON.stringify(members));
+    
+    // Continue with original save
     onSaveResults(selectedWinners);
     onClose();
   };

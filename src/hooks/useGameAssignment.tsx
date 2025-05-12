@@ -7,6 +7,8 @@ export type Player = {
   gender: "male" | "female";
   waitingTime: number;
   isGuest?: boolean;
+  wins?: number;
+  losses?: number;
 }
 
 export function useGameAssignment() {
