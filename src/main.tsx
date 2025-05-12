@@ -4,7 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import './index.css';
 
-// Register service worker
+// Register service worker with improved error handling
 const updateSW = registerSW({
   onNeedRefresh() {
     if (confirm('New content available. Reload?')) {
@@ -13,6 +13,9 @@ const updateSW = registerSW({
   },
   onOfflineReady() {
     console.log('App is ready for offline use');
+  },
+  onRegisterError(error) {
+    console.error('Service worker registration failed:', error);
   },
   immediate: true
 });
