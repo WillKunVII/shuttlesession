@@ -12,3 +12,9 @@ declare module 'virtual:pwa-register' {
 
   export function registerSW(options?: RegisterSWOptions): () => void;
 }
+
+declare module 'workbox-window';
+declare module 'workbox-strategies';
+declare module 'workbox-routing';
+declare module 'workbox-precaching';
+declare module 'workbox-core';
