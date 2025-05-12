@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => ({
         short_name: 'ShuttleSession',
         description: 'Manage badminton sessions and player queues',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'fullscreen',
+        orientation: 'portrait',
         icons: [
           {
             src: 'favicon.ico',
