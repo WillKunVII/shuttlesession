@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -17,12 +18,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Slider } from "@/components/ui/slider";
 
 export default function Settings() {
   const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
   const [autoAssignment, setAutoAssignment] = useState<boolean>(false);
   const [scoreKeeping, setScoreKeeping] = useState<boolean>(false);
   const [showPlayerOfSession, setShowPlayerOfSession] = useState<boolean>(false);
+  const [playerPoolSize, setPlayerPoolSize] = useState<number>(8); // Default value
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -42,6 +45,11 @@ export default function Settings() {
     if (savedScoreKeeping === "true") {
       setScoreKeeping(true);
     }
+    
+    const savedPoolSize = localStorage.getItem("playerPoolSize");
+    if (savedPoolSize) {
+      setPlayerPoolSize(Number(savedPoolSize));
+    }
   }, []);
 
   const handleSaveSettings = () => {
@@ -49,6 +57,7 @@ export default function Settings() {
     localStorage.setItem("courtOrdering", courtOrdering);
     localStorage.setItem("autoAssignment", String(autoAssignment));
     localStorage.setItem("scoreKeeping", String(scoreKeeping));
+    localStorage.setItem("playerPoolSize", String(playerPoolSize));
     
     // Show success toast
     toast({
@@ -151,6 +160,29 @@ export default function Settings() {
                   <Label htmlFor="disabled">Disabled</Label>
                 </div>
               </RadioGroup>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center border-b pb-4">
+            <div>
+              <h3 className="font-medium">Player Pool Size</h3>
+              <p className="text-sm text-muted-foreground">Number of players eligible for the next game (6-12)</p>
+            </div>
+            <div className="w-1/2">
+              <div className="flex flex-col space-y-4">
+                <Slider 
+                  value={[playerPoolSize]} 
+                  min={6} 
+                  max={12} 
+                  step={1} 
+                  onValueChange={(value) => setPlayerPoolSize(value[0])}
+                />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>6</span>
+                  <span className="font-medium text-primary">{playerPoolSize} players</span>
+                  <span>12</span>
+                </div>
+              </div>
             </div>
           </div>
 

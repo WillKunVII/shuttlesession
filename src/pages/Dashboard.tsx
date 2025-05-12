@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -176,7 +177,7 @@ export default function Dashboard() {
           <NextGame 
             players={nextGamePlayers}
             onClear={() => {
-              // Put players back in the queue
+              // Put players back in the queue in their original positions
               addPlayersToQueue(clearNextGame());
             }}
           />
