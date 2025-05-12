@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
+import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
@@ -13,6 +13,10 @@ export default function Dashboard() {
   const { queue, addPlayerToQueue, removePlayerFromQueue, addPlayersToQueue, removePlayersFromQueue, autoSelectPlayers } = usePlayerQueue();
   const { nextGamePlayers, setNextGame, clearNextGame, isNextGameReady } = useGameAssignment();
   const { getSortedCourts, assignPlayersToCourtById, endGameOnCourt } = useCourtManagement();
+  
+  // State for end game dialog
+  const [endGameDialogOpen, setEndGameDialogOpen] = useState(false);
+  const [currentCourtPlayers, setCurrentCourtPlayers] = useState<{ id: number, players: any[] }>({ id: 0, players: [] });
 
   // Get sorted courts
   const sortedCourts = getSortedCourts();
@@ -35,22 +39,92 @@ export default function Dashboard() {
     }
   };
 
-  // Function to end a game on a court
-  const endGame = (courtId: number) => {
+  // Function to handle end game button click
+  const handleEndGameClick = (courtId: number) => {
+    const players = sortedCourts.find(court => court.id === courtId)?.players || [];
+    
+    if (players.length > 0) {
+      // Check if score keeping is enabled
+      const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+      
+      if (isScoreKeepingEnabled) {
+        // Open dialog to select winners
+        setCurrentCourtPlayers({ id: courtId, players });
+        setEndGameDialogOpen(true);
+      } else {
+        // Just end the game normally without tracking scores
+        finishEndGame(courtId, []);
+      }
+    }
+  };
+  
+  // Function to finish ending the game and update records
+  const finishEndGame = (courtId: number, winnerNames: string[]) => {
     const releasedPlayers = endGameOnCourt(courtId);
     
     if (releasedPlayers.length > 0) {
-      // Add players back to the queue with proper properties
-      const playerObjects: Player[] = releasedPlayers.map((player, idx) => ({
-        id: Date.now() + idx,
-        name: player.name,
-        gender: player.gender as "male" | "female",
-        waitingTime: 0,
-        isGuest: player.isGuest
-      }));
+      // Get all members to update win/loss records
+      const savedMembers = localStorage.getItem("clubMembers");
+      let members: any[] = [];
+      if (savedMembers) {
+        try {
+          members = JSON.parse(savedMembers);
+        } catch (e) {
+          console.error("Error parsing members from localStorage", e);
+        }
+      }
+      
+      // Add players back to the queue with proper properties and update win/loss records
+      const playerObjects: Player[] = releasedPlayers.map((player, idx) => {
+        // Find matching member to get their ID and record
+        const matchingMember = members.find(m => m.name === player.name);
+        const playerId = matchingMember?.id || Date.now() + idx;
+        
+        // Update win/loss record if score keeping is enabled
+        if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
+          const isWinner = winnerNames.includes(player.name);
+          
+          // Update member record if it exists
+          if (matchingMember) {
+            if (isWinner) {
+              matchingMember.wins = (matchingMember.wins || 0) + 1;
+            } else {
+              matchingMember.losses = (matchingMember.losses || 0) + 1;
+            }
+          }
+          
+          return {
+            id: playerId,
+            name: player.name,
+            gender: player.gender as "male" | "female",
+            waitingTime: 0,
+            isGuest: player.isGuest,
+            wins: matchingMember?.wins || 0,
+            losses: matchingMember?.losses || 0
+          };
+        }
+        
+        return {
+          id: playerId,
+          name: player.name,
+          gender: player.gender as "male" | "female",
+          waitingTime: 0,
+          isGuest: player.isGuest,
+          wins: matchingMember?.wins || 0,
+          losses: matchingMember?.losses || 0
+        };
+      });
+      
+      // Save updated member records
+      if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
+        localStorage.setItem("clubMembers", JSON.stringify(members));
+      }
       
       addPlayersToQueue(playerObjects);
     }
+    
+    // Close dialog if it was open
+    setEndGameDialogOpen(false);
   };
 
   // Handle player selection for next game
@@ -76,7 +150,7 @@ export default function Dashboard() {
                 key={court.id}
                 court={court}
                 onAssign={() => assignToFreeCourt(court.id)}
-                onEndGame={() => endGame(court.id)}
+                onEndGame={() => handleEndGameClick(court.id)}
                 nextGameReady={isNextGameReady()}
               />
             ))}
@@ -118,6 +192,14 @@ export default function Dashboard() {
           />
         </div>
       </div>
+      
+      {/* End Game Dialog */}
+      <EndGameDialog
+        isOpen={endGameDialogOpen}
+        onClose={() => setEndGameDialogOpen(false)}
+        players={currentCourtPlayers.players}
+        onSaveResults={(winnerNames) => finishEndGame(currentCourtPlayers.id, winnerNames)}
+      />
     </>
   );
 }

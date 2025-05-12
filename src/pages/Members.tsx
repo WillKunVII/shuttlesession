@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -9,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Edit, Save, X, Trash2 } from "lucide-react";
+import { Edit, Save, X, Trash2, Trophy, Award } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 // Empty initial members list
@@ -21,6 +20,8 @@ export type Member = {
   status: "active" | "inactive";
   gender: "male" | "female";
   isGuest: boolean;
+  wins: number;
+  losses: number;
 };
 
 export default function Members() {
@@ -41,7 +42,16 @@ export default function Members() {
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
       try {
-        setMembers(JSON.parse(savedMembers));
+        // Check if members have wins/losses fields, add if not
+        const parsedMembers = JSON.parse(savedMembers);
+        const updatedMembers = parsedMembers.map((member: any) => ({
+          ...member,
+          wins: member.wins !== undefined ? member.wins : 0,
+          losses: member.losses !== undefined ? member.losses : 0
+        }));
+        setMembers(updatedMembers);
+        // Save the updated members back to localStorage
+        localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
       } catch (e) {
         console.error("Error parsing members from localStorage", e);
       }
@@ -60,7 +70,9 @@ export default function Members() {
         name: newMemberName,
         gender: newMemberGender,
         status: "active" as const,
-        isGuest
+        isGuest,
+        wins: 0,
+        losses: 0
       };
       
       setMembers([...members, newMember]);
@@ -129,6 +141,9 @@ export default function Members() {
     }
   };
 
+  // Check if score keeping is enabled
+  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+
   return (
     <div className="space-y-6">
       <div>
@@ -155,6 +170,9 @@ export default function Members() {
                   <th className="px-6 py-3 text-sm font-semibold">Name</th>
                   <th className="px-6 py-3 text-sm font-semibold">Status</th>
                   <th className="px-6 py-3 text-sm font-semibold">Gender</th>
+                  {isScoreKeepingEnabled && (
+                    <th className="px-6 py-3 text-sm font-semibold">Record</th>
+                  )}
                   <th className="px-6 py-3 text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -175,6 +193,21 @@ export default function Members() {
                     <td className="px-6 py-4">
                       <span className={`inline-block h-3 w-3 rounded-full ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
                     </td>
+                    {isScoreKeepingEnabled && (
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center">
+                            <Trophy className="h-4 w-4 text-green-500 mr-1" />
+                            {member.wins || 0}
+                          </span>
+                          <span className="text-gray-500">–</span>
+                          <span className="flex items-center">
+                            <X className="h-4 w-4 text-red-500 mr-1" />
+                            {member.losses || 0}
+                          </span>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => handleEditClick(member)}>

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -20,6 +21,7 @@ import {
 export default function Settings() {
   const [courtOrdering, setCourtOrdering] = useState<"ascending" | "descending">("ascending");
   const [autoAssignment, setAutoAssignment] = useState<boolean>(false);
+  const [scoreKeeping, setScoreKeeping] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -34,12 +36,18 @@ export default function Settings() {
     if (savedAutoAssignment === "true") {
       setAutoAssignment(true);
     }
+    
+    const savedScoreKeeping = localStorage.getItem("scoreKeeping");
+    if (savedScoreKeeping === "true") {
+      setScoreKeeping(true);
+    }
   }, []);
 
   const handleSaveSettings = () => {
     // Save settings to localStorage
     localStorage.setItem("courtOrdering", courtOrdering);
     localStorage.setItem("autoAssignment", String(autoAssignment));
+    localStorage.setItem("scoreKeeping", String(scoreKeeping));
     
     // Show success toast
     toast({
@@ -101,6 +109,17 @@ export default function Settings() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-4">General Settings</h2>
         <div className="space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+            <div>
+              <h3 className="font-medium">Score Keeping</h3>
+              <p className="text-sm text-muted-foreground">Track player wins and losses</p>
+            </div>
+            <Switch 
+              checked={scoreKeeping}
+              onCheckedChange={setScoreKeeping}
+            />
+          </div>
+
           <div className="flex justify-between items-center border-b pb-4">
             <div>
               <h3 className="font-medium">Auto-Assignment</h3>

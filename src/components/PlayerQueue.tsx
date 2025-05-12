@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Check, CircleDot, Plus } from "lucide-react";
+import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +11,8 @@ interface Player {
   waitingTime: number;
   gender: "male" | "female";
   isGuest?: boolean;
+  wins?: number;
+  losses?: number;
 }
 
 interface PlayerQueueProps {
@@ -21,6 +24,7 @@ interface PlayerQueueProps {
 
 export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
+  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
   
   const togglePlayerSelection = (player: Player) => {
     if (selected.some(p => p.id === player.id)) {
@@ -81,6 +85,12 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                   <span className="font-medium">{player.name}</span>
                   {player.isGuest && (
                     <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                  )}
+                  
+                  {isScoreKeepingEnabled && (player.wins !== undefined || player.losses !== undefined) && (
+                    <span className="ml-1 text-sm text-gray-500">
+                      W {player.wins || 0} – L {player.losses || 0}
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center">
