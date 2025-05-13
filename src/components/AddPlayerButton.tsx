@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,6 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
           id: Date.now(),
           name,
           gender,
-          status: "active",
           isGuest,
           wins: 0,
           losses: 0
