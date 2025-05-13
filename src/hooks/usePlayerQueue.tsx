@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { getStorageItem, setStorageItem, getPlayHistory, setPlayHistory } from "@/utils/storageUtils";
 import { nanoid } from "nanoid";
 
 // Starting with no players in the queue
@@ -13,7 +13,7 @@ interface PlayHistory {
 
 export function usePlayerQueue() {
   const [queue, setQueue] = useState<Player[]>(initialPlayers);
-  const [playHistory, setPlayHistory] = useState<PlayHistory>({});
+  const [playHistory, setPlayHistoryState] = useState<PlayHistory>({});
   
   // Load queue from localStorage on component mount
   useEffect(() => {
@@ -57,16 +57,9 @@ export function usePlayerQueue() {
       }
     }
     
-    // Load play history from localStorage
-    const savedPlayHistory = localStorage.getItem("playHistory");
-    if (savedPlayHistory) {
-      try {
-        const historyData = JSON.parse(savedPlayHistory);
-        setPlayHistory(historyData);
-      } catch (e) {
-        console.error("Error parsing play history from localStorage", e);
-      }
-    }
+    // Load play history from localStorage using the utility function
+    const historyData = getPlayHistory();
+    setPlayHistoryState(historyData);
   }, []);
 
   // Save queue to localStorage whenever it changes
@@ -74,9 +67,9 @@ export function usePlayerQueue() {
     localStorage.setItem("playerQueue", JSON.stringify(queue));
   }, [queue]);
   
-  // Save play history to localStorage whenever it changes
+  // Save play history to localStorage whenever it changes using the utility function
   useEffect(() => {
-    localStorage.setItem("playHistory", JSON.stringify(playHistory));
+    setPlayHistory(playHistory);
   }, [playHistory]);
 
   // Helper function to get play count between two players
@@ -102,7 +95,7 @@ export function usePlayerQueue() {
       }
     }
     
-    setPlayHistory(newHistory);
+    setPlayHistoryState(newHistory);
   };
 
   // Add player to queue

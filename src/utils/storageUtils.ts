@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for working with localStorage
  * Centralizes storage operations and adds error handling
@@ -69,4 +68,22 @@ export function getMembers() {
 
 export function setMembers(members: any[]) {
   setStorageItem("members", members);
+}
+
+export function getPlayHistory() {
+  return getStorageItem("playHistory", {});
+}
+
+export function setPlayHistory(history: Record<string, number>) {
+  setStorageItem("playHistory", history);
+}
+
+export function clearPlayHistory() {
+  localStorage.removeItem("playHistory");
+}
+
+export function clearSessionData() {
+  localStorage.removeItem("playerQueue");
+  localStorage.removeItem("nextGamePlayers");
+  localStorage.removeItem("playHistory");
 }
