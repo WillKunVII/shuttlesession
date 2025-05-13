@@ -12,10 +12,10 @@ const SplashScreen = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-app-primary-500 to-app-primary-700 text-neutral-000 p-6">
+    <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6">
       <div className="text-center animate-fade-in">
         <div className="flex justify-center mb-6">
-          <div className="bg-neutral-000 p-3 rounded-full flex items-center justify-center">
+          <div className="bg-transparent p-3 rounded-md flex items-center justify-center">
             <svg width="64" height="64" viewBox="0 0 28 56" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19.9979 21.9689C20.2486 23.733 21.4717 32.6751 21.2991 38.4443C21.0873 45.5213 18.6988 55.9979 17.6584 56C16.6181 55.9984 14.7354 46.1715 14.5236 39.0943C14.3561 33.4971 15.0302 24.4183 15.2064 22.1742C16.7473 22.1431 18.4647 22.0592 19.9979 21.9689Z" fill="white"/>
               <path d="M8.19579 21.9802C9.74317 22.0698 11.4593 22.1505 12.9843 22.1773C13.124 24.3632 13.6427 32.9917 13.4759 38.566C13.2642 45.6434 11.5818 55.4707 10.5415 55.4717C9.5011 55.4697 7.1126 44.993 6.90079 37.916C6.72907 32.1771 7.93648 23.7197 8.19579 21.9802Z" fill="white"/>
