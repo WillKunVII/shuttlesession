@@ -8,6 +8,7 @@ import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+
 export default function Dashboard() {
   // Use our custom hooks
   const {
@@ -16,7 +17,8 @@ export default function Dashboard() {
     removePlayerFromQueue,
     addPlayersToQueue,
     removePlayersFromQueue,
-    autoSelectPlayers
+    autoSelectPlayers,
+    returnPlayersToOriginalPositions
   } = usePlayerQueue();
   const {
     nextGamePlayers,
@@ -157,6 +159,16 @@ export default function Dashboard() {
       removePlayersFromQueue(playerIds);
     }
   };
+  
+  // Handle clearing the next game selection
+  const handleClearNextGame = () => {
+    // Get the players from the next game before clearing it
+    const playersToReturn = clearNextGame();
+    
+    // Return players to their original positions in the queue
+    returnPlayersToOriginalPositions(playersToReturn);
+  };
+  
   return <>
       {/* Left column: Courts - stacked vertically */}
       <div className="flex flex-col space-y-3">
@@ -184,10 +196,7 @@ export default function Dashboard() {
               Auto-Select Players
             </Button>
           </div>
-          <NextGame players={nextGamePlayers} onClear={() => {
-          // Put players back in the queue in their original positions
-          addPlayersToQueue(clearNextGame());
-        }} />
+          <NextGame players={nextGamePlayers} onClear={handleClearNextGame} />
         </div>
         
         {/* Bottom of right column: Player Queue */}

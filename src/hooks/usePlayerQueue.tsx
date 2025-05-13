@@ -105,6 +105,20 @@ export function usePlayerQueue() {
     return selectedPlayers;
   };
 
+  // Return players to their original positions in the queue
+  const returnPlayersToOriginalPositions = (players: Player[]) => {
+    if (players.length === 0) return;
+    
+    // Get the current player pool size
+    const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
+    
+    // Create a new queue by merging the returned players with the existing queue
+    // Try to maintain original order by sorting by ID (assuming lower ID = added earlier)
+    const mergedPlayers = [...queue, ...players].sort((a, b) => a.id - b.id);
+    
+    setQueue(mergedPlayers);
+  };
+
   // Auto select top players from the queue based on player pool size
   const autoSelectPlayers = (count: number = 4) => {
     // Get player pool size from settings or default to 8
@@ -147,6 +161,7 @@ export function usePlayerQueue() {
     addPlayersToQueue,
     removePlayersFromQueue,
     autoSelectPlayers,
-    getPlayerPoolSize
+    getPlayerPoolSize,
+    returnPlayersToOriginalPositions
   };
 }
