@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -85,6 +84,12 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  .safe-area-padding-top {
+    padding-top: env(safe-area-inset-top, 1rem);
   }
 }
 
