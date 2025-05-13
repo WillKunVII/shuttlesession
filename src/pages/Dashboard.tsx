@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -8,16 +7,37 @@ import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
-
 export default function Dashboard() {
   // Use our custom hooks
-  const { queue, addPlayerToQueue, removePlayerFromQueue, addPlayersToQueue, removePlayersFromQueue, autoSelectPlayers } = usePlayerQueue();
-  const { nextGamePlayers, setNextGame, clearNextGame, isNextGameReady } = useGameAssignment();
-  const { getSortedCourts, assignPlayersToCourtById, endGameOnCourt } = useCourtManagement();
-  
+  const {
+    queue,
+    addPlayerToQueue,
+    removePlayerFromQueue,
+    addPlayersToQueue,
+    removePlayersFromQueue,
+    autoSelectPlayers
+  } = usePlayerQueue();
+  const {
+    nextGamePlayers,
+    setNextGame,
+    clearNextGame,
+    isNextGameReady
+  } = useGameAssignment();
+  const {
+    getSortedCourts,
+    assignPlayersToCourtById,
+    endGameOnCourt
+  } = useCourtManagement();
+
   // State for end game dialog
   const [endGameDialogOpen, setEndGameDialogOpen] = useState(false);
-  const [currentCourtPlayers, setCurrentCourtPlayers] = useState<{ id: number, players: any[] }>({ id: 0, players: [] });
+  const [currentCourtPlayers, setCurrentCourtPlayers] = useState<{
+    id: number;
+    players: any[];
+  }>({
+    id: 0,
+    players: []
+  });
 
   // Get sorted courts
   const sortedCourts = getSortedCourts();
@@ -43,14 +63,15 @@ export default function Dashboard() {
   // Function to handle end game button click
   const handleEndGameClick = (courtId: number) => {
     const players = sortedCourts.find(court => court.id === courtId)?.players || [];
-    
     if (players.length > 0) {
       // Check if score keeping is enabled
       const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
-      
       if (isScoreKeepingEnabled) {
         // Open dialog to select winners
-        setCurrentCourtPlayers({ id: courtId, players });
+        setCurrentCourtPlayers({
+          id: courtId,
+          players
+        });
         setEndGameDialogOpen(true);
       } else {
         // Just end the game normally without tracking scores
@@ -58,11 +79,10 @@ export default function Dashboard() {
       }
     }
   };
-  
+
   // Function to finish ending the game and update records
   const finishEndGame = (courtId: number, winnerNames: string[]) => {
     const releasedPlayers = endGameOnCourt(courtId);
-    
     if (releasedPlayers.length > 0) {
       // Get all members to update win/loss records
       const savedMembers = localStorage.getItem("clubMembers");
@@ -74,17 +94,17 @@ export default function Dashboard() {
           console.error("Error parsing members from localStorage", e);
         }
       }
-      
+
       // Add players back to the queue with proper properties and update win/loss records
       const playerObjects: Player[] = releasedPlayers.map((player, idx) => {
         // Find matching member to get their ID and record
         const matchingMember = members.find(m => m.name === player.name);
         const playerId = matchingMember?.id || Date.now() + idx;
-        
+
         // Update win/loss record if score keeping is enabled
         if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
           const isWinner = winnerNames.includes(player.name);
-          
+
           // Update member record if it exists
           if (matchingMember) {
             if (isWinner) {
@@ -93,7 +113,6 @@ export default function Dashboard() {
               matchingMember.losses = (matchingMember.losses || 0) + 1;
             }
           }
-          
           return {
             id: playerId,
             name: player.name,
@@ -104,7 +123,6 @@ export default function Dashboard() {
             losses: matchingMember?.losses || 0
           };
         }
-        
         return {
           id: playerId,
           name: player.name,
@@ -115,15 +133,14 @@ export default function Dashboard() {
           losses: matchingMember?.losses || 0
         };
       });
-      
+
       // Save updated member records
       if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
         localStorage.setItem("clubMembers", JSON.stringify(members));
       }
-      
       addPlayersToQueue(playerObjects);
     }
-    
+
     // Close dialog if it was open
     setEndGameDialogOpen(false);
   };
@@ -132,29 +149,19 @@ export default function Dashboard() {
   const handlePlayerSelect = (selectedPlayers: Player[]) => {
     if (selectedPlayers.length === 4) {
       setNextGame(selectedPlayers);
-      
+
       // Remove selected players from queue
       const playerIds = selectedPlayers.map(p => p.id);
       removePlayersFromQueue(playerIds);
     }
   };
-
-  return (
-    <>
+  return <>
       {/* Left column: Courts - stacked vertically */}
       <div className="flex flex-col space-y-3">
         <div className="bg-white rounded-xl shadow-sm p-3">
           <h2 className="text-xl font-semibold mb-3">Court Status</h2>
           <div className="flex flex-col space-y-3">
-            {sortedCourts.map(court => (
-              <CourtStatus 
-                key={court.id}
-                court={court}
-                onAssign={() => assignToFreeCourt(court.id)}
-                onEndGame={() => handleEndGameClick(court.id)}
-                nextGameReady={isNextGameReady()}
-              />
-            ))}
+            {sortedCourts.map(court => <CourtStatus key={court.id} court={court} onAssign={() => assignToFreeCourt(court.id)} onEndGame={() => handleEndGameClick(court.id)} nextGameReady={isNextGameReady()} />)}
           </div>
         </div>
       </div>
@@ -165,42 +172,23 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-3">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-semibold">Next Game</h2>
-            <Button 
-              variant="outline" 
-              onClick={() => generateNextGame()}
-              disabled={queue.length < 4}
-              size="sm"
-            >
+            <Button variant="outline" onClick={() => generateNextGame()} disabled={queue.length < 4} size="sm">
               Auto-Select Players
             </Button>
           </div>
-          <NextGame 
-            players={nextGamePlayers}
-            onClear={() => {
-              // Put players back in the queue in their original positions
-              addPlayersToQueue(clearNextGame());
-            }}
-          />
+          <NextGame players={nextGamePlayers} onClear={() => {
+          // Put players back in the queue in their original positions
+          addPlayersToQueue(clearNextGame());
+        }} />
         </div>
         
         {/* Bottom of right column: Player Queue */}
         <div className="bg-white rounded-xl shadow-sm p-3">
-          <PlayerQueue 
-            players={queue} 
-            onPlayerSelect={handlePlayerSelect}
-            onPlayerLeave={removePlayerFromQueue}
-            onAddPlayer={(player) => addPlayerToQueue(player)}
-          />
+          <PlayerQueue players={queue} onPlayerSelect={handlePlayerSelect} onPlayerLeave={removePlayerFromQueue} onAddPlayer={player => addPlayerToQueue(player)} />
         </div>
       </div>
       
       {/* End Game Dialog */}
-      <EndGameDialog
-        isOpen={endGameDialogOpen}
-        onClose={() => setEndGameDialogOpen(false)}
-        players={currentCourtPlayers.players}
-        onSaveResults={(winnerNames) => finishEndGame(currentCourtPlayers.id, winnerNames)}
-      />
-    </>
-  );
+      <EndGameDialog isOpen={endGameDialogOpen} onClose={() => setEndGameDialogOpen(false)} players={currentCourtPlayers.players} onSaveResults={winnerNames => finishEndGame(currentCourtPlayers.id, winnerNames)} />
+    </>;
 }
