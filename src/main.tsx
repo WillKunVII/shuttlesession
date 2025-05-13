@@ -20,13 +20,23 @@ const updateSW = registerSW({
   immediate: true
 });
 
-// Optimize the address bar hiding function for mobile
+// Check if the app is running as an installed PWA
+const isPWA = () => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.matchMedia('(display-mode: fullscreen)').matches || 
+         window.navigator.standalone === true;
+};
+
+// Optimize the address bar hiding function for mobile PWAs only
 const hideAddressBar = () => {
+  // Only proceed if this is a PWA
+  if (!isPWA()) return;
+  
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
   
-  // More reliable method to hide address bar
+  // Try to hide address bar on mobile
   if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
     // Only try fullscreen on user interaction (needed for most browsers)
     document.addEventListener('click', () => {
@@ -42,7 +52,7 @@ const hideAddressBar = () => {
   }
 };
 
-// Add event listener to hide address bar on mobile
+// Add event listener to hide address bar on mobile (only for PWAs)
 window.addEventListener('load', hideAddressBar);
 window.addEventListener('resize', hideAddressBar);
 
