@@ -5,6 +5,17 @@ import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface Player {
   id: string;
@@ -25,6 +36,7 @@ interface PlayerQueueProps {
 
 export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
+  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
@@ -47,7 +59,19 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   
   const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
     if (onAddPlayer) {
+      // Check if player with same name already exists in the queue
+      if (players.some(p => p.name.toLowerCase() === player.name.toLowerCase())) {
+        toast(`${player.name} is already in the queue`);
+        return;
+      }
       onAddPlayer(player);
+    }
+  };
+  
+  const handleLeaveConfirm = () => {
+    if (playerToRemove && onPlayerLeave) {
+      onPlayerLeave(playerToRemove.id);
+      setPlayerToRemove(null);
     }
   };
   
@@ -126,7 +150,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onPlayerLeave) onPlayerLeave(player.id);
+                        setPlayerToRemove(player);
                       }}
                     >
                       Leave
@@ -138,6 +162,23 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           </div>
         </ScrollArea>
       )}
+      
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!playerToRemove} onOpenChange={(open) => !open && setPlayerToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove player from queue?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {playerToRemove?.name} from the queue?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeaveConfirm}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

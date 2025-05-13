@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { nanoid } from "nanoid";
-import { toast } from "sonner"; // Add this import
+import { toast } from "sonner"; // Added import for toast
 
 interface Member {
   id: string;
@@ -64,7 +64,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       if (!existingMember) {
         // Create new member object
         const newMember: Member = {
-          id: nanoid(), // Changed from Date.now() to nanoid()
+          id: nanoid(),
           name,
           gender,
           isGuest,
