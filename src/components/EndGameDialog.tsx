@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getStorageValue, setStorageValue } from "@/lib/utils";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 interface Player {
   name: string;
@@ -28,7 +29,7 @@ interface EndGameDialogProps {
 
 export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGameDialogProps) {
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
-  const isScoreKeepingEnabled = getStorageValue("scoreKeeping", "false") === "true";
+  const isScoreKeepingEnabled = getStorageItem("scoreKeeping", false);
   
   // Reset selections when dialog opens
   useEffect(() => {
@@ -56,7 +57,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     }
     
     // Get all members
-    const members = getStorageValue("members", []);
+    const members = getStorageItem("members", []);
     
     // Update wins/losses for all players
     players.forEach(player => {
@@ -84,7 +85,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     });
     
     // Save updated members data
-    setStorageValue("members", members);
+    setStorageItem("members", members);
     
     // Continue with original save
     onSaveResults(selectedWinners);
