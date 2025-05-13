@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -146,12 +147,12 @@ export default function Members() {
 
   return (
     <div className="space-y-6 w-full col-span-full">
-      <div>
-        <h1 className="text-2xl font-bold mb-2">Members</h1>
-        <p className="text-muted-foreground">Manage club members</p>
-      </div>
-      
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Members</h1>
+          <p className="text-muted-foreground">Manage club members</p>
+        </div>
+        
         <Button onClick={() => {
           setEditMode(false);
           setNewMemberName("");
