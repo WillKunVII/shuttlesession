@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getStorageValue, setStorageValue } from "@/lib/utils";
 
 interface Player {
   name: string;
@@ -28,7 +28,7 @@ interface EndGameDialogProps {
 
 export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGameDialogProps) {
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
-  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+  const isScoreKeepingEnabled = getStorageValue("scoreKeeping", "false") === "true";
   
   // Reset selections when dialog opens
   useEffect(() => {
@@ -37,35 +37,31 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     }
   }, [isOpen]);
   
-  // Toggle player selection as winner
-  const toggleWinner = (playerName: string) => {
-    if (selectedWinners.includes(playerName)) {
-      setSelectedWinners(selectedWinners.filter(name => name !== playerName));
-    } else {
-      // Only allow 2 winners max
-      if (selectedWinners.length < 2) {
-        setSelectedWinners([...selectedWinners, playerName]);
+  // Toggle player selection as winner, memoized to avoid rerenders
+  const toggleWinner = useCallback((playerName: string) => {
+    setSelectedWinners(prev => {
+      if (prev.includes(playerName)) {
+        return prev.filter(name => name !== playerName);
+      } else {
+        // Only allow 2 winners max
+        return prev.length < 2 ? [...prev, playerName] : prev;
       }
-    }
-  };
+    });
+  }, []);
   
-  const handleSave = () => {
-    // Get all members
-    const membersData = localStorage.getItem("members");
-    let members: any[] = [];
-    
-    if (membersData) {
-      try {
-        members = JSON.parse(membersData);
-      } catch (e) {
-        console.error("Error parsing members data", e);
-      }
+  const handleSave = useCallback(() => {
+    if (!isScoreKeepingEnabled) {
+      onClose();
+      return;
     }
+    
+    // Get all members
+    const members = getStorageValue("members", []);
     
     // Update wins/losses for all players
     players.forEach(player => {
       // Find if this player is in the members list
-      const memberIndex = members.findIndex(m => m.name === player.name);
+      const memberIndex = members.findIndex((m: any) => m.name === player.name);
       const isWinner = selectedWinners.includes(player.name);
       
       if (memberIndex !== -1) {
@@ -88,14 +84,14 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     });
     
     // Save updated members data
-    localStorage.setItem("members", JSON.stringify(members));
+    setStorageValue("members", members);
     
     // Continue with original save
     onSaveResults(selectedWinners);
     onClose();
-  };
+  }, [isScoreKeepingEnabled, onClose, onSaveResults, players, selectedWinners]);
   
-  // If score keeping is disabled, just close without showing dialog
+  // If score keeping is disabled, just skip dialog
   if (!isScoreKeepingEnabled) {
     return null;
   }

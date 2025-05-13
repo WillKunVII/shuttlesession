@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,11 +29,19 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
   
   const togglePlayerSelection = (player: Player) => {
-    if (selected.some(p => p.id === player.id)) {
-      setSelected(selected.filter(p => p.id !== player.id));
-    } else if (selected.length < 4) {
-      setSelected([...selected, player]);
-    }
+    setSelected(prev => {
+      // Check if player is already selected
+      if (prev.some(p => p.id === player.id)) {
+        // If selected, remove them
+        return prev.filter(p => p.id !== player.id);
+      } 
+      // If not selected and we haven't reached the limit yet, add them
+      else if (prev.length < 4) {
+        return [...prev, player];
+      }
+      // Otherwise don't change anything
+      return prev;
+    });
   };
   
   const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
@@ -74,7 +81,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
         <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-2 pr-4">
             {players.map((player, index) => (
-              <>
+              <div key={player.id}>
                 {index === playerPoolSize && players.length > playerPoolSize && (
                   <div className="relative my-4">
                     <Separator className="absolute inset-0 my-2" />
@@ -86,7 +93,6 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                   </div>
                 )}
                 <div 
-                  key={player.id} 
                   className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
                     selected.some(p => p.id === player.id) 
                       ? "bg-shuttle-lightBlue border-shuttle-blue" 
@@ -126,7 +132,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                     </Button>
                   </div>
                 </div>
-              </>
+              </div>
             ))}
           </div>
         </ScrollArea>

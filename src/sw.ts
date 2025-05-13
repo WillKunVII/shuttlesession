@@ -8,6 +8,21 @@ import { ExpirationPlugin } from 'workbox-expiration';
 // @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Cache static assets aggressively
+registerRoute(
+  ({request}) => request.destination === 'script' || 
+                 request.destination === 'style',
+  new CacheFirst({
+    cacheName: 'static-resources',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+      }),
+    ],
+  })
+);
+
 // Cache Google Fonts with a stale-while-revalidate strategy
 registerRoute(
   ({url}) => url.origin === 'https://fonts.googleapis.com' || 
@@ -24,7 +39,7 @@ registerRoute(
     cacheName: 'images-cache',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 50,
+        maxEntries: 80,
         maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
       }),
     ],
