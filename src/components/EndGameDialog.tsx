@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ interface Player {
   name: string;
   gender: "male" | "female";
   isGuest?: boolean;
-  id?: number;
+  id?: string;
 }
 
 interface EndGameDialogProps {

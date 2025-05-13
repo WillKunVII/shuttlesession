@@ -15,10 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Member } from "@/pages/Members";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
+import { nanoid } from "nanoid";
+
+interface Member {
+  id: string; // Changed from number to string
+  name: string;
+  gender: "male" | "female";
+  isGuest?: boolean;
+  wins?: number;
+  losses?: number;
+}
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
@@ -56,7 +62,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       if (!existingMember) {
         // Create new member object
         const newMember: Member = {
-          id: Date.now(),
+          id: nanoid(), // Changed from Date.now() to nanoid()
           name,
           gender,
           isGuest,

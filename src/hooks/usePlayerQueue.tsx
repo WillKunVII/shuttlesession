@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
 import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { nanoid } from "nanoid";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
@@ -60,7 +61,7 @@ export function usePlayerQueue() {
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
     const newPlayer: Player = {
-      id: Date.now(),
+      id: nanoid(),
       name: player.name,
       gender: player.gender,
       isGuest: player.isGuest,
@@ -88,7 +89,7 @@ export function usePlayerQueue() {
   };
 
   // Remove player from queue
-  const removePlayerFromQueue = (playerId: number) => {
+  const removePlayerFromQueue = (playerId: string) => {
     setQueue(queue.filter(player => player.id !== playerId));
   };
 
@@ -99,7 +100,7 @@ export function usePlayerQueue() {
   };
 
   // Remove multiple players from queue and return them
-  const removePlayersFromQueue = (playerIds: number[]) => {
+  const removePlayersFromQueue = (playerIds: string[]) => {
     const selectedPlayers = queue.filter(p => playerIds.includes(p.id));
     setQueue(queue.filter(p => !playerIds.includes(p.id)));
     return selectedPlayers;
@@ -113,8 +114,9 @@ export function usePlayerQueue() {
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     
     // Create a new queue by merging the returned players with the existing queue
-    // Try to maintain original order by sorting by ID (assuming lower ID = added earlier)
-    const mergedPlayers = [...queue, ...players].sort((a, b) => a.id - b.id);
+    // Try to maintain original order by sorting by ID (nanoid doesn't have inherent ordering)
+    // Instead of sorting by ID, just add them back in the order they were created
+    const mergedPlayers = [...queue, ...players];
     
     setQueue(mergedPlayers);
   };

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 interface Player {
-  id: number;
+  id: string;
   name: string;
   waitingTime: number;
   gender: "male" | "female";
@@ -18,7 +19,7 @@ interface Player {
 interface PlayerQueueProps {
   players: Player[];
   onPlayerSelect: (selectedPlayers: Player[]) => void;
-  onPlayerLeave?: (playerId: number) => void;
+  onPlayerLeave?: (playerId: string) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean}) => void;
 }
 

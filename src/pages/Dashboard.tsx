@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -103,7 +102,7 @@ export default function Dashboard() {
       const playerObjects: Player[] = releasedPlayers.map((player, idx) => {
         // Find matching member to get their ID and record
         const matchingMember = members.find(m => m.name === player.name);
-        const playerId = matchingMember?.id || Date.now() + idx;
+        const nanoid = window.crypto.randomUUID(); // Using built-in UUID as fallback
 
         // Update win/loss record if score keeping is enabled
         if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
@@ -118,7 +117,7 @@ export default function Dashboard() {
             }
           }
           return {
-            id: playerId,
+            id: nanoid,
             name: player.name,
             gender: player.gender as "male" | "female",
             waitingTime: 0,
@@ -128,7 +127,7 @@ export default function Dashboard() {
           };
         }
         return {
-          id: playerId,
+          id: nanoid,
           name: player.name,
           gender: player.gender as "male" | "female",
           waitingTime: 0,

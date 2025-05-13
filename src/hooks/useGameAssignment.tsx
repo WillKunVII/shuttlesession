@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 export type Player = {
-  id: number;
+  id: string;
   name: string;
   gender: "male" | "female";
   waitingTime: number;
@@ -16,7 +16,7 @@ export function useGameAssignment() {
 
   // Load next game players from localStorage on component mount
   useEffect(() => {
-    const savedNextGame = localStorage.getItem("nextGamePlayers");
+    const savedNextGame = getStorageItem("nextGamePlayers");
     if (savedNextGame) {
       try {
         setNextGamePlayers(JSON.parse(savedNextGame));
@@ -28,7 +28,7 @@ export function useGameAssignment() {
 
   // Save next game players to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("nextGamePlayers", JSON.stringify(nextGamePlayers));
+    setStorageItem("nextGamePlayers", JSON.stringify(nextGamePlayers));
   }, [nextGamePlayers]);
 
   // Set next game players 
