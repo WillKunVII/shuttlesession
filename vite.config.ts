@@ -31,17 +31,17 @@ export default defineConfig(({ mode }) => ({
         orientation: 'portrait',
         icons: [
           {
-            src: '/lovable-uploads/357ffd0e-0828-4660-96df-166a9769a250.png',
+            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/lovable-uploads/357ffd0e-0828-4660-96df-166a9769a250.png',
+            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/lovable-uploads/357ffd0e-0828-4660-96df-166a9769a250.png',
+            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable'
