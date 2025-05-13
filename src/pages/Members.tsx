@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -145,7 +146,7 @@ export default function Members() {
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full col-span-full">
       <div>
         <h1 className="text-2xl font-bold mb-2">Members</h1>
         <p className="text-muted-foreground">Manage club members</p>
