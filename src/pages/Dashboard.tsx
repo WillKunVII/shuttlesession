@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -44,7 +45,8 @@ export default function Dashboard() {
 
   // Function to generate next game players (auto mode)
   const generateNextGame = () => {
-    if (queue.length >= 4) {
+    // Only attempt to generate a next game if there isn't one already
+    if (nextGamePlayers.length === 0 && queue.length >= 4) {
       const selectedPlayers = autoSelectPlayers(4);
       setNextGame(selectedPlayers);
     }
@@ -172,7 +174,13 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow-sm p-3">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-semibold">Next Game</h2>
-            <Button variant="outline" onClick={() => generateNextGame()} disabled={queue.length < 4} size="sm">
+            <Button 
+              variant="outline" 
+              onClick={() => generateNextGame()} 
+              // Only enable the button when there is no next game and there are enough players
+              disabled={nextGamePlayers.length > 0 || queue.length < 4} 
+              size="sm"
+            >
               Auto-Select Players
             </Button>
           </div>

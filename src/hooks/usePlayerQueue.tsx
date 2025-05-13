@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
@@ -107,11 +109,22 @@ export function usePlayerQueue() {
   const autoSelectPlayers = (count: number = 4) => {
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
+    
+    // Always prioritize players at the top of the queue
     const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
     
     if (poolPlayers.length >= count) {
-      // Only select from the player pool
-      const selectedPlayers = poolPlayers.slice(0, count);
+      // Always select the first player in queue to prioritize waiting time
+      const firstPlayer = poolPlayers[0];
+      
+      // For the remaining players, select randomly from the pool (excluding first player)
+      const remainingPoolPlayers = poolPlayers.slice(1);
+      const shuffledRemaining = [...remainingPoolPlayers]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, count - 1);
+      
+      // Combine first player with randomly selected others
+      const selectedPlayers = [firstPlayer, ...shuffledRemaining];
       const selectedIds = selectedPlayers.map(p => p.id);
       
       // Remove selected players from queue
