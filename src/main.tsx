@@ -24,7 +24,8 @@ const updateSW = registerSW({
 const isPWA = () => {
   return window.matchMedia('(display-mode: standalone)').matches || 
          window.matchMedia('(display-mode: fullscreen)').matches || 
-         window.navigator.standalone === true;
+         // Safe check for iOS Safari's standalone property
+         (window.navigator as any).standalone === true;
 };
 
 // Optimize the address bar hiding function for mobile PWAs only
