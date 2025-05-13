@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -52,18 +51,41 @@ export default function Settings() {
     }
   }, []);
 
-  const handleSaveSettings = () => {
-    // Save settings to localStorage
-    localStorage.setItem("courtOrdering", courtOrdering);
-    localStorage.setItem("autoAssignment", String(autoAssignment));
-    localStorage.setItem("scoreKeeping", String(scoreKeeping));
-    localStorage.setItem("playerPoolSize", String(playerPoolSize));
+  // Save setting function that will be called automatically when settings change
+  const saveSetting = (key: string, value: string) => {
+    localStorage.setItem(key, value);
     
-    // Show success toast
+    // Show brief success toast
     toast({
-      title: "Settings saved",
-      description: "Your settings have been saved successfully."
+      title: "Setting saved",
+      description: `${key} has been updated.`
     });
+  };
+
+  // Handle court ordering change
+  const handleCourtOrderingChange = (value: "ascending" | "descending") => {
+    setCourtOrdering(value);
+    saveSetting("courtOrdering", value);
+  };
+  
+  // Handle auto assignment change
+  const handleAutoAssignmentChange = (value: string) => {
+    const isEnabled = value === "enabled";
+    setAutoAssignment(isEnabled);
+    saveSetting("autoAssignment", String(isEnabled));
+  };
+  
+  // Handle score keeping change
+  const handleScoreKeepingChange = (value: boolean) => {
+    setScoreKeeping(value);
+    saveSetting("scoreKeeping", String(value));
+  };
+  
+  // Handle player pool size change
+  const handlePlayerPoolSizeChange = (value: number[]) => {
+    const size = value[0];
+    setPlayerPoolSize(size);
+    saveSetting("playerPoolSize", String(size));
   };
 
   const handleEndSession = () => {
@@ -136,7 +158,7 @@ export default function Settings() {
             </div>
             <Switch 
               checked={scoreKeeping}
-              onCheckedChange={setScoreKeeping}
+              onCheckedChange={handleScoreKeepingChange}
             />
           </div>
 
@@ -148,7 +170,7 @@ export default function Settings() {
             <div>
               <RadioGroup 
                 value={autoAssignment ? "enabled" : "disabled"}
-                onValueChange={(value) => setAutoAssignment(value === "enabled")}
+                onValueChange={handleAutoAssignmentChange}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -175,7 +197,7 @@ export default function Settings() {
                   min={6} 
                   max={12} 
                   step={1} 
-                  onValueChange={(value) => setPlayerPoolSize(value[0])}
+                  onValueChange={handlePlayerPoolSizeChange}
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>6</span>
@@ -194,7 +216,7 @@ export default function Settings() {
             <div>
               <RadioGroup 
                 value={courtOrdering} 
-                onValueChange={(value) => setCourtOrdering(value as "ascending" | "descending")}
+                onValueChange={handleCourtOrderingChange}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -207,10 +229,6 @@ export default function Settings() {
                 </div>
               </RadioGroup>
             </div>
-          </div>
-          
-          <div className="flex justify-end mt-6">
-            <Button onClick={handleSaveSettings}>Save Settings</Button>
           </div>
         </div>
       </div>

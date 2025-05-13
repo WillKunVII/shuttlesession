@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -18,7 +17,6 @@ const initialMembers: Member[] = [];
 export type Member = {
   id: number;
   name: string;
-  status: "active" | "inactive";
   gender: "male" | "female";
   isGuest: boolean;
   wins: number;
@@ -47,6 +45,8 @@ export default function Members() {
         const parsedMembers = JSON.parse(savedMembers);
         const updatedMembers = parsedMembers.map((member: any) => ({
           ...member,
+          // Remove status field if it exists
+          status: undefined,
           wins: member.wins !== undefined ? member.wins : 0,
           losses: member.losses !== undefined ? member.losses : 0
         }));
@@ -70,7 +70,6 @@ export default function Members() {
         id: Date.now(),
         name: newMemberName,
         gender: newMemberGender,
-        status: "active" as const,
         isGuest,
         wins: 0,
         losses: 0
@@ -169,7 +168,6 @@ export default function Members() {
               <thead className="border-b">
                 <tr>
                   <th className="px-6 py-3 text-sm font-semibold">Name</th>
-                  <th className="px-6 py-3 text-sm font-semibold">Status</th>
                   <th className="px-6 py-3 text-sm font-semibold">Gender</th>
                   {isScoreKeepingEnabled && (
                     <th className="px-6 py-3 text-sm font-semibold">Record</th>
@@ -185,11 +183,6 @@ export default function Members() {
                       {member.isGuest && (
                         <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
-                        {member.status}
-                      </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-block h-3 w-3 rounded-full ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
