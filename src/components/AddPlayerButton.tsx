@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,10 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { nanoid } from "nanoid";
+import { toast } from "sonner"; // Add this import
 
 interface Member {
-  id: string; // Changed from number to string
+  id: string;
   name: string;
   gender: "male" | "female";
   isGuest?: boolean;

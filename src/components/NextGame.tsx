@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 
 interface Player {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   waitingTime: number;
   gender: "male" | "female";

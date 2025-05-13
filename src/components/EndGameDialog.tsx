@@ -16,7 +16,7 @@ interface Player {
   name: string;
   gender: "male" | "female";
   isGuest?: boolean;
-  id?: string;
+  id?: string; // Updated to align with other components
 }
 
 interface EndGameDialogProps {
