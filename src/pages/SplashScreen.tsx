@@ -12,7 +12,9 @@ const SplashScreen = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-app-primary-700 text-neutral-000 p-6">
+      <div className="flex-1"></div>
+      
       <div className="text-center animate-fade-in max-w-md w-full mx-auto">
         <div className="flex justify-center mb-6">
           <div className="bg-transparent p-3 rounded-md flex items-center justify-center">
@@ -44,7 +46,9 @@ const SplashScreen = () => {
         </div>
       </div>
       
-      <div className="mt-auto pt-8 text-center opacity-70 text-sm">
+      <div className="flex-1"></div>
+      
+      <div className="pt-8 text-center opacity-70 text-sm">
         <p>© 2025 ShuttleSession</p>
       </div>
     </div>
