@@ -13,7 +13,7 @@ const SplashScreen = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6">
-      <div className="text-center animate-fade-in">
+      <div className="text-center animate-fade-in max-w-md w-full mx-auto">
         <div className="flex justify-center mb-6">
           <div className="bg-transparent p-3 rounded-md flex items-center justify-center">
             <svg width="64" height="64" viewBox="0 0 28 56" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,7 +30,7 @@ const SplashScreen = () => {
         <h1 className="text-4xl font-bold mb-2">ShuttleSession</h1>
         <p className="text-xl mb-8 opacity-90">Badminton Session Management</p>
         
-        <div className={`max-w-md mx-auto space-y-4 ${isMobile ? 'px-4' : 'px-8'}`}>
+        <div className={`mx-auto space-y-4 ${isMobile ? 'px-4' : 'px-8'}`}>
           <p className="text-lg opacity-80 mb-6">
             Create games, manage player queues and keep your badminton sessions running smoothly.
           </p>
