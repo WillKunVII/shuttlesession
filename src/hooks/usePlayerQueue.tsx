@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
 import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
@@ -7,8 +6,14 @@ import { nanoid } from "nanoid";
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
 
+// Interface to track play history
+interface PlayHistory {
+  [playerPair: string]: number; // Key is player1Id-player2Id, value is count
+}
+
 export function usePlayerQueue() {
   const [queue, setQueue] = useState<Player[]>(initialPlayers);
+  const [playHistory, setPlayHistory] = useState<PlayHistory>({});
   
   // Load queue from localStorage on component mount
   useEffect(() => {
@@ -51,12 +56,54 @@ export function usePlayerQueue() {
         console.error("Error parsing queue from localStorage", e);
       }
     }
+    
+    // Load play history from localStorage
+    const savedPlayHistory = localStorage.getItem("playHistory");
+    if (savedPlayHistory) {
+      try {
+        const historyData = JSON.parse(savedPlayHistory);
+        setPlayHistory(historyData);
+      } catch (e) {
+        console.error("Error parsing play history from localStorage", e);
+      }
+    }
   }, []);
 
   // Save queue to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("playerQueue", JSON.stringify(queue));
   }, [queue]);
+  
+  // Save play history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("playHistory", JSON.stringify(playHistory));
+  }, [playHistory]);
+
+  // Helper function to get play count between two players
+  const getPlayCount = (player1Id: string, player2Id: string): number => {
+    // Sort IDs to ensure consistent key regardless of order
+    const [id1, id2] = [player1Id, player2Id].sort();
+    const key = `${id1}-${id2}`;
+    return playHistory[key] || 0;
+  };
+  
+  // Helper function to update play history when players are selected for a game
+  const updatePlayHistory = (selectedPlayerIds: string[]) => {
+    const newHistory = { ...playHistory };
+    
+    // For each unique pair of players, increment their play count
+    for (let i = 0; i < selectedPlayerIds.length; i++) {
+      for (let j = i + 1; j < selectedPlayerIds.length; j++) {
+        // Sort IDs to ensure consistent key regardless of order
+        const [id1, id2] = [selectedPlayerIds[i], selectedPlayerIds[j]].sort();
+        const key = `${id1}-${id2}`;
+        
+        newHistory[key] = (newHistory[key] || 0) + 1;
+      }
+    }
+    
+    setPlayHistory(newHistory);
+  };
 
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
@@ -121,27 +168,54 @@ export function usePlayerQueue() {
     setQueue(mergedPlayers);
   };
 
-  // Auto select top players from the queue based on player pool size
+  // Auto select top players from the queue based on player pool size and play history
   const autoSelectPlayers = (count: number = 4) => {
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     
-    // Always prioritize players at the top of the queue
+    // Get the available players from the pool
     const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
     
     if (poolPlayers.length >= count) {
       // Always select the first player in queue to prioritize waiting time
       const firstPlayer = poolPlayers[0];
-      
-      // For the remaining players, select randomly from the pool (excluding first player)
+      const selectedPlayers = [firstPlayer];
+      const selectedIds = [firstPlayer.id];
       const remainingPoolPlayers = poolPlayers.slice(1);
-      const shuffledRemaining = [...remainingPoolPlayers]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, count - 1);
       
-      // Combine first player with randomly selected others
-      const selectedPlayers = [firstPlayer, ...shuffledRemaining];
-      const selectedIds = selectedPlayers.map(p => p.id);
+      // For each remaining spot, find the player who has played least with those already selected
+      while (selectedPlayers.length < count) {
+        let leastPlayedWithIndex = 0;
+        let minTotalPlayCount = Infinity;
+        
+        // For each remaining player, calculate total play count with already selected players
+        for (let i = 0; i < remainingPoolPlayers.length; i++) {
+          const candidate = remainingPoolPlayers[i];
+          let totalPlayCount = 0;
+          
+          // Sum up play count with each already selected player
+          for (const selectedId of selectedIds) {
+            totalPlayCount += getPlayCount(candidate.id, selectedId);
+          }
+          
+          // If this player has played less with the selected ones, choose them
+          if (totalPlayCount < minTotalPlayCount) {
+            minTotalPlayCount = totalPlayCount;
+            leastPlayedWithIndex = i;
+          }
+        }
+        
+        // Add the player with the least play history with selected players
+        const nextPlayer = remainingPoolPlayers[leastPlayedWithIndex];
+        selectedPlayers.push(nextPlayer);
+        selectedIds.push(nextPlayer.id);
+        
+        // Remove this player from consideration
+        remainingPoolPlayers.splice(leastPlayedWithIndex, 1);
+      }
+      
+      // Update play history for the new game
+      updatePlayHistory(selectedIds);
       
       // Remove selected players from queue
       setQueue(queue.filter(p => !selectedIds.includes(p.id)));

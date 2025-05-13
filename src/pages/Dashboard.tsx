@@ -7,6 +7,7 @@ import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   // Use our custom hooks
@@ -49,7 +50,10 @@ export default function Dashboard() {
     // Only attempt to generate a next game if there isn't one already
     if (nextGamePlayers.length === 0 && queue.length >= 4) {
       const selectedPlayers = autoSelectPlayers(4);
-      setNextGame(selectedPlayers);
+      if (selectedPlayers.length === 4) {
+        setNextGame(selectedPlayers);
+        toast("Auto-selected players based on least played together");
+      }
     }
   };
 
