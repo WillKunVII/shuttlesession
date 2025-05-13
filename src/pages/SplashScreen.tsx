@@ -16,10 +16,13 @@ const SplashScreen = () => {
       <div className="text-center animate-fade-in">
         <div className="flex justify-center mb-6">
           <div className="bg-neutral-000 p-3 rounded-full">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 6L7 12H17L12 6Z" fill="#00702A" />
-              <path d="M12 18L7 12H17L12 18Z" fill="#00702A" />
-            </svg>
+            <img 
+              src="/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png" 
+              alt="ShuttleSession Logo" 
+              width="64" 
+              height="64" 
+              className="rounded-full"
+            />
           </div>
         </div>
         
