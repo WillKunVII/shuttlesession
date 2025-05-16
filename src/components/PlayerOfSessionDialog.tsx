@@ -20,6 +20,11 @@ interface Player {
   losses?: number;
 }
 
+interface SessionScore {
+  wins: number;
+  losses: number;
+}
+
 interface PlayerOfSessionDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +42,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
 
   const loadAndRankPlayers = () => {
     // Get session scores
-    const sessionScores = getStorageItem("sessionScores", {});
+    const sessionScores = getStorageItem<Record<string, SessionScore>>("sessionScores", {});
     
     if (Object.keys(sessionScores).length === 0) {
       return;
