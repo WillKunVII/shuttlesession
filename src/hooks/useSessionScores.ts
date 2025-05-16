@@ -42,14 +42,18 @@ export function useSessionScores(isOpen: boolean) {
       }
       
       // Create player list from session scores
-      const playersList: Player[] = Object.entries(sessionScores).map(([name, scores]) => {
+      const playersList: Player[] = Object.entries(sessionScores).map(([name, scores], index) => {
         const member = members.find(m => m.name === name);
         return {
+          id: member?.id || index + 1000, // Use member ID if available, or generate one
           name,
           gender: member?.gender || "male",
           isGuest: member?.isGuest || false,
+          waitingTime: 0, // Required property by Player interface
           wins: scores.wins,
-          losses: scores.losses
+          losses: scores.losses,
+          sessionWins: scores.wins,
+          sessionLosses: scores.losses
         };
       });
       
