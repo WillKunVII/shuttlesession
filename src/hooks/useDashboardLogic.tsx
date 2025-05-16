@@ -13,8 +13,7 @@ export function useDashboardLogic() {
     queue,
     addPlayerToQueue,
     removePlayerFromQueue,
-    addPlayersToQueue,
-    autoSelectPlayers
+    addPlayersToQueue
   } = usePlayerQueue();
   
   const {
@@ -32,13 +31,13 @@ export function useDashboardLogic() {
   } = useGameEnding();
 
   const {
-    generateNextGame,
     assignToFreeCourt
   } = useNextGameAssignment();
 
   const {
     handlePlayerSelect,
-    handleClearNextGame
+    handleClearNextGame,
+    generateNextGame
   } = usePlayerSelection();
 
   // State for end game result
