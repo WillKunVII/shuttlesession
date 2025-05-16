@@ -5,20 +5,10 @@ import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { isScoreKeepingEnabled, getStorageItem, getSessionScores } from "@/utils/storageUtils";
+import { isScoreKeepingEnabled, getStorageItem } from "@/utils/storageUtils";
 import { Badge } from "@/components/ui/badge";
 import { PlayPreference } from "@/types/member";
-
-interface Player {
-  id: number;
-  name: string;
-  waitingTime: number;
-  gender: "male" | "female";
-  isGuest?: boolean;
-  wins?: number;
-  losses?: number;
-  playPreferences?: PlayPreference[];
-}
+import { Player } from "@/types/player";
 
 interface PlayerQueueProps {
   players: Player[];
@@ -31,19 +21,14 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
-  const [sessionScores, setSessionScores] = useState<Record<string, {wins: number, losses: number}>>({});
   
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
   
-  // Load preferences setting and session scores
+  // Load preferences setting
   useEffect(() => {
     const enablePref = getStorageItem("enablePlayerPreferences", false);
     setPreferencesEnabled(enablePref);
-    
-    // Load session scores
-    const scores = getSessionScores();
-    setSessionScores(scores);
   }, []);
   
   // Ensure selected players are still in the queue
@@ -82,11 +67,6 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
       onPlayerLeave(playerId);
     }
   };
-
-  // Get session score for a player
-  const getPlayerSessionScore = (name: string) => {
-    return sessionScores[name] || { wins: 0, losses: 0 };
-  };
   
   return (
     <div className="space-y-4 max-h-[calc(100vh-24rem)]">
@@ -118,75 +98,71 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
       ) : (
         <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-2 pr-4">
-            {players.map((player, index) => {
-              const sessionScore = getPlayerSessionScore(player.name);
-              
-              return (
-                <div key={player.id}>
-                  {index === playerPoolSize && players.length > playerPoolSize && (
-                    <div className="relative my-4">
-                      <Separator className="absolute inset-0 my-2" />
-                      <div className="relative flex justify-center">
-                        <span className="bg-white px-2 text-xs text-muted-foreground">
-                          Player Pool Limit
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <div
-                    className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
-                      selected.some(p => p.id === player.id) 
-                        ? "bg-shuttle-lightBlue border-shuttle-blue" 
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => togglePlayerSelection(player)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
-                      <span className="font-medium">{player.name}</span>
-                      {player.isGuest && (
-                        <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                      )}
-                      
-                      {scoreKeepingEnabled && (
-                        <span className="ml-1 text-sm text-gray-500">
-                          W {sessionScore.wins || 0} – L {sessionScore.losses || 0}
-                        </span>
-                      )}
-                      
-                      {/* Display play preferences only when enabled */}
-                      {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
-                        <div className="flex gap-1 ml-2">
-                          {player.playPreferences.map(pref => (
-                            <Badge key={pref} variant="outline" className="text-xs">
-                              {pref}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center">
-                      {selected.some(p => p.id === player.id) && (
-                        <div className="h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center mr-2">
-                          <Check className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayerLeave(player.id);
-                        }}
-                      >
-                        Leave
-                      </Button>
+            {players.map((player, index) => (
+              <div key={player.id}>
+                {index === playerPoolSize && players.length > playerPoolSize && (
+                  <div className="relative my-4">
+                    <Separator className="absolute inset-0 my-2" />
+                    <div className="relative flex justify-center">
+                      <span className="bg-white px-2 text-xs text-muted-foreground">
+                        Player Pool Limit
+                      </span>
                     </div>
                   </div>
+                )}
+                <div
+                  className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
+                    selected.some(p => p.id === player.id) 
+                      ? "bg-shuttle-lightBlue border-shuttle-blue" 
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => togglePlayerSelection(player)}
+                >
+                  <div className="flex items-center gap-2">
+                    <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
+                    <span className="font-medium">{player.name}</span>
+                    {player.isGuest && (
+                      <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                    )}
+                    
+                    {scoreKeepingEnabled && (
+                      <span className="ml-1 text-sm text-gray-500">
+                        W {player.sessionWins || 0} – L {player.sessionLosses || 0}
+                      </span>
+                    )}
+                    
+                    {/* Display play preferences only when enabled */}
+                    {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
+                      <div className="flex gap-1 ml-2">
+                        {player.playPreferences.map(pref => (
+                          <Badge key={pref} variant="outline" className="text-xs">
+                            {pref}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    {selected.some(p => p.id === player.id) && (
+                      <div className="h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center mr-2">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlayerLeave(player.id);
+                      }}
+                    >
+                      Leave
+                    </Button>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </ScrollArea>
       )}

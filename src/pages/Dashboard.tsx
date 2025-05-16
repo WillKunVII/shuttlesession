@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
 import { NextGame } from "@/components/NextGame";
@@ -9,6 +8,7 @@ import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { Player } from "@/types/player";
+import { getSessionScores, setSessionScores } from "@/utils/storageUtils";
 
 export default function Dashboard() {
   // Use our custom hooks
@@ -68,7 +68,7 @@ export default function Dashboard() {
     const players = sortedCourts.find(court => court.id === courtId)?.players || [];
     if (players.length > 0) {
       // Check if score keeping is enabled
-      const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+      const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
       if (isScoreKeepingEnabled) {
         // Open dialog to select winners
         setCurrentCourtPlayers({
@@ -88,7 +88,7 @@ export default function Dashboard() {
     const releasedPlayers = endGameOnCourt(courtId);
     if (releasedPlayers.length > 0) {
       // Get all members to update win/loss records
-      const savedMembers = localStorage.getItem("clubMembers");
+      const savedMembers = localStorage.getItem("members");
       let members: any[] = [];
       if (savedMembers) {
         try {
@@ -98,6 +98,9 @@ export default function Dashboard() {
         }
       }
 
+      // Get and update session scores
+      const sessionScores = getSessionScores();
+
       // Add players back to the queue with proper properties and update win/loss records
       const playerObjects: Player[] = releasedPlayers.map((player, idx) => {
         // Find matching member to get their ID and record
@@ -105,8 +108,19 @@ export default function Dashboard() {
         const playerId = matchingMember?.id || Date.now() + idx;
 
         // Update win/loss record if score keeping is enabled
-        if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
+        if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") !== "false") {
           const isWinner = winnerNames.includes(player.name);
+          
+          // Update session scores
+          if (!sessionScores[player.name]) {
+            sessionScores[player.name] = { wins: 0, losses: 0 };
+          }
+          
+          if (isWinner) {
+            sessionScores[player.name].wins = (sessionScores[player.name].wins || 0) + 1;
+          } else {
+            sessionScores[player.name].losses = (sessionScores[player.name].losses || 0) + 1;
+          }
 
           // Update member record if it exists
           if (matchingMember) {
@@ -116,16 +130,11 @@ export default function Dashboard() {
               matchingMember.losses = (matchingMember.losses || 0) + 1;
             }
           }
-          return {
-            id: playerId,
-            name: player.name,
-            gender: player.gender as "male" | "female",
-            waitingTime: 0,
-            isGuest: player.isGuest,
-            wins: matchingMember?.wins || 0,
-            losses: matchingMember?.losses || 0
-          };
         }
+        
+        // Get the latest session scores for this player
+        const playerSessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
+        
         return {
           id: playerId,
           name: player.name,
@@ -133,14 +142,18 @@ export default function Dashboard() {
           waitingTime: 0,
           isGuest: player.isGuest,
           wins: matchingMember?.wins || 0,
-          losses: matchingMember?.losses || 0
+          losses: matchingMember?.losses || 0,
+          sessionWins: playerSessionScore.wins,
+          sessionLosses: playerSessionScore.losses
         };
       });
 
-      // Save updated member records
-      if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
-        localStorage.setItem("clubMembers", JSON.stringify(members));
+      // Save updated session scores
+      if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") !== "false") {
+        setSessionScores(sessionScores);
+        localStorage.setItem("members", JSON.stringify(members));
       }
+      
       addPlayersToQueue(playerObjects);
     }
 

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Player } from "../types/player";
 import { getStorageItem, getSessionScores } from "@/utils/storageUtils";
@@ -32,10 +33,16 @@ export function usePlayerPersistence(queue: Player[], setQueue: React.Dispatch<R
                     ...player,
                     wins: member.wins || 0,
                     losses: member.losses || 0,
+                    sessionWins: sessionScore.wins || 0,
+                    sessionLosses: sessionScore.losses || 0,
                     playPreferences: member.playPreferences || []
                   };
                 }
-                return player;
+                return {
+                  ...player,
+                  sessionWins: sessionScore.wins || 0,
+                  sessionLosses: sessionScore.losses || 0
+                };
               });
               
               setQueue(updatedQueue);

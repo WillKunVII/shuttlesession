@@ -9,5 +9,7 @@ export interface Player {
   isGuest?: boolean;
   wins?: number;
   losses?: number;
+  sessionWins?: number;
+  sessionLosses?: number;
   playPreferences?: PlayPreference[];
 }

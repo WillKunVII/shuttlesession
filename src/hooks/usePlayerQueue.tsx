@@ -4,6 +4,7 @@ import { PlayPreference } from "../types/member";
 import { usePlayerSelection } from "./usePlayerSelection";
 import { usePlayerPersistence } from "./usePlayerPersistence";
 import { canFormValidGame, getPlayerPoolSize } from "../utils/gameUtils";
+import { getSessionScores } from "../utils/storageUtils";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
@@ -19,17 +20,23 @@ export function usePlayerQueue() {
 
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
+    // Get session scores
+    const sessionScores = getSessionScores();
+    const sessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
+    
     const newPlayer: Player = {
       id: Date.now(),
       name: player.name,
       gender: player.gender,
       isGuest: player.isGuest,
       waitingTime: 0,
+      sessionWins: sessionScore.wins,
+      sessionLosses: sessionScore.losses,
       playPreferences: player.playPreferences || []
     };
     
     // If score keeping is enabled, try to get win/loss record
-    if (localStorage.getItem("scoreKeeping") === "true") {
+    if (localStorage.getItem("scoreKeeping") !== "false") {
       const membersData = localStorage.getItem("members");
       if (membersData) {
         try {
