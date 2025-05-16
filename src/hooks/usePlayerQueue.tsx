@@ -1,16 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Player } from "./useGameAssignment";
-import { getStorageItem, setStorageItem, getPlayHistory, setPlayHistory } from "@/utils/storageUtils";
-import { nanoid } from "nanoid";
+import { Player, PlayHistory } from "@/types/playerTypes";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { getPlayHistory, setPlayHistory, getPlayCount, updatePlayHistory } from "@/utils/playHistoryUtils";
+import { selectPlayersFromPool } from "@/utils/playerSelectionUtils";
+import { createNewPlayer, loadPlayerRecords } from "@/utils/queueOperations";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
-
-// Interface to track play history
-interface PlayHistory {
-  [playerPair: string]: number; // Key is player1Id-player2Id, value is count
-}
 
 export function usePlayerQueue() {
   const [queue, setQueue] = useState<Player[]>(initialPlayers);
@@ -22,43 +19,14 @@ export function usePlayerQueue() {
     if (savedQueue) {
       try {
         const queueData = JSON.parse(savedQueue);
-        
-        // Load win/loss records if score keeping is enabled
-        if (localStorage.getItem("scoreKeeping") === "true") {
-          const membersData = localStorage.getItem("members");
-          if (membersData) {
-            try {
-              const members = JSON.parse(membersData);
-              
-              // Update queue players with win/loss data from members
-              const updatedQueue = queueData.map((player: Player) => {
-                const member = members.find((m: any) => m.name === player.name);
-                if (member) {
-                  return {
-                    ...player,
-                    wins: member.wins || 0,
-                    losses: member.losses || 0
-                  };
-                }
-                return player;
-              });
-              
-              setQueue(updatedQueue);
-              return;
-            } catch (e) {
-              console.error("Error loading members data for win/loss records", e);
-            }
-          }
-        }
-        
-        // If score keeping is disabled or members data couldn't be loaded
-        setQueue(queueData);
+        const updatedQueue = loadPlayerRecords(queueData);
+        setQueue(updatedQueue);
       } catch (e) {
         console.error("Error parsing queue from localStorage", e);
       }
     }
     
-    // Load play history from localStorage using the utility function
+    // Load play history from localStorage
     const historyData = getPlayHistory();
     setPlayHistoryState(historyData);
   }, []);
@@ -68,64 +36,19 @@ export function usePlayerQueue() {
     localStorage.setItem("playerQueue", JSON.stringify(queue));
   }, [queue]);
   
-  // Save play history to localStorage whenever it changes using the utility function
+  // Save play history to localStorage whenever it changes
   useEffect(() => {
     setPlayHistory(playHistory);
   }, [playHistory]);
 
-  // Helper function to get play count between two players
-  const getPlayCount = (player1Id: string, player2Id: string): number => {
-    // Sort IDs to ensure consistent key regardless of order
-    const [id1, id2] = [player1Id, player2Id].sort();
-    const key = `${id1}-${id2}`;
-    return playHistory[key] || 0;
-  };
-  
-  // Helper function to update play history when players are selected for a game
-  const updatePlayHistory = (selectedPlayerIds: string[]) => {
-    const newHistory = { ...playHistory };
-    
-    // For each unique pair of players, increment their play count
-    for (let i = 0; i < selectedPlayerIds.length; i++) {
-      for (let j = i + 1; j < selectedPlayerIds.length; j++) {
-        // Sort IDs to ensure consistent key regardless of order
-        const [id1, id2] = [selectedPlayerIds[i], selectedPlayerIds[j]].sort();
-        const key = `${id1}-${id2}`;
-        
-        newHistory[key] = (newHistory[key] || 0) + 1;
-      }
-    }
-    
-    setPlayHistoryState(newHistory);
+  // Helper function for player play count lookup
+  const playCountLookup = (player1Id: string, player2Id: string): number => {
+    return getPlayCount(playHistory, player1Id, player2Id);
   };
 
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
-    const newPlayer: Player = {
-      id: nanoid(),
-      name: player.name,
-      gender: player.gender,
-      isGuest: player.isGuest,
-      waitingTime: 0
-    };
-    
-    // If score keeping is enabled, try to get win/loss record
-    if (localStorage.getItem("scoreKeeping") === "true") {
-      const membersData = localStorage.getItem("members");
-      if (membersData) {
-        try {
-          const members = JSON.parse(membersData);
-          const member = members.find((m: any) => m.name === player.name);
-          if (member) {
-            newPlayer.wins = member.wins || 0;
-            newPlayer.losses = member.losses || 0;
-          }
-        } catch (e) {
-          console.error("Error getting member win/loss data", e);
-        }
-      }
-    }
-    
+    const newPlayer = createNewPlayer(player);
     setQueue([...queue, newPlayer]);
   };
 
@@ -134,7 +57,7 @@ export function usePlayerQueue() {
     setQueue(queue.filter(player => player.id !== playerId));
   };
 
-  // Add multiple players to queue - always at the end now to ensure fair rotation
+  // Add multiple players to queue
   const addPlayersToQueue = (players: Player[]) => {
     // Always add players to the end of the queue for fair rotation
     setQueue([...queue, ...players]);
@@ -151,69 +74,29 @@ export function usePlayerQueue() {
   const returnPlayersToOriginalPositions = (players: Player[]) => {
     if (players.length === 0) return;
     
-    // Create a new queue by inserting players back at their original positions
-    // To do this properly, we need to track original indices
-    
-    // First, prepare the players to be reinserted with original positions preserved
+    // Prepare the players to be reinserted with original positions preserved
     const playersToReinsert = [...players].map(player => ({
       ...player,
       // Reset waiting time for returned players
       waitingTime: 0
     }));
     
-    // Then create the new queue by integrating the returned players
-    // For simplicity, we'll add them to the front of the queue to ensure they have priority
+    // Add them to the front of the queue to ensure they have priority
     setQueue([...playersToReinsert, ...queue]);
   };
 
-  // Auto select top players from the queue based on player pool size and play history
+  // Auto select top players from the queue
   const autoSelectPlayers = (count: number = 4) => {
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     
-    // Get the available players from the pool
-    const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
+    const selectedPlayers = selectPlayersFromPool(queue, count, poolSize, playCountLookup);
     
-    if (poolPlayers.length >= count) {
-      // Always select the first player in queue to prioritize waiting time
-      const firstPlayer = poolPlayers[0];
-      const selectedPlayers = [firstPlayer];
-      const selectedIds = [firstPlayer.id];
-      const remainingPoolPlayers = poolPlayers.slice(1);
-      
-      // For each remaining spot, find the player who has played least with those already selected
-      while (selectedPlayers.length < count) {
-        let leastPlayedWithIndex = 0;
-        let minTotalPlayCount = Infinity;
-        
-        // For each remaining player, calculate total play count with already selected players
-        for (let i = 0; i < remainingPoolPlayers.length; i++) {
-          const candidate = remainingPoolPlayers[i];
-          let totalPlayCount = 0;
-          
-          // Sum up play count with each already selected player
-          for (const selectedId of selectedIds) {
-            totalPlayCount += getPlayCount(candidate.id, selectedId);
-          }
-          
-          // If this player has played less with the selected ones, choose them
-          if (totalPlayCount < minTotalPlayCount) {
-            minTotalPlayCount = totalPlayCount;
-            leastPlayedWithIndex = i;
-          }
-        }
-        
-        // Add the player with the least play history with selected players
-        const nextPlayer = remainingPoolPlayers[leastPlayedWithIndex];
-        selectedPlayers.push(nextPlayer);
-        selectedIds.push(nextPlayer.id);
-        
-        // Remove this player from consideration
-        remainingPoolPlayers.splice(leastPlayedWithIndex, 1);
-      }
-      
+    if (selectedPlayers.length === count) {
       // Update play history for the new game
-      updatePlayHistory(selectedIds);
+      const selectedIds = selectedPlayers.map(player => player.id);
+      const newHistory = updatePlayHistory(playHistory, selectedIds);
+      setPlayHistoryState(newHistory);
       
       // Remove selected players from queue
       setQueue(queue.filter(p => !selectedIds.includes(p.id)));

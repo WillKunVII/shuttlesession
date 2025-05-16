@@ -5,9 +5,10 @@ import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
 import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
-import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
+import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { toast } from "sonner";
+import { Player } from "@/types/playerTypes";
 
 export default function Dashboard() {
   // Use our custom hooks
