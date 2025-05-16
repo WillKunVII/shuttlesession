@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
@@ -65,7 +64,7 @@ export function usePlayerQueue() {
   // Add multiple players to queue with position control
   // returnToOriginalPositions: true = put back in original positions (for clearing selection)
   // returnToOriginalPositions: false = put at end of queue (for game ended)
-  // winners: array of player names who won the game - they go to top of queue
+  // winners: array of player names who won the game - they go to the end but above losers
   const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) => {
     if (returnToOriginalPositions) {
       // For clearing selection - return players to their original positions
@@ -131,27 +130,14 @@ export function usePlayerQueue() {
         }
       });
     } else if (winners && winners.length > 0) {
-      // Game ended with winners - add winners to the top of their respective groups,
-      // losers to the bottom of the queue
+      // Game ended with winners - add all players to end of queue, with winners above losers
       setQueue(prevQueue => {
         // Separate players into winners and losers
         const winningPlayers = players.filter(p => winners.includes(p.name));
         const losingPlayers = players.filter(p => !winners.includes(p.name));
         
-        // Separate existing queue by gender for proper insertion
-        const malePlayers = prevQueue.filter(p => p.gender === "male");
-        const femalePlayers = prevQueue.filter(p => p.gender === "female");
-        
-        // Separate winners by gender
-        const maleWinners = winningPlayers.filter(p => p.gender === "male");
-        const femaleWinners = winningPlayers.filter(p => p.gender === "female");
-        
-        // Create new queue with winners at the top of their respective gender groups
-        const newMaleQueue = [...maleWinners, ...malePlayers];
-        const newFemaleQueue = [...femaleWinners, ...femalePlayers];
-        
-        // Merge the gender queues and add losers at the end
-        return [...newMaleQueue, ...newFemaleQueue, ...losingPlayers];
+        // Add all players to end of queue, winners first then losers
+        return [...prevQueue, ...winningPlayers, ...losingPlayers];
       });
     } else {
       // Simply add players to the end of queue (for game ended without winners)

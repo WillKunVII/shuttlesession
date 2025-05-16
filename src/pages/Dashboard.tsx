@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -128,7 +129,7 @@ export default function Dashboard() {
         };
       });
       
-      // Add players back to the queue, with winners at top of their respective groups
+      // Add players back to the queue, with winners at the end but above losers
       addPlayersToQueue(playerObjects, false, winnerNames);
       
       // Force refresh our queue state after players are added back
