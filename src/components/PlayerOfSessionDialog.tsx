@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Trophy, Medal, Award, X } from "lucide-react";
+import { Trophy, Medal, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStorageItem } from "@/utils/storageUtils";
 import {

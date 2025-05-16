@@ -40,15 +40,15 @@ export function isScoreKeepingEnabled(): boolean {
 }
 
 // Session-specific score tracking
-export function getSessionScores() {
+export function getSessionScores(): Record<string, {wins: number, losses: number}> {
   return getStorageItem("sessionScores", {});
 }
 
-export function setSessionScores(scores: Record<string, {wins: number, losses: number}>) {
+export function setSessionScores(scores: Record<string, {wins: number, losses: number}>): void {
   setStorageItem("sessionScores", scores);
 }
 
-export function clearSessionScores() {
+export function clearSessionScores(): void {
   localStorage.removeItem("sessionScores");
 }
 

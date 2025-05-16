@@ -42,7 +42,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     setPreferencesEnabled(enablePref);
     
     // Load session scores
-    const scores = getStorageItem("sessionScores", {});
+    const scores = getSessionScores();
     setSessionScores(scores);
   }, []);
   
@@ -122,7 +122,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
               const sessionScore = getPlayerSessionScore(player.name);
               
               return (
-                <React.Fragment key={player.id}>
+                <div key={player.id}>
                   {index === playerPoolSize && players.length > playerPoolSize && (
                     <div className="relative my-4">
                       <Separator className="absolute inset-0 my-2" />
@@ -184,7 +184,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       </Button>
                     </div>
                   </div>
-                </React.Fragment>
+                </div>
               );
             })}
           </div>

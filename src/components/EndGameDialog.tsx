@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { getStorageItem, setStorageItem, getSessionScores, setSessionScores } from "@/utils/storageUtils";
 
 interface Player {
   name: string;
@@ -29,7 +29,7 @@ interface EndGameDialogProps {
 
 export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGameDialogProps) {
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
-  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
   
   // Reset selections when dialog opens
   useEffect(() => {
@@ -64,7 +64,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     }
     
     // Get session scores
-    const sessionScores = getStorageItem("sessionScores", {});
+    const sessionScores = getSessionScores();
     
     // Update wins/losses for all players
     players.forEach(player => {
@@ -105,7 +105,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     });
     
     // Save updated scores
-    setStorageItem("sessionScores", sessionScores);
+    setSessionScores(sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
     
     // Continue with original save
