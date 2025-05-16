@@ -10,8 +10,8 @@ export function selectPlayersFromPool(
 ): Player[] {
   console.log(`selectPlayersFromPool called with ${queue.length} players in queue, selecting ${count} from max pool of ${poolSize}`);
   
-  if (!queue || !Array.isArray(queue)) {
-    console.error("Queue is not a valid array:", queue);
+  if (!queue || !Array.isArray(queue) || queue.length < count) {
+    console.error(`Queue is invalid or too small: ${queue?.length} players, need ${count}`);
     return [];
   }
   

@@ -7,7 +7,12 @@ import { toast } from "sonner";
 
 export function usePlayerSelection() {
   const { setNextGame, clearNextGame } = useGameAssignment();
-  const { removePlayersFromQueue, returnPlayersToOriginalPositions, autoSelectPlayers, queue } = usePlayerQueue();
+  const { 
+    removePlayersFromQueue, 
+    returnPlayersToOriginalPositions, 
+    autoSelectPlayers, 
+    queue 
+  } = usePlayerQueue();
 
   // Handle player selection for next game
   const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
@@ -22,7 +27,7 @@ export function usePlayerSelection() {
   
   // Auto-select players from queue based on play history
   const generateNextGame = useCallback(() => {
-    // Check queue length directly from the latest state
+    // Log current queue state for debugging
     console.log(`Attempting to auto-select players from queue of length: ${queue.length}`);
     
     if (!queue || queue.length < 4) {
@@ -42,7 +47,7 @@ export function usePlayerSelection() {
       toast.error("Failed to select players for next game");
       return false;
     }
-  }, [autoSelectPlayers, setNextGame, queue]); // Explicitly add queue as a dependency
+  }, [autoSelectPlayers, setNextGame, queue]);
   
   // Handle clearing the next game selection
   const handleClearNextGame = useCallback(() => {

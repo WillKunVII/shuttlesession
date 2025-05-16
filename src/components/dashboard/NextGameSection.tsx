@@ -18,6 +18,9 @@ export function NextGameSection({
 }: NextGameSectionProps) {
   console.log("NextGameSection rendering with queue length:", queueLength);
   
+  // Calculate button disabled state based on current conditions
+  const autoSelectDisabled = nextGamePlayers.length > 0 || queueLength < 4;
+  
   return (
     <div className="bg-white rounded-xl shadow-sm p-3">
       <div className="flex justify-between items-center mb-3">
@@ -25,10 +28,10 @@ export function NextGameSection({
         <Button 
           variant="outline" 
           onClick={generateNextGame} 
-          disabled={nextGamePlayers.length > 0 || queueLength < 4} 
+          disabled={autoSelectDisabled} 
           size="sm"
         >
-          Auto-Select Players
+          Auto-Select Players {queueLength >= 4 ? `(${queueLength})` : ''}
         </Button>
       </div>
       <NextGame players={nextGamePlayers} onClear={handleClearNextGame} />
