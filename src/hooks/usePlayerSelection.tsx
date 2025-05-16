@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { Player } from "@/types/playerTypes";
+import { toast } from "sonner";
 
 export function usePlayerSelection() {
   const { setNextGame, clearNextGame } = useGameAssignment();
@@ -21,13 +22,18 @@ export function usePlayerSelection() {
   
   // Auto-select players from queue based on play history
   const generateNextGame = useCallback(() => {
+    console.log("Attempting to auto-select players");
     const selectedPlayers = autoSelectPlayers(4);
+    
     if (selectedPlayers.length === 4) {
       // Set selected players as next game
       setNextGame(selectedPlayers);
+      toast.success("Auto-selected players based on least played together");
       return true;
+    } else {
+      toast.error("Not enough players to create a game");
+      return false;
     }
-    return false;
   }, [autoSelectPlayers, setNextGame]);
   
   // Handle clearing the next game selection
