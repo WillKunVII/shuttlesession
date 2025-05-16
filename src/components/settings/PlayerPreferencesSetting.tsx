@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { setStorageItem, getStorageItem } from "@/utils/storageUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function PlayerPreferencesSetting() {
   const [enablePreferences, setEnablePreferences] = useState<boolean>(false);
+  const isMobile = useIsMobile();
 
   // Load preferences setting from localStorage on mount using the shared utility
   useEffect(() => {
@@ -21,7 +23,7 @@ export function PlayerPreferencesSetting() {
   };
 
   return (
-    <div className="flex justify-between items-center border-b pb-4">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
         <h3 className="font-medium">Player Preferences</h3>
         <p className="text-sm text-muted-foreground">Enable play style preferences (Open, Mixed, Ladies)</p>
@@ -29,7 +31,7 @@ export function PlayerPreferencesSetting() {
       <RadioGroup 
         value={enablePreferences ? "enabled" : "disabled"}
         onValueChange={handleValueChange}
-        className="flex space-x-4"
+        className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-4"}`}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="enabled" id="preferences-enabled" />
