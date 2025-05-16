@@ -8,7 +8,7 @@ import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { Player } from "@/types/player";
-import { getSessionScores, setSessionScores } from "@/utils/storageUtils";
+import { getSessionScores } from "@/utils/storageUtils";
 
 export default function Dashboard() {
   // Use our custom hooks
@@ -98,41 +98,16 @@ export default function Dashboard() {
         }
       }
 
-      // Get and update session scores
+      // Get session scores
       const sessionScores = getSessionScores();
 
-      // Add players back to the queue with proper properties and update win/loss records
+      // Add players back to the queue with proper properties
       const playerObjects: Player[] = releasedPlayers.map((player, idx) => {
         // Find matching member to get their ID and record
         const matchingMember = members.find(m => m.name === player.name);
         const playerId = matchingMember?.id || Date.now() + idx;
 
-        // Update win/loss record if score keeping is enabled
-        if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") !== "false") {
-          const isWinner = winnerNames.includes(player.name);
-          
-          // Update session scores
-          if (!sessionScores[player.name]) {
-            sessionScores[player.name] = { wins: 0, losses: 0 };
-          }
-          
-          if (isWinner) {
-            sessionScores[player.name].wins = (sessionScores[player.name].wins || 0) + 1;
-          } else {
-            sessionScores[player.name].losses = (sessionScores[player.name].losses || 0) + 1;
-          }
-
-          // Update member record if it exists
-          if (matchingMember) {
-            if (isWinner) {
-              matchingMember.wins = (matchingMember.wins || 0) + 1;
-            } else {
-              matchingMember.losses = (matchingMember.losses || 0) + 1;
-            }
-          }
-        }
-        
-        // Get the latest session scores for this player
+        // Get the latest session scores for this player (already updated in EndGameDialog)
         const playerSessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
         
         return {
@@ -147,12 +122,6 @@ export default function Dashboard() {
           sessionLosses: playerSessionScore.losses
         };
       });
-
-      // Save updated session scores
-      if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") !== "false") {
-        setSessionScores(sessionScores);
-        localStorage.setItem("members", JSON.stringify(members));
-      }
       
       addPlayersToQueue(playerObjects);
     }
