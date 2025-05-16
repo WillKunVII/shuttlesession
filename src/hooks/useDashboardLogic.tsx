@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
@@ -45,10 +46,16 @@ export function useDashboardLogic() {
   // Function to assign next game to a court
   const assignToFreeCourt = (courtId: number) => {
     if (isNextGameReady()) {
-      const success = assignPlayersToCourtById(courtId, nextGamePlayers);
+      // Make sure we're passing the actual player objects, not just IDs
+      const success = assignPlayersToCourtById(courtId, [...nextGamePlayers]);
       if (success) {
+        toast.success(`Game assigned to court ${courtId}`);
         clearNextGame();
+      } else {
+        toast.error("Failed to assign game to court");
       }
+    } else {
+      toast.error("No game ready to assign");
     }
   };
 

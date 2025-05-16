@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from "react";
+import { Player } from "@/types/playerTypes";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 // Initial courts data
 const initialCourts = [
@@ -57,9 +59,9 @@ export function useCourtManagement() {
   };
 
   // Function to assign players to a court
-  const assignPlayersToCourtById = (courtId: number, players: any[]) => {
+  const assignPlayersToCourtById = (courtId: number, players: Player[]) => {
     if (players.length === 4) {
-      setCourts(courts.map(court => {
+      setCourts(prevCourts => prevCourts.map(court => {
         if (court.id === courtId) {
           return {
             ...court,
@@ -85,7 +87,7 @@ export function useCourtManagement() {
     
     if (courtToEnd && courtToEnd.status === "occupied") {
       // Update court status
-      setCourts(courts.map(court => {
+      setCourts(prevCourts => prevCourts.map(court => {
         if (court.id === courtId) {
           return {
             ...court,
