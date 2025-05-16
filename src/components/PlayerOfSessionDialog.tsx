@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal, Award, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Player {
   name: string;
@@ -124,7 +123,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
   
   return (
     <Dialog open={isOpen && hasPlayers} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Player of the Session</DialogTitle>
           <DialogDescription className="text-center">
@@ -132,45 +131,43 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-grow overflow-auto pr-4">
-          <div className="py-4 space-y-6">
-            {topPlayers.map((playerGroup, index) => 
-              playerGroup.length > 0 && (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getMedalIcon(index)}
-                    <h3 className={`font-bold ${getMedalColor(index)}`}>
-                      {getMedalName(index)} Medal
-                      {playerGroup.length > 1 ? " Winners" : " Winner"}
-                    </h3>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {playerGroup.map((player) => (
-                      <div 
-                        key={player.name} 
-                        className="flex items-center justify-between border rounded-lg p-3"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                          <span className="font-medium">{player.name}</span>
-                          {player.isGuest && (
-                            <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                          )}
-                        </div>
-                        <div className="text-sm">
-                          W {player.wins || 0} – L {player.losses || 0}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+        <div className="py-6 space-y-6">
+          {topPlayers.map((playerGroup, index) => 
+            playerGroup.length > 0 && (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  {getMedalIcon(index)}
+                  <h3 className={`font-bold ${getMedalColor(index)}`}>
+                    {getMedalName(index)} Medal
+                    {playerGroup.length > 1 ? " Winners" : " Winner"}
+                  </h3>
                 </div>
-              )
-            )}
-          </div>
-        </ScrollArea>
+                
+                <div className="space-y-2">
+                  {playerGroup.map((player) => (
+                    <div 
+                      key={player.name} 
+                      className="flex items-center justify-between border rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
+                        <span className="font-medium">{player.name}</span>
+                        {player.isGuest && (
+                          <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                        )}
+                      </div>
+                      <div className="text-sm">
+                        W {player.wins || 0} – L {player.losses || 0}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+        </div>
         
-        <DialogFooter className="mt-4">
+        <DialogFooter>
           <Button onClick={onClose} className="w-full">
             Close
           </Button>

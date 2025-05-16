@@ -1,7 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Player } from "@/types/playerTypes";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
+import { useState, useEffect } from "react";
 
 // Initial courts data
 const initialCourts = [
@@ -48,7 +46,7 @@ export function useCourtManagement() {
   }, [courts]);
 
   // Get courts sorted based on the courtOrdering setting
-  const getSortedCourts = useCallback(() => {
+  const getSortedCourts = () => {
     return [...courts].sort((a, b) => {
       if (courtOrdering === "ascending") {
         return a.id - b.id;
@@ -56,56 +54,38 @@ export function useCourtManagement() {
         return b.id - a.id;
       }
     });
-  }, [courts, courtOrdering]);
+  };
 
   // Function to assign players to a court
-  const assignPlayersToCourtById = useCallback((courtId: number, players: Player[]) => {
-    console.log("Assigning players to court:", courtId, players);
-    
+  const assignPlayersToCourtById = (courtId: number, players: any[]) => {
     if (players.length === 4) {
-      // Create a deep copy of the players to avoid any reference issues
-      const playersCopy = players.map(p => ({
-        name: p.name, 
-        gender: p.gender,
-        isGuest: p.isGuest
+      setCourts(courts.map(court => {
+        if (court.id === courtId) {
+          return {
+            ...court,
+            status: "occupied" as const,
+            players: players.map(p => ({
+              name: p.name, 
+              gender: p.gender,
+              isGuest: p.isGuest
+            })),
+            timeRemaining: 15
+          };
+        }
+        return court;
       }));
-      
-      setCourts(prevCourts => {
-        const updatedCourts = prevCourts.map(court => {
-          if (court.id === courtId) {
-            console.log(`Updating court ${courtId} with players:`, playersCopy);
-            return {
-              ...court,
-              status: "occupied" as const,
-              players: playersCopy,
-              timeRemaining: 15
-            };
-          }
-          return court;
-        });
-        
-        // Log the updated court for debugging
-        const updatedCourt = updatedCourts.find(c => c.id === courtId);
-        console.log("Updated court state:", updatedCourt);
-        
-        return updatedCourts;
-      });
-      
       return true;
     }
     return false;
-  }, []);
+  };
 
   // Function to end a game on a court
-  const endGameOnCourt = useCallback((courtId: number) => {
+  const endGameOnCourt = (courtId: number) => {
     const courtToEnd = courts.find(c => c.id === courtId);
     
     if (courtToEnd && courtToEnd.status === "occupied") {
-      // Store players before clearing
-      const releasedPlayers = [...courtToEnd.players];
-      
       // Update court status
-      setCourts(prevCourts => prevCourts.map(court => {
+      setCourts(courts.map(court => {
         if (court.id === courtId) {
           return {
             ...court,
@@ -117,11 +97,11 @@ export function useCourtManagement() {
         return court;
       }));
       
-      return releasedPlayers;
+      return courtToEnd.players;
     }
     
     return [];
-  }, [courts]);
+  };
 
   return {
     courts,

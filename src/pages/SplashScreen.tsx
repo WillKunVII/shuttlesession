@@ -2,44 +2,19 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
 
 const SplashScreen = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [viewHeight, setViewHeight] = useState("100vh");
-  
-  // Handle viewport height adjustments for mobile browsers
-  useEffect(() => {
-    const updateHeight = () => {
-      // Use the actual visible viewport height
-      setViewHeight(`${window.visualViewport?.height || window.innerHeight}px`);
-    };
-    
-    // Set initial height
-    updateHeight();
-    
-    // Update height when visual viewport or window size changes
-    window.visualViewport?.addEventListener('resize', updateHeight);
-    window.addEventListener('resize', updateHeight);
-    
-    return () => {
-      window.visualViewport?.removeEventListener('resize', updateHeight);
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, []);
   
   const handleStartSession = () => {
     navigate("/session");
   };
 
   return (
-    <div 
-      className="flex flex-col items-center justify-between bg-app-primary-700 text-neutral-000 p-6"
-      style={{ height: viewHeight, maxHeight: viewHeight }}
-    >      
-      <div className="text-center animate-fade-in max-w-md w-full mx-auto flex flex-col justify-center flex-1">
-        <div className="flex justify-center mb-4">
+    <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6">
+      <div className="text-center animate-fade-in">
+        <div className="flex justify-center mb-6">
           <div className="bg-transparent p-3 rounded-md flex items-center justify-center">
             <svg width="64" height="64" viewBox="0 0 28 56" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19.9979 21.9689C20.2486 23.733 21.4717 32.6751 21.2991 38.4443C21.0873 45.5213 18.6988 55.9979 17.6584 56C16.6181 55.9984 14.7354 46.1715 14.5236 39.0943C14.3561 33.4971 15.0302 24.4183 15.2064 22.1742C16.7473 22.1431 18.4647 22.0592 19.9979 21.9689Z" fill="white"/>
@@ -52,24 +27,24 @@ const SplashScreen = () => {
           </div>
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-bold mb-1">ShuttleSession</h1>
-        <p className="text-lg md:text-xl mb-4 opacity-90">Badminton Session Management</p>
+        <h1 className="text-4xl font-bold mb-2">ShuttleSession</h1>
+        <p className="text-xl mb-8 opacity-90">Badminton Session Management</p>
         
-        <div className={`mx-auto space-y-3 ${isMobile ? 'px-2' : 'px-6'}`}>
-          <p className="text-base md:text-lg opacity-80 mb-4">
+        <div className={`max-w-md mx-auto space-y-4 ${isMobile ? 'px-4' : 'px-8'}`}>
+          <p className="text-lg opacity-80 mb-6">
             Create games, manage player queues and keep your badminton sessions running smoothly.
           </p>
           
           <Button 
             onClick={handleStartSession} 
-            className="w-full py-5 text-lg bg-neutral-000 text-app-primary-700 hover:bg-neutral-100 transition-colors"
+            className="w-full py-6 text-lg bg-neutral-000 text-app-primary-700 hover:bg-neutral-100 transition-colors"
           >
             Start Session
           </Button>
         </div>
       </div>
       
-      <div className="text-center opacity-70 text-sm pt-2">
+      <div className="mt-auto pt-8 text-center opacity-70 text-sm">
         <p>© 2025 ShuttleSession</p>
       </div>
     </div>

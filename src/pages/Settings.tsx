@@ -99,10 +99,9 @@ export default function Settings() {
   };
 
   const finishEndSession = () => {
-    // Clear player queue, next game data, and play history
+    // Clear player queue and next game data
     localStorage.removeItem("playerQueue");
     localStorage.removeItem("nextGamePlayers");
-    localStorage.removeItem("playHistory");
     
     // Navigate back to splash screen
     navigate("/");

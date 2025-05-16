@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 export type Player = {
-  id: string;
+  id: number;
   name: string;
   gender: "male" | "female";
   waitingTime: number;
@@ -17,11 +16,10 @@ export function useGameAssignment() {
 
   // Load next game players from localStorage on component mount
   useEffect(() => {
-    const savedNextGame = getStorageItem("nextGamePlayers", ""); // Add second parameter with default value
+    const savedNextGame = localStorage.getItem("nextGamePlayers");
     if (savedNextGame) {
       try {
-        const parsedData = JSON.parse(savedNextGame as string); // Add type assertion
-        setNextGamePlayers(parsedData);
+        setNextGamePlayers(JSON.parse(savedNextGame));
       } catch (e) {
         console.error("Error parsing next game players from localStorage", e);
       }
@@ -30,7 +28,7 @@ export function useGameAssignment() {
 
   // Save next game players to localStorage whenever it changes
   useEffect(() => {
-    setStorageItem("nextGamePlayers", JSON.stringify(nextGamePlayers));
+    localStorage.setItem("nextGamePlayers", JSON.stringify(nextGamePlayers));
   }, [nextGamePlayers]);
 
   // Set next game players 

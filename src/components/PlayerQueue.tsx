@@ -1,85 +1,46 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { Player } from "@/types/playerTypes";
+
+interface Player {
+  id: number;
+  name: string;
+  waitingTime: number;
+  gender: "male" | "female";
+  isGuest?: boolean;
+  wins?: number;
+  losses?: number;
+}
 
 interface PlayerQueueProps {
   players: Player[];
   onPlayerSelect: (selectedPlayers: Player[]) => void;
-  onPlayerLeave?: (playerId: string) => void;
+  onPlayerLeave?: (playerId: number) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean}) => void;
 }
 
 export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
-  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
   
-  // Keep selected players in sync with the queue
-  useEffect(() => {
-    // Filter out any selected players that are no longer in the queue
-    setSelected(prev => prev.filter(selectedPlayer => 
-      players.some(queuedPlayer => queuedPlayer.id === selectedPlayer.id)
-    ));
-    
-    console.log(`PlayerQueue component received ${players.length} players`);
-  }, [players]);
-  
   const togglePlayerSelection = (player: Player) => {
-    setSelected(prev => {
-      // Check if player is already selected
-      if (prev.some(p => p.id === player.id)) {
-        // If selected, remove them
-        return prev.filter(p => p.id !== player.id);
-      } 
-      // If not selected and we haven't reached the limit yet, add them
-      else if (prev.length < 4) {
-        return [...prev, player];
-      }
-      // Otherwise don't change anything
-      return prev;
-    });
+    if (selected.some(p => p.id === player.id)) {
+      setSelected(selected.filter(p => p.id !== player.id));
+    } else if (selected.length < 4) {
+      setSelected([...selected, player]);
+    }
   };
   
   const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
     if (onAddPlayer) {
-      // Check if player with same name already exists in the queue
-      if (players.some(p => p.name.toLowerCase() === player.name.toLowerCase())) {
-        toast(`${player.name} is already in the queue`);
-        return;
-      }
       onAddPlayer(player);
     }
-  };
-  
-  const handleLeaveConfirm = () => {
-    if (playerToRemove && onPlayerLeave) {
-      onPlayerLeave(playerToRemove.id);
-      setPlayerToRemove(null);
-    }
-  };
-  
-  const handleCreateGame = () => {
-    console.log("Creating game with selected players:", selected);
-    onPlayerSelect(selected);
-    setSelected([]);
   };
   
   return (
@@ -95,9 +56,12 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           <Button
             size="sm"
             disabled={selected.length !== 4}
-            onClick={handleCreateGame}
+            onClick={() => {
+              onPlayerSelect(selected);
+              setSelected([]);
+            }}
           >
-            Create Game {selected.length > 0 ? `(${selected.length}/4)` : ''}
+            Create Game
           </Button>
         </div>
       </div>
@@ -110,7 +74,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
         <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-2 pr-4">
             {players.map((player, index) => (
-              <div key={player.id}>
+              <>
                 {index === playerPoolSize && players.length > playerPoolSize && (
                   <div className="relative my-4">
                     <Separator className="absolute inset-0 my-2" />
@@ -122,6 +86,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                   </div>
                 )}
                 <div 
+                  key={player.id} 
                   className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
                     selected.some(p => p.id === player.id) 
                       ? "bg-shuttle-lightBlue border-shuttle-blue" 
@@ -154,35 +119,18 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setPlayerToRemove(player);
+                        if (onPlayerLeave) onPlayerLeave(player.id);
                       }}
                     >
                       Leave
                     </Button>
                   </div>
                 </div>
-              </div>
+              </>
             ))}
           </div>
         </ScrollArea>
       )}
-      
-      {/* Confirmation Dialog */}
-      <AlertDialog open={!!playerToRemove} onOpenChange={(open) => !open && setPlayerToRemove(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove player from queue?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove {playerToRemove?.name} from the queue?
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLeaveConfirm}>Remove</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

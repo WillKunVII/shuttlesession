@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,13 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 interface Player {
   name: string;
   gender: "male" | "female";
   isGuest?: boolean;
-  id?: string; // Updated to align with other components
+  id?: number;
 }
 
 interface EndGameDialogProps {
@@ -28,43 +28,80 @@ interface EndGameDialogProps {
 
 export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGameDialogProps) {
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
-  const isScoreKeepingEnabled = getStorageItem("scoreKeeping", false);
+  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
   
-  // Reset selections when dialog opens with new players
+  // Reset selections when dialog opens
   useEffect(() => {
-    if (isOpen && players.length > 0) {
+    if (isOpen) {
       setSelectedWinners([]);
-      console.log("EndGameDialog opened with players:", players);
     }
-  }, [isOpen, players]);
+  }, [isOpen]);
   
   // Toggle player selection as winner
-  const toggleWinner = useCallback((playerName: string) => {
-    console.log("Toggling winner:", playerName);
-    setSelectedWinners(prev => {
-      if (prev.includes(playerName)) {
-        return prev.filter(name => name !== playerName);
+  const toggleWinner = (playerName: string) => {
+    if (selectedWinners.includes(playerName)) {
+      setSelectedWinners(selectedWinners.filter(name => name !== playerName));
+    } else {
+      // Only allow 2 winners max
+      if (selectedWinners.length < 2) {
+        setSelectedWinners([...selectedWinners, playerName]);
+      }
+    }
+  };
+  
+  const handleSave = () => {
+    // Get all members
+    const membersData = localStorage.getItem("members");
+    let members: any[] = [];
+    
+    if (membersData) {
+      try {
+        members = JSON.parse(membersData);
+      } catch (e) {
+        console.error("Error parsing members data", e);
+      }
+    }
+    
+    // Update wins/losses for all players
+    players.forEach(player => {
+      // Find if this player is in the members list
+      const memberIndex = members.findIndex(m => m.name === player.name);
+      const isWinner = selectedWinners.includes(player.name);
+      
+      if (memberIndex !== -1) {
+        // Update existing member
+        if (isWinner) {
+          members[memberIndex].wins = (members[memberIndex].wins || 0) + 1;
+        } else {
+          members[memberIndex].losses = (members[memberIndex].losses || 0) + 1;
+        }
       } else {
-        // Only allow 2 winners max
-        return prev.length < 2 ? [...prev, playerName] : prev;
+        // Add new member with win/loss record
+        members.push({
+          name: player.name,
+          gender: player.gender,
+          isGuest: player.isGuest,
+          wins: isWinner ? 1 : 0,
+          losses: isWinner ? 0 : 1
+        });
       }
     });
-  }, []);
-  
-  const handleSave = useCallback(() => {
-    console.log("Saving game results with winners:", selectedWinners);
+    
+    // Save updated members data
+    localStorage.setItem("members", JSON.stringify(members));
+    
+    // Continue with original save
     onSaveResults(selectedWinners);
-  }, [onSaveResults, selectedWinners]);
+    onClose();
+  };
   
-  // If score keeping is disabled, just skip dialog
+  // If score keeping is disabled, just close without showing dialog
   if (!isScoreKeepingEnabled) {
     return null;
   }
   
   return (
-    <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={(open) => {
-      if (!open) onClose();
-    }}>
+    <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Record Game Results</DialogTitle>
