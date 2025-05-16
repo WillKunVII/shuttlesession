@@ -17,6 +17,22 @@ export function GameEndingManager({ finishEndGame }: GameEndingManagerProps) {
     players: []
   });
 
+  useEffect(() => {
+    // Listen for custom events from the useDashboardLogic
+    const handleEndGameEvent = (event: CustomEvent) => {
+      const { courtId, players } = event.detail;
+      handleEndGame(courtId, players);
+    };
+
+    // Add event listener
+    window.addEventListener('endGame' as any, handleEndGameEvent as EventListener);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('endGame' as any, handleEndGameEvent as EventListener);
+    };
+  }, []);
+
   const handleEndGame = (courtId: number, players: any[]) => {
     console.log("GameEndingManager handling end game for court:", courtId, "players:", players);
     if (players.length > 0) {

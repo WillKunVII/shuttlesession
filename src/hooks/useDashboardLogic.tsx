@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
@@ -26,10 +25,14 @@ export function useDashboardLogic() {
   } = useGameAssignment();
   
   const {
+    courts,
     getSortedCourts,
     assignPlayersToCourtById,
     endGameOnCourt
   } = useCourtManagement();
+
+  // State for end game result
+  const [endGameResult, setEndGameResult] = useState<{courtId: number, players: any[]}>({ courtId: 0, players: [] });
 
   // Function to generate next game players (auto mode)
   const generateNextGame = () => {
@@ -38,16 +41,17 @@ export function useDashboardLogic() {
       const selectedPlayers = autoSelectPlayers(4);
       if (selectedPlayers.length === 4) {
         setNextGame(selectedPlayers);
-        toast("Auto-selected players based on least played together");
+        toast.success("Auto-selected players based on least played together");
       }
     }
   };
 
   // Function to assign next game to a court
-  const assignToFreeCourt = (courtId: number) => {
+  const assignToFreeCourt = useCallback((courtId: number) => {
     if (isNextGameReady()) {
       // Log before assignment to verify data
-      console.log("Assigning players to court:", courtId, nextGamePlayers);
+      console.log("Assigning players to court:", courtId);
+      console.log("Players to assign:", nextGamePlayers);
       
       // Create a deep copy to prevent reference issues
       const playersToCourt = [...nextGamePlayers].map(player => ({...player}));
@@ -58,21 +62,16 @@ export function useDashboardLogic() {
       if (success) {
         toast.success(`Game assigned to court ${courtId}`);
         clearNextGame();
-        
-        // Force refresh of courts
-        setTimeout(() => {
-          getSortedCourts();
-        }, 100);
       } else {
         toast.error("Failed to assign game to court");
       }
     } else {
       toast.error("No game ready to assign");
     }
-  };
+  }, [nextGamePlayers, isNextGameReady, assignPlayersToCourtById, clearNextGame]);
 
   // Function to handle end game button click
-  const handleEndGameClick = (courtId: number) => {
+  const handleEndGameClick = useCallback((courtId: number) => {
     console.log("End game clicked for court:", courtId);
     const sortedCourts = getSortedCourts();
     const court = sortedCourts.find(court => court.id === courtId);
@@ -93,10 +92,10 @@ export function useDashboardLogic() {
     }
     
     return { courtId: 0, players: [] };
-  };
+  }, [getSortedCourts]);
 
   // Function to finish ending the game and update records
-  const finishEndGame = (courtId: number, winnerNames: string[]) => {
+  const finishEndGame = useCallback((courtId: number, winnerNames: string[]) => {
     console.log("Finishing game end for court:", courtId, "Winners:", winnerNames);
     const releasedPlayers = endGameOnCourt(courtId);
     console.log("Released players:", releasedPlayers);
@@ -161,17 +160,12 @@ export function useDashboardLogic() {
       console.log("Adding players back to queue:", playerObjects);
       addPlayersToQueue(playerObjects);
       
-      // Force refresh of courts after ending the game
-      setTimeout(() => {
-        getSortedCourts();
-      }, 100);
-      
       toast.success(`Game ended on Court ${courtId}`);
     }
-  };
+  }, [endGameOnCourt, addPlayersToQueue]);
 
   // Handle player selection for next game
-  const handlePlayerSelect = (selectedPlayers: Player[]) => {
+  const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
     if (selectedPlayers.length === 4) {
       setNextGame(selectedPlayers);
 
@@ -179,16 +173,16 @@ export function useDashboardLogic() {
       const playerIds = selectedPlayers.map(p => p.id);
       removePlayersFromQueue(playerIds);
     }
-  };
+  }, [setNextGame, removePlayersFromQueue]);
   
   // Handle clearing the next game selection
-  const handleClearNextGame = () => {
+  const handleClearNextGame = useCallback(() => {
     // Get the players from the next game before clearing it
     const playersToReturn = clearNextGame();
     
     // Return players to their original positions in the queue
     returnPlayersToOriginalPositions(playersToReturn);
-  };
+  }, [clearNextGame, returnPlayersToOriginalPositions]);
 
   return {
     queue,
