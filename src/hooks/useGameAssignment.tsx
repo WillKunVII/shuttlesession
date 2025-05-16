@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { Player } from "../types/player";
 import { PlayPreference } from "@/types/member";
 
 export type Player = {
