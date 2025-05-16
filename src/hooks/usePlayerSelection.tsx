@@ -17,24 +17,29 @@ export function usePlayerSelection() {
   // Handle player selection for next game
   const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
     if (selectedPlayers.length === 4) {
+      console.log("Selecting players for next game:", selectedPlayers);
       setNextGame(selectedPlayers);
 
       // Remove selected players from queue
       const playerIds = selectedPlayers.map(p => p.id);
       removePlayersFromQueue(playerIds);
+    } else {
+      console.log("Not enough players selected:", selectedPlayers.length);
     }
   }, [setNextGame, removePlayersFromQueue]);
   
   // Auto-select players from queue based on play history
   const generateNextGame = useCallback(() => {
-    // Log current queue state for debugging
-    console.log(`Attempting to auto-select players from queue of length: ${queue.length}`);
+    // Get current queue length - ensure it's using the latest state
+    const currentQueueLength = queue.length;
+    console.log(`Attempting to auto-select players from queue of length: ${currentQueueLength}`);
     
-    if (!queue || queue.length < 4) {
-      toast.error(`Not enough players in queue (${queue?.length || 0}). Need at least 4.`);
+    if (!queue || currentQueueLength < 4) {
+      toast.error(`Not enough players in queue (${currentQueueLength || 0}). Need at least 4.`);
       return false;
     }
     
+    // Using the autoSelectPlayers function from usePlayerQueue
     const selectedPlayers = autoSelectPlayers(4);
     console.log("Auto-selected players:", selectedPlayers);
     
@@ -53,6 +58,7 @@ export function usePlayerSelection() {
   const handleClearNextGame = useCallback(() => {
     // Get the players from the next game before clearing it
     const playersToReturn = clearNextGame();
+    console.log("Clearing next game, returning players:", playersToReturn);
     
     // Return players to their original positions in the queue
     returnPlayersToOriginalPositions(playersToReturn);

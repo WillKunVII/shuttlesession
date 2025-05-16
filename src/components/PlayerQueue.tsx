@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     setSelected(prev => prev.filter(selectedPlayer => 
       players.some(queuedPlayer => queuedPlayer.id === selectedPlayer.id)
     ));
+    
+    console.log(`PlayerQueue component received ${players.length} players`);
   }, [players]);
   
   const togglePlayerSelection = (player: Player) => {
@@ -73,6 +76,12 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     }
   };
   
+  const handleCreateGame = () => {
+    console.log("Creating game with selected players:", selected);
+    onPlayerSelect(selected);
+    setSelected([]);
+  };
+  
   return (
     <div className="space-y-4 max-h-[calc(100vh-24rem)]">
       <div className="flex justify-between items-center mb-4">
@@ -86,12 +95,9 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           <Button
             size="sm"
             disabled={selected.length !== 4}
-            onClick={() => {
-              onPlayerSelect(selected);
-              setSelected([]);
-            }}
+            onClick={handleCreateGame}
           >
-            Create Game
+            Create Game {selected.length > 0 ? `(${selected.length}/4)` : ''}
           </Button>
         </div>
       </div>

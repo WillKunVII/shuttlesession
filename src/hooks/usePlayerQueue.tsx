@@ -24,6 +24,7 @@ export function usePlayerQueue() {
         console.log("Loaded queue from localStorage:", updatedQueue.length, "players");
       } catch (e) {
         console.error("Error parsing queue from localStorage", e);
+        setQueue(initialPlayers);
       }
     }
     
@@ -83,7 +84,7 @@ export function usePlayerQueue() {
     setQueue(prevQueue => {
       selectedPlayers = prevQueue.filter(p => playerIds.includes(p.id));
       const updatedQueue = prevQueue.filter(p => !playerIds.includes(p.id));
-      console.log("Removed multiple players from queue, new length:", updatedQueue.length);
+      console.log("Removed multiple players from queue, new length:", updatedQueue.length, "Selected players:", selectedPlayers.length);
       return updatedQueue;
     });
     
@@ -92,7 +93,10 @@ export function usePlayerQueue() {
 
   // Return players to their original positions in the queue
   const returnPlayersToOriginalPositions = (players: Player[]) => {
-    if (players.length === 0) return;
+    if (!players || players.length === 0) {
+      console.log("No players to return to queue");
+      return;
+    }
     
     // Prepare the players to be reinserted with original positions preserved
     const playersToReinsert = [...players].map(player => ({
@@ -122,7 +126,9 @@ export function usePlayerQueue() {
       return [];
     }
     
-    const selectedPlayers = selectPlayersFromPool(queue, count, poolSize, playCountLookup);
+    // Create a copy of the current queue to prevent reference issues
+    const currentQueue = [...queue];
+    const selectedPlayers = selectPlayersFromPool(currentQueue, count, poolSize, playCountLookup);
     console.log("Selected players from pool:", selectedPlayers);
     
     if (selectedPlayers && selectedPlayers.length === count) {
