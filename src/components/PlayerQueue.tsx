@@ -142,7 +142,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       </span>
                     )}
                     
-                    {/* Display play preferences */}
+                    {/* Display play preferences - always visible now */}
                     {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
                       <div className="flex gap-1 ml-2">
                         {player.playPreferences.map(pref => (
