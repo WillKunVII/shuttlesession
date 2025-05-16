@@ -35,7 +35,8 @@ export function getPlayerPoolSize(): number {
 }
 
 export function isScoreKeepingEnabled(): boolean {
-  return localStorage.getItem("scoreKeeping") === "true";
+  // Changed to return true by default when no value is set
+  return localStorage.getItem("scoreKeeping") !== "false";
 }
 
 // Specific data getters/setters

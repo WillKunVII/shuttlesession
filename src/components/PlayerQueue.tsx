@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { CircleDot, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import React from "react";
+import { isScoreKeepingEnabled } from "@/utils/storageUtils";
 
 interface Player {
   id: number;
@@ -25,7 +27,7 @@ interface PlayerQueueProps {
 
 export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
-  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
+  const scoreKeepingEnabled = isScoreKeepingEnabled();
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
   
@@ -123,7 +125,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
                     )}
                     
-                    {isScoreKeepingEnabled && (player.wins !== undefined || player.losses !== undefined) && (
+                    {scoreKeepingEnabled && (player.wins !== undefined || player.losses !== undefined) && (
                       <span className="ml-1 text-sm text-gray-500">
                         W {player.wins || 0} – L {player.losses || 0}
                       </span>
