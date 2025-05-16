@@ -17,16 +17,6 @@ import {
 import { toast } from "sonner";
 import { Player } from "@/types/playerTypes";
 
-interface Player {
-  id: string;
-  name: string;
-  waitingTime: number;
-  gender: "male" | "female";
-  isGuest?: boolean;
-  wins?: number;
-  losses?: number;
-}
-
 interface PlayerQueueProps {
   players: Player[];
   onPlayerSelect: (selectedPlayers: Player[]) => void;
