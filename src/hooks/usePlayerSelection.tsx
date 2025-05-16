@@ -15,7 +15,9 @@ export function usePlayerSelection(queue: Player[]) {
     
     // Get player pool size from settings
     const poolSize = getPlayerPoolSize();
-    const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
+    
+    // Make sure we're working with a fresh copy of the queue
+    const poolPlayers = [...queue].slice(0, Math.min(poolSize, queue.length));
     
     if (poolPlayers.length >= count) {
       if (!prefEnabled) {
@@ -24,8 +26,8 @@ export function usePlayerSelection(queue: Player[]) {
       } else {
         // Try to find a valid game based on preferences
         // First attempt: look for a Mixed game
-        const males = poolPlayers.filter(p => p.gender === "male" && (p.playPreferences?.includes("Mixed") || p.playPreferences?.length === 0));
-        const females = poolPlayers.filter(p => p.gender === "female" && (p.playPreferences?.includes("Mixed") || p.playPreferences?.length === 0));
+        const males = poolPlayers.filter(p => p.gender === "male" && (p.playPreferences?.includes("Mixed") || !p.playPreferences || p.playPreferences.length === 0));
+        const females = poolPlayers.filter(p => p.gender === "female" && (p.playPreferences?.includes("Mixed") || !p.playPreferences || p.playPreferences.length === 0));
         
         if (males.length >= 2 && females.length >= 2) {
           return [...males.slice(0, 2), ...females.slice(0, 2)];
@@ -33,7 +35,7 @@ export function usePlayerSelection(queue: Player[]) {
         
         // Second attempt: look for a Ladies game
         const ladiesPlayers = poolPlayers.filter(
-          p => p.gender === "female" && (p.playPreferences?.includes("Ladies") || p.playPreferences?.length === 0)
+          p => p.gender === "female" && (p.playPreferences?.includes("Ladies") || !p.playPreferences || p.playPreferences.length === 0)
         );
         
         if (ladiesPlayers.length >= 4) {
@@ -42,7 +44,7 @@ export function usePlayerSelection(queue: Player[]) {
         
         // Third attempt: look for an Open game
         const openPlayers = poolPlayers.filter(
-          p => p.playPreferences?.includes("Open") || p.playPreferences?.length === 0
+          p => p.playPreferences?.includes("Open") || !p.playPreferences || p.playPreferences.length === 0
         );
         
         if (openPlayers.length >= 4) {

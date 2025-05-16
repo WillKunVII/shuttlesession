@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
@@ -53,24 +54,24 @@ export function usePlayerQueue() {
       }
     }
     
-    setQueue([...queue, newPlayer]);
+    setQueue(prevQueue => [...prevQueue, newPlayer]);
   };
 
   // Remove player from queue
   const removePlayerFromQueue = (playerId: number) => {
-    setQueue(queue.filter(player => player.id !== playerId));
+    setQueue(prevQueue => prevQueue.filter(player => player.id !== playerId));
   };
 
   // Add multiple players to queue - always at the end now to ensure fair rotation
   const addPlayersToQueue = (players: Player[]) => {
     // Always add players to the end of the queue for fair rotation
-    setQueue([...queue, ...players]);
+    setQueue(prevQueue => [...prevQueue, ...players]);
   };
 
   // Remove multiple players from queue and return them
   const removePlayersFromQueue = (playerIds: number[]) => {
     const selectedPlayers = queue.filter(p => playerIds.includes(p.id));
-    setQueue(queue.filter(p => !playerIds.includes(p.id)));
+    setQueue(prevQueue => prevQueue.filter(p => !playerIds.includes(p.id)));
     return selectedPlayers;
   };
 
@@ -81,7 +82,7 @@ export function usePlayerQueue() {
     if (selectedPlayers.length === count) {
       // Remove selected players from queue
       const selectedIds = selectedPlayers.map(p => p.id);
-      setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+      setQueue(prevQueue => prevQueue.filter(p => !selectedIds.includes(p.id)));
       return selectedPlayers;
     }
     

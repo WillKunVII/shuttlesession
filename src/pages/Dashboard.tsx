@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -41,6 +42,7 @@ export default function Dashboard() {
     id: 0,
     players: []
   });
+  const [queueUpdated, setQueueUpdated] = useState(0); // Counter to track queue updates
 
   // Get sorted courts
   const sortedCourts = getSortedCourts();
@@ -48,8 +50,12 @@ export default function Dashboard() {
   // Function to generate next game players (auto mode)
   const generateNextGame = () => {
     if (queue.length >= 4) {
+      console.log("Attempting to auto-select players from queue:", queue);
       const selectedPlayers = autoSelectPlayers(4);
-      setNextGame(selectedPlayers);
+      console.log("Auto-selected players:", selectedPlayers);
+      if (selectedPlayers.length === 4) {
+        setNextGame(selectedPlayers);
+      }
     }
   };
 
@@ -124,6 +130,9 @@ export default function Dashboard() {
       });
       
       addPlayersToQueue(playerObjects);
+      
+      // Force refresh our queue state after players are added back
+      setQueueUpdated(prev => prev + 1);
     }
 
     // Close dialog if it was open
@@ -169,11 +178,21 @@ export default function Dashboard() {
         
         {/* Bottom of right column: Player Queue */}
         <div className="bg-white rounded-xl shadow-sm p-3">
-          <PlayerQueue players={queue} onPlayerSelect={handlePlayerSelect} onPlayerLeave={removePlayerFromQueue} onAddPlayer={player => addPlayerToQueue(player)} />
+          <PlayerQueue 
+            players={queue} 
+            onPlayerSelect={handlePlayerSelect} 
+            onPlayerLeave={removePlayerFromQueue} 
+            onAddPlayer={player => addPlayerToQueue(player)} 
+          />
         </div>
       </div>
       
       {/* End Game Dialog */}
-      <EndGameDialog isOpen={endGameDialogOpen} onClose={() => setEndGameDialogOpen(false)} players={currentCourtPlayers.players} onSaveResults={winnerNames => finishEndGame(currentCourtPlayers.id, winnerNames)} />
+      <EndGameDialog 
+        isOpen={endGameDialogOpen} 
+        onClose={() => setEndGameDialogOpen(false)} 
+        players={currentCourtPlayers.players} 
+        onSaveResults={winnerNames => finishEndGame(currentCourtPlayers.id, winnerNames)} 
+      />
     </>;
 }
