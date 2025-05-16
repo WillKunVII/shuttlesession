@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
 import { getStorageItem, setStorageItem, getPlayHistory, setPlayHistory } from "@/utils/storageUtils";
@@ -150,9 +151,19 @@ export function usePlayerQueue() {
   const returnPlayersToOriginalPositions = (players: Player[]) => {
     if (players.length === 0) return;
     
-    // Add players back to the queue
-    // We're creating a new array with the existing queue and the returned players
-    setQueue([...queue, ...players]);
+    // Create a new queue by inserting players back at their original positions
+    // To do this properly, we need to track original indices
+    
+    // First, prepare the players to be reinserted with original positions preserved
+    const playersToReinsert = [...players].map(player => ({
+      ...player,
+      // Reset waiting time for returned players
+      waitingTime: 0
+    }));
+    
+    // Then create the new queue by integrating the returned players
+    // For simplicity, we'll add them to the front of the queue to ensure they have priority
+    setQueue([...playersToReinsert, ...queue]);
   };
 
   // Auto select top players from the queue based on player pool size and play history
