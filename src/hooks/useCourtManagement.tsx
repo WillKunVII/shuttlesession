@@ -61,21 +61,33 @@ export function useCourtManagement() {
   // Function to assign players to a court
   const assignPlayersToCourtById = (courtId: number, players: Player[]) => {
     if (players.length === 4) {
-      setCourts(prevCourts => prevCourts.map(court => {
-        if (court.id === courtId) {
-          return {
-            ...court,
-            status: "occupied" as const,
-            players: players.map(p => ({
-              name: p.name, 
-              gender: p.gender,
-              isGuest: p.isGuest
-            })),
-            timeRemaining: 15
-          };
-        }
-        return court;
+      // Create a deep copy of the players to avoid any reference issues
+      const playersCopy = players.map(p => ({
+        name: p.name, 
+        gender: p.gender,
+        isGuest: p.isGuest
       }));
+      
+      setCourts(prevCourts => {
+        // Create a new array of courts with the updated court
+        return prevCourts.map(court => {
+          if (court.id === courtId) {
+            return {
+              ...court,
+              status: "occupied" as const,
+              players: playersCopy,
+              timeRemaining: 15
+            };
+          }
+          return court;
+        });
+      });
+      
+      // Wait a tick to ensure state updates before returning
+      setTimeout(() => {
+        console.log("Court updated:", courts.find(c => c.id === courtId));
+      }, 0);
+      
       return true;
     }
     return false;
@@ -86,6 +98,9 @@ export function useCourtManagement() {
     const courtToEnd = courts.find(c => c.id === courtId);
     
     if (courtToEnd && courtToEnd.status === "occupied") {
+      // Store players before clearing
+      const releasedPlayers = [...courtToEnd.players];
+      
       // Update court status
       setCourts(prevCourts => prevCourts.map(court => {
         if (court.id === courtId) {
@@ -99,7 +114,7 @@ export function useCourtManagement() {
         return court;
       }));
       
-      return courtToEnd.players;
+      return releasedPlayers;
     }
     
     return [];

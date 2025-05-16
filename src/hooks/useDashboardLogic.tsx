@@ -46,11 +46,23 @@ export function useDashboardLogic() {
   // Function to assign next game to a court
   const assignToFreeCourt = (courtId: number) => {
     if (isNextGameReady()) {
-      // Make sure we're passing the actual player objects, not just IDs
-      const success = assignPlayersToCourtById(courtId, [...nextGamePlayers]);
+      // Log before assignment to verify data
+      console.log("Assigning players to court:", courtId, nextGamePlayers);
+      
+      // Create a deep copy to prevent reference issues
+      const playersToCourt = [...nextGamePlayers].map(player => ({...player}));
+      
+      // Attempt assignment
+      const success = assignPlayersToCourtById(courtId, playersToCourt);
+      
       if (success) {
         toast.success(`Game assigned to court ${courtId}`);
         clearNextGame();
+        
+        // Force refresh of courts
+        setTimeout(() => {
+          getSortedCourts();
+        }, 100);
       } else {
         toast.error("Failed to assign game to court");
       }
