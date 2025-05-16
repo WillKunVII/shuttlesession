@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { setStorageItem, getStorageItem } from "@/utils/storageUtils";
 
 export function PlayerPreferencesSetting() {
@@ -21,23 +19,15 @@ export function PlayerPreferencesSetting() {
   };
 
   return (
-    <Card className="shadow-none border">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Player Preferences</CardTitle>
-        <CardDescription>
-          Enable play style preferences (Open, Mixed, Ladies)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <Label htmlFor="enable-player-preferences">Enable play preferences</Label>
-          <Switch
-            id="enable-player-preferences"
-            checked={enablePreferences}
-            onCheckedChange={handleToggleChange}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex justify-between items-center border-b pb-4">
+      <div>
+        <h3 className="font-medium">Player Preferences</h3>
+        <p className="text-sm text-muted-foreground">Enable play style preferences (Open, Mixed, Ladies)</p>
+      </div>
+      <Switch 
+        checked={enablePreferences}
+        onCheckedChange={handleToggleChange}
+      />
+    </div>
   );
 }
