@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import React from "react";
-import { isScoreKeepingEnabled } from "@/utils/storageUtils";
+import { isScoreKeepingEnabled, getStorageItem } from "@/utils/storageUtils";
 import { Badge } from "@/components/ui/badge";
 import { PlayPreference } from "@/types/member";
 
@@ -38,8 +37,8 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   
   // Load preferences setting
   useEffect(() => {
-    const enablePref = localStorage.getItem("enablePlayerPreferences");
-    setPreferencesEnabled(enablePref === "true");
+    const enablePref = getStorageItem("enablePlayerPreferences", false);
+    setPreferencesEnabled(enablePref);
   }, []);
   
   // Ensure selected players are still in the queue
@@ -142,8 +141,8 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       </span>
                     )}
                     
-                    {/* Display play preferences - always visible */}
-                    {player.playPreferences && player.playPreferences.length > 0 && (
+                    {/* Display play preferences only when enabled */}
+                    {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
                       <div className="flex gap-1 ml-2">
                         {player.playPreferences.map(pref => (
                           <Badge key={pref} variant="outline" className="text-xs">
