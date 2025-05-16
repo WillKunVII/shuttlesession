@@ -3,6 +3,7 @@ import { ScoreKeepingSetting } from "./ScoreKeepingSetting";
 import { AutoAssignmentSetting } from "./AutoAssignmentSetting";
 import { PlayerPoolSizeSetting } from "./PlayerPoolSizeSetting";
 import { CourtOrderingSetting } from "./CourtOrderingSetting";
+import { PlayerPreferencesSetting } from "./PlayerPreferencesSetting";
 
 export function GeneralSettings() {
   return (
@@ -13,6 +14,7 @@ export function GeneralSettings() {
         <AutoAssignmentSetting />
         <PlayerPoolSizeSetting />
         <CourtOrderingSetting />
+        <PlayerPreferencesSetting />
       </div>
     </div>
   );

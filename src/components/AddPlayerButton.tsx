@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Member } from "@/pages/Members";
+import { Member, PlayPreference } from "@/types/member";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
-  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean}) => void;
+  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
 }
 
 export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerButtonProps) {
@@ -32,6 +33,8 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   const [isOpen, setIsOpen] = useState(false);
   const [membersList, setMembersList] = useState<Member[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [playPreferences, setPlayPreferences] = useState<PlayPreference[]>([]);
+  const [preferencesEnabled, setPreferencesEnabled] = useState(false);
   
   // Load members from localStorage
   useEffect(() => {
@@ -43,6 +46,10 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
         console.error("Error parsing members from localStorage", e);
       }
     }
+
+    // Check if play preferences are enabled
+    const enablePref = localStorage.getItem("enablePlayerPreferences");
+    setPreferencesEnabled(enablePref === "true");
   }, [isOpen]); // Reload when sheet opens
   
   const handleAddPlayer = () => {
@@ -61,7 +68,8 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
           gender,
           isGuest,
           wins: 0,
-          losses: 0
+          losses: 0,
+          playPreferences: preferencesEnabled ? playPreferences : undefined
         };
         
         // Add to members list
@@ -79,13 +87,15 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       onAddPlayer({
         name,
         gender,
-        isGuest
+        isGuest,
+        playPreferences: preferencesEnabled ? playPreferences : []
       });
       
       // Reset form
       setName("");
       setGender("male");
       setIsGuest(false);
+      setPlayPreferences([]);
       setIsOpen(false);
     }
   };
@@ -94,7 +104,16 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     setName(member.name);
     setGender(member.gender);
     setIsGuest(member.isGuest);
+    setPlayPreferences(member.playPreferences || []);
     setShowSuggestions(false);
+  };
+
+  const togglePreference = (preference: PlayPreference) => {
+    if (playPreferences.includes(preference)) {
+      setPlayPreferences(playPreferences.filter(p => p !== preference));
+    } else {
+      setPlayPreferences([...playPreferences, preference]);
+    }
   };
 
   const filteredMembers = membersList.filter(member => 
@@ -165,6 +184,41 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
               </div>
             </RadioGroup>
           </div>
+          
+          {/* Play preferences */}
+          {preferencesEnabled && (
+            <div className="space-y-2">
+              <Label>Play Preferences</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="open-play" 
+                    checked={playPreferences.includes("Open")}
+                    onCheckedChange={() => togglePreference("Open")}
+                  />
+                  <Label htmlFor="open-play">Open Play (any combination)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="mixed-play" 
+                    checked={playPreferences.includes("Mixed")}
+                    onCheckedChange={() => togglePreference("Mixed")}
+                  />
+                  <Label htmlFor="mixed-play">Mixed Play (male/female pairs)</Label>
+                </div>
+                {gender === "female" && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="ladies-play" 
+                      checked={playPreferences.includes("Ladies")}
+                      onCheckedChange={() => togglePreference("Ladies")}
+                    />
+                    <Label htmlFor="ladies-play">Ladies Play (females only)</Label>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="flex items-center space-x-2">
             <Checkbox 

@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { PlayPreference } from "@/types/member";
 
 export type Player = {
   id: number;
@@ -9,6 +10,7 @@ export type Player = {
   isGuest?: boolean;
   wins?: number;
   losses?: number;
+  playPreferences?: PlayPreference[];
 }
 
 export function useGameAssignment() {
@@ -56,10 +58,33 @@ export function useGameAssignment() {
     return Array.isArray(nextGamePlayers) && nextGamePlayers.length === 4;
   };
 
+  // Determine the game type based on players
+  const getGameType = (): PlayPreference => {
+    if (!isNextGameReady()) return "";
+    
+    const isMixedPossible = 
+      nextGamePlayers.filter(p => p.gender === "male").length === 2 && 
+      nextGamePlayers.filter(p => p.gender === "female").length === 2;
+    
+    const isLadiesPossible = 
+      nextGamePlayers.filter(p => p.gender === "female").length === 4;
+    
+    const allPreferences = nextGamePlayers.flatMap(p => p.playPreferences || []);
+    
+    if (isMixedPossible && allPreferences.includes("Mixed")) {
+      return "Mixed";
+    } else if (isLadiesPossible && allPreferences.includes("Ladies")) {
+      return "Ladies";
+    } else {
+      return "Open";
+    }
+  };
+
   return {
     nextGamePlayers,
     setNextGame,
     clearNextGame,
-    isNextGameReady
+    isNextGameReady,
+    getGameType
   };
 }

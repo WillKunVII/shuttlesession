@@ -7,6 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import React from "react";
 import { isScoreKeepingEnabled } from "@/utils/storageUtils";
+import { Badge } from "@/components/ui/badge";
+import { PlayPreference } from "@/types/member";
 
 interface Player {
   id: number;
@@ -16,20 +18,29 @@ interface Player {
   isGuest?: boolean;
   wins?: number;
   losses?: number;
+  playPreferences?: PlayPreference[];
 }
 
 interface PlayerQueueProps {
   players: Player[];
   onPlayerSelect: (selectedPlayers: Player[]) => void;
   onPlayerLeave?: (playerId: number) => void;
-  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean}) => void;
+  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
 }
 
 export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
+  const [preferencesEnabled, setPreferencesEnabled] = useState(false);
+  
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
+  
+  // Load preferences setting
+  useEffect(() => {
+    const enablePref = localStorage.getItem("enablePlayerPreferences");
+    setPreferencesEnabled(enablePref === "true");
+  }, []);
   
   // Ensure selected players are still in the queue
   useEffect(() => {
@@ -53,7 +64,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     }
   };
   
-  const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
+  const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => {
     if (onAddPlayer) {
       onAddPlayer(player);
     }
@@ -129,6 +140,17 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       <span className="ml-1 text-sm text-gray-500">
                         W {player.wins || 0} – L {player.losses || 0}
                       </span>
+                    )}
+                    
+                    {/* Display play preferences */}
+                    {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
+                      <div className="flex gap-1 ml-2">
+                        {player.playPreferences.map(pref => (
+                          <Badge key={pref} variant="outline" className="text-xs">
+                            {pref}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center">

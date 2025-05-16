@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Player } from "./useGameAssignment";
+import { PlayPreference } from "@/types/member";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
@@ -28,7 +30,8 @@ export function usePlayerQueue() {
                   return {
                     ...player,
                     wins: member.wins || 0,
-                    losses: member.losses || 0
+                    losses: member.losses || 0,
+                    playPreferences: member.playPreferences || []
                   };
                 }
                 return player;
@@ -62,7 +65,8 @@ export function usePlayerQueue() {
       name: player.name,
       gender: player.gender,
       isGuest: player.isGuest,
-      waitingTime: 0
+      waitingTime: 0,
+      playPreferences: player.playPreferences || []
     };
     
     // If score keeping is enabled, try to get win/loss record
@@ -75,6 +79,7 @@ export function usePlayerQueue() {
           if (member) {
             newPlayer.wins = member.wins || 0;
             newPlayer.losses = member.losses || 0;
+            newPlayer.playPreferences = member.playPreferences || [];
           }
         } catch (e) {
           console.error("Error getting member win/loss data", e);
@@ -103,21 +108,109 @@ export function usePlayerQueue() {
     return selectedPlayers;
   };
 
+  // Check if players can form a valid game based on preferences
+  const canFormValidGame = (players: Player[]): boolean => {
+    if (players.length !== 4) return false;
+    
+    // Check if play preferences are enabled
+    const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
+    if (!prefEnabled) return true;
+    
+    // Get all preferences
+    const allPreferences = players.flatMap(p => p.playPreferences || []);
+    
+    // Check if Mixed game is possible and preferred
+    const isMixedPossible = 
+      players.filter(p => p.gender === "male").length === 2 && 
+      players.filter(p => p.gender === "female").length === 2;
+    
+    const hasMixedPreference = allPreferences.includes("Mixed");
+    
+    // Check if Ladies game is possible and preferred
+    const isLadiesPossible = 
+      players.filter(p => p.gender === "female").length === 4;
+    
+    const hasLadiesPreference = allPreferences.includes("Ladies");
+    
+    // Check if any game type is possible
+    const hasOpenPreference = allPreferences.includes("Open");
+    
+    // If Mixed is possible and preferred, or Ladies is possible and preferred,
+    // or if Open play is allowed, then we can form a valid game
+    return (isMixedPossible && hasMixedPreference) || 
+           (isLadiesPossible && hasLadiesPreference) || 
+           hasOpenPreference || 
+           !prefEnabled;
+  };
+
   // Auto select top players from the queue based on player pool size
   const autoSelectPlayers = (count: number = 4) => {
+    // Check if player preferences are enabled
+    const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
+    
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
     
     if (poolPlayers.length >= count) {
-      // Only select from the player pool
-      const selectedPlayers = poolPlayers.slice(0, count);
-      const selectedIds = selectedPlayers.map(p => p.id);
-      
-      // Remove selected players from queue
-      setQueue(queue.filter(p => !selectedIds.includes(p.id)));
-      
-      return selectedPlayers;
+      if (!prefEnabled) {
+        // If preferences are not enabled, just select the top players
+        const selectedPlayers = poolPlayers.slice(0, count);
+        const selectedIds = selectedPlayers.map(p => p.id);
+        
+        // Remove selected players from queue
+        setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+        
+        return selectedPlayers;
+      } else {
+        // Try to find a valid game based on preferences
+        // First attempt: look for a Mixed game
+        const males = poolPlayers.filter(p => p.gender === "male" && (p.playPreferences?.includes("Mixed") || p.playPreferences?.length === 0));
+        const females = poolPlayers.filter(p => p.gender === "female" && (p.playPreferences?.includes("Mixed") || p.playPreferences?.length === 0));
+        
+        if (males.length >= 2 && females.length >= 2) {
+          const selectedPlayers = [...males.slice(0, 2), ...females.slice(0, 2)];
+          const selectedIds = selectedPlayers.map(p => p.id);
+          
+          // Remove selected players from queue
+          setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+          
+          return selectedPlayers;
+        }
+        
+        // Second attempt: look for a Ladies game
+        const ladiesPlayers = poolPlayers.filter(
+          p => p.gender === "female" && (p.playPreferences?.includes("Ladies") || p.playPreferences?.length === 0)
+        );
+        
+        if (ladiesPlayers.length >= 4) {
+          const selectedPlayers = ladiesPlayers.slice(0, 4);
+          const selectedIds = selectedPlayers.map(p => p.id);
+          
+          // Remove selected players from queue
+          setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+          
+          return selectedPlayers;
+        }
+        
+        // Third attempt: look for an Open game
+        const openPlayers = poolPlayers.filter(
+          p => p.playPreferences?.includes("Open") || p.playPreferences?.length === 0
+        );
+        
+        if (openPlayers.length >= 4) {
+          const selectedPlayers = openPlayers.slice(0, 4);
+          const selectedIds = selectedPlayers.map(p => p.id);
+          
+          // Remove selected players from queue
+          setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+          
+          return selectedPlayers;
+        }
+        
+        // If no valid game can be formed based on preferences, return empty array
+        return [];
+      }
     }
     return [];
   };
@@ -134,6 +227,7 @@ export function usePlayerQueue() {
     addPlayersToQueue,
     removePlayersFromQueue,
     autoSelectPlayers,
-    getPlayerPoolSize
+    getPlayerPoolSize,
+    canFormValidGame
   };
 }

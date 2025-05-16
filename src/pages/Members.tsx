@@ -11,18 +11,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Edit, Save, X, Trash2, Trophy, Award } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { PlayPreference, Member } from "@/types/member";
 
 // Empty initial members list
 const initialMembers: Member[] = [];
-
-export type Member = {
-  id: number;
-  name: string;
-  gender: "male" | "female";
-  isGuest: boolean;
-  wins: number;
-  losses: number;
-};
 
 export default function Members() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -31,6 +23,8 @@ export default function Members() {
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberGender, setNewMemberGender] = useState<"male" | "female">("male");
   const [isGuest, setIsGuest] = useState(false);
+  const [playPreferences, setPlayPreferences] = useState<PlayPreference[]>([]);
+  const [preferencesEnabled, setPreferencesEnabled] = useState(false);
   
   // Edit mode states
   const [editMode, setEditMode] = useState(false);
@@ -39,6 +33,9 @@ export default function Members() {
 
   // Load members from localStorage on component mount
   useEffect(() => {
+    const enablePref = localStorage.getItem("enablePlayerPreferences");
+    setPreferencesEnabled(enablePref === "true");
+
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
       try {
@@ -49,7 +46,8 @@ export default function Members() {
           // Remove status field if it exists
           status: undefined,
           wins: member.wins !== undefined ? member.wins : 0,
-          losses: member.losses !== undefined ? member.losses : 0
+          losses: member.losses !== undefined ? member.losses : 0,
+          playPreferences: member.playPreferences || []
         }));
         setMembers(updatedMembers);
         // Save the updated members back to localStorage
@@ -73,7 +71,8 @@ export default function Members() {
         gender: newMemberGender,
         isGuest,
         wins: 0,
-        losses: 0
+        losses: 0,
+        playPreferences: preferencesEnabled ? playPreferences : []
       };
       
       setMembers([...members, newMember]);
@@ -81,6 +80,7 @@ export default function Members() {
       setNewMemberName("");
       setNewMemberGender("male");
       setIsGuest(false);
+      setPlayPreferences([]);
       
       toast.success("Member added successfully");
     }
@@ -91,6 +91,7 @@ export default function Members() {
     setNewMemberName(member.name);
     setNewMemberGender(member.gender);
     setIsGuest(member.isGuest);
+    setPlayPreferences(member.playPreferences || []);
     setEditMode(true);
     setIsDialogOpen(true);
   };
@@ -103,7 +104,8 @@ export default function Members() {
               ...member,
               name: newMemberName,
               gender: newMemberGender,
-              isGuest: isGuest
+              isGuest: isGuest,
+              playPreferences: preferencesEnabled ? playPreferences : member.playPreferences
             }
           : member
       );
@@ -125,6 +127,15 @@ export default function Members() {
     setNewMemberName("");
     setNewMemberGender("male");
     setIsGuest(false);
+    setPlayPreferences([]);
+  };
+  
+  const togglePreference = (preference: PlayPreference) => {
+    if (playPreferences.includes(preference)) {
+      setPlayPreferences(playPreferences.filter(p => p !== preference));
+    } else {
+      setPlayPreferences([...playPreferences, preference]);
+    }
   };
 
   const confirmDeleteMember = (memberId: number) => {
@@ -158,6 +169,7 @@ export default function Members() {
           setNewMemberName("");
           setNewMemberGender("male");
           setIsGuest(false);
+          setPlayPreferences([]);
           setIsDialogOpen(true);
         }}>Add Member</Button>
       </div>
@@ -172,6 +184,9 @@ export default function Members() {
                   <th className="px-6 py-3 text-sm font-semibold">Gender</th>
                   {isScoreKeepingEnabled && (
                     <th className="px-6 py-3 text-sm font-semibold">Record</th>
+                  )}
+                  {preferencesEnabled && (
+                    <th className="px-6 py-3 text-sm font-semibold">Play Preferences</th>
                   )}
                   <th className="px-6 py-3 text-sm font-semibold">Actions</th>
                 </tr>
@@ -200,6 +215,21 @@ export default function Members() {
                             <X className="h-4 w-4 text-red-500 mr-1" />
                             {member.losses || 0}
                           </span>
+                        </div>
+                      </td>
+                    )}
+                    {preferencesEnabled && (
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {member.playPreferences && member.playPreferences.length > 0 ? (
+                            member.playPreferences.map((pref) => (
+                              <Badge key={pref} variant="outline" className="text-xs">
+                                {pref}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-gray-400 text-sm">None</span>
+                          )}
                         </div>
                       </td>
                     )}
@@ -255,6 +285,41 @@ export default function Members() {
                 </div>
               </RadioGroup>
             </div>
+            
+            {/* Play preferences */}
+            {preferencesEnabled && (
+              <div className="space-y-2">
+                <Label>Play Preferences</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="open-play" 
+                      checked={playPreferences.includes("Open")}
+                      onCheckedChange={() => togglePreference("Open")}
+                    />
+                    <Label htmlFor="open-play">Open Play (any combination)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="mixed-play" 
+                      checked={playPreferences.includes("Mixed")}
+                      onCheckedChange={() => togglePreference("Mixed")}
+                    />
+                    <Label htmlFor="mixed-play">Mixed Play (male/female pairs)</Label>
+                  </div>
+                  {newMemberGender === "female" && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="ladies-play" 
+                        checked={playPreferences.includes("Ladies")}
+                        onCheckedChange={() => togglePreference("Ladies")}
+                      />
+                      <Label htmlFor="ladies-play">Ladies Play (females only)</Label>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="flex items-center space-x-2">
               <Checkbox 
