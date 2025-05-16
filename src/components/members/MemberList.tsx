@@ -2,8 +2,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trophy, X, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { Member } from "@/types/member";
+import { MemberRecord } from "./MemberRecord";
 
 interface MemberListProps {
   members: Member[];
@@ -52,17 +53,7 @@ export function MemberList({
                   </td>
                   {isScoreKeepingEnabled && (
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center">
-                          <Trophy className="h-4 w-4 text-green-500 mr-1" />
-                          {member.wins || 0}
-                        </span>
-                        <span className="text-gray-500">–</span>
-                        <span className="flex items-center">
-                          <X className="h-4 w-4 text-red-500 mr-1" />
-                          {member.losses || 0}
-                        </span>
-                      </div>
+                      <MemberRecord wins={member.wins} losses={member.losses} />
                     </td>
                   )}
                   {preferencesEnabled && (
