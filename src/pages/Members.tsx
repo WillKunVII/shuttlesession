@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Edit, Save, X, Trash2, Trophy, Award } from "lucide-react";
@@ -61,6 +60,11 @@ export default function Members() {
   // Save members to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("clubMembers", JSON.stringify(members));
+  }, [members]);
+
+  // Sort members alphabetically by name
+  const sortedMembers = useMemo(() => {
+    return [...members].sort((a, b) => a.name.localeCompare(b.name));
   }, [members]);
 
   const handleAddMember = () => {
@@ -192,7 +196,7 @@ export default function Members() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {members.map(member => (
+                {sortedMembers.map(member => (
                   <tr key={member.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium">
                       {member.name}
