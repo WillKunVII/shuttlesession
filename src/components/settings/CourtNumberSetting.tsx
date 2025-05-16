@@ -32,12 +32,12 @@ export function CourtNumberSetting() {
   };
 
   return (
-    <div className="flex justify-between items-center border-b pb-4">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
         <h3 className="font-medium">Number of Courts</h3>
         <p className="text-sm text-muted-foreground">Configure the number of courts available (1-8)</p>
       </div>
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <Select value={courtCount.toString()} onValueChange={handleValueChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select courts" />

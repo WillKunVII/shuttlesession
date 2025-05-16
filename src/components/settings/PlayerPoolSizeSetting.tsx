@@ -35,12 +35,12 @@ export function PlayerPoolSizeSetting() {
   };
 
   return (
-    <div className="flex justify-between items-center border-b pb-4">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
         <h3 className="font-medium">Player Pool Size</h3>
         <p className="text-sm text-muted-foreground">Number of players eligible for the next game (6-12)</p>
       </div>
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <Select value={playerPoolSize.toString()} onValueChange={handleValueChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select size" />
