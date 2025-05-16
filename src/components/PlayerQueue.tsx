@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
@@ -40,6 +39,14 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
+  
+  // Keep selected players in sync with the queue
+  useEffect(() => {
+    // Filter out any selected players that are no longer in the queue
+    setSelected(prev => prev.filter(selectedPlayer => 
+      players.some(queuedPlayer => queuedPlayer.id === selectedPlayer.id)
+    ));
+  }, [players]);
   
   const togglePlayerSelection = (player: Player) => {
     setSelected(prev => {
