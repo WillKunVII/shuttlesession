@@ -129,7 +129,8 @@ export default function Dashboard() {
         };
       });
       
-      addPlayersToQueue(playerObjects);
+      // Add players to the bottom of the queue after a game ends
+      addPlayersToQueue(playerObjects, false);
       
       // Force refresh our queue state after players are added back
       setQueueUpdated(prev => prev + 1);
@@ -171,9 +172,11 @@ export default function Dashboard() {
             </Button>
           </div>
           <NextGame players={nextGamePlayers} onClear={() => {
-          // Put players back in the queue in their original positions
-          addPlayersToQueue(clearNextGame());
-        }} />
+            // Put players back in the queue in their original positions
+            const players = clearNextGame();
+            // Return to original positions when clearing selection
+            addPlayersToQueue(players, true);
+          }} />
         </div>
         
         {/* Bottom of right column: Player Queue */}
