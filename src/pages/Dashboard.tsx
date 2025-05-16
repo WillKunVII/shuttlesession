@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -129,8 +128,8 @@ export default function Dashboard() {
         };
       });
       
-      // Add players to the bottom of the queue after a game ends
-      addPlayersToQueue(playerObjects, false);
+      // Add players back to the queue, with winners at top of their respective groups
+      addPlayersToQueue(playerObjects, false, winnerNames);
       
       // Force refresh our queue state after players are added back
       setQueueUpdated(prev => prev + 1);
@@ -150,6 +149,7 @@ export default function Dashboard() {
       removePlayersFromQueue(playerIds);
     }
   };
+  
   return <>
       {/* Left column: Courts - stacked vertically */}
       <div className="flex flex-col space-y-3">

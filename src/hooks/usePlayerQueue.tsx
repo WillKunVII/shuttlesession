@@ -65,75 +65,98 @@ export function usePlayerQueue() {
   // Add multiple players to queue with position control
   // returnToOriginalPositions: true = put back in original positions (for clearing selection)
   // returnToOriginalPositions: false = put at end of queue (for game ended)
-  const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false) => {
-    if (!returnToOriginalPositions) {
-      // Simply add players to the end of queue (for game ended)
-      setQueue(prevQueue => [...prevQueue, ...players]);
-      return;
-    }
-    
-    // For clearing selection - return players to their original positions
-    setQueue(prevQueue => {
-      // Get the original queue state that was saved when players were selected
-      const originalQueueStr = localStorage.getItem("originalPlayerQueue");
-      if (!originalQueueStr) {
-        // If we don't have original positions, just add to the end
-        console.log("No original queue positions found, adding to end");
-        return [...prevQueue, ...players];
-      }
-      
-      try {
-        // Parse the original queue
-        const originalQueue: Player[] = JSON.parse(originalQueueStr);
-        
-        // Create a map of player names to their original positions
-        const originalPositions = new Map<string, number>();
-        originalQueue.forEach((player, index) => {
-          originalPositions.set(player.name, index);
-        });
-        
-        // Sort returning players based on their original positions
-        const sortedReturningPlayers = [...players].sort((a, b) => {
-          const posA = originalPositions.get(a.name);
-          const posB = originalPositions.get(b.name);
-          
-          // If both players are in the original positions map, sort by position
-          if (posA !== undefined && posB !== undefined) {
-            return posA - posB;
-          }
-          // If only player A is in the map, they should come first
-          if (posA !== undefined) {
-            return -1;
-          }
-          // If only player B is in the map, they should come first
-          if (posB !== undefined) {
-            return 1;
-          }
-          // If neither player is in the map, maintain their current order
-          return 0;
-        });
-        
-        // Create a merged queue by inserting returning players at their original positions
-        let newQueue = [...prevQueue];
-        for (const player of sortedReturningPlayers) {
-          const originalPos = originalPositions.get(player.name);
-          if (originalPos !== undefined) {
-            // Find insertion index - limited by current queue length
-            const insertionIndex = Math.min(originalPos, newQueue.length);
-            newQueue.splice(insertionIndex, 0, player);
-          } else {
-            // If player wasn't in original queue, add to end
-            newQueue.push(player);
-          }
+  // winners: array of player names who won the game - they go to top of queue
+  const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) => {
+    if (returnToOriginalPositions) {
+      // For clearing selection - return players to their original positions
+      setQueue(prevQueue => {
+        // Get the original queue state that was saved when players were selected
+        const originalQueueStr = localStorage.getItem("originalPlayerQueue");
+        if (!originalQueueStr) {
+          // If we don't have original positions, just add to the end
+          console.log("No original queue positions found, adding to end");
+          return [...prevQueue, ...players];
         }
         
-        return newQueue;
-      } catch (error) {
-        console.error("Error restoring players to original positions:", error);
-        // Fallback: just add to end of queue
-        return [...prevQueue, ...players];
-      }
-    });
+        try {
+          // Parse the original queue
+          const originalQueue: Player[] = JSON.parse(originalQueueStr);
+          
+          // Create a map of player names to their original positions
+          const originalPositions = new Map<string, number>();
+          originalQueue.forEach((player, index) => {
+            originalPositions.set(player.name, index);
+          });
+          
+          // Sort returning players based on their original positions
+          const sortedReturningPlayers = [...players].sort((a, b) => {
+            const posA = originalPositions.get(a.name);
+            const posB = originalPositions.get(b.name);
+            
+            // If both players are in the original positions map, sort by position
+            if (posA !== undefined && posB !== undefined) {
+              return posA - posB;
+            }
+            // If only player A is in the map, they should come first
+            if (posA !== undefined) {
+              return -1;
+            }
+            // If only player B is in the map, they should come first
+            if (posB !== undefined) {
+              return 1;
+            }
+            // If neither player is in the map, maintain their current order
+            return 0;
+          });
+          
+          // Create a merged queue by inserting returning players at their original positions
+          let newQueue = [...prevQueue];
+          for (const player of sortedReturningPlayers) {
+            const originalPos = originalPositions.get(player.name);
+            if (originalPos !== undefined) {
+              // Find insertion index - limited by current queue length
+              const insertionIndex = Math.min(originalPos, newQueue.length);
+              newQueue.splice(insertionIndex, 0, player);
+            } else {
+              // If player wasn't in original queue, add to end
+              newQueue.push(player);
+            }
+          }
+          
+          return newQueue;
+        } catch (error) {
+          console.error("Error restoring players to original positions:", error);
+          // Fallback: just add to end of queue
+          return [...prevQueue, ...players];
+        }
+      });
+    } else if (winners && winners.length > 0) {
+      // Game ended with winners - add winners to the top of their respective groups,
+      // losers to the bottom of the queue
+      setQueue(prevQueue => {
+        // Separate players into winners and losers
+        const winningPlayers = players.filter(p => winners.includes(p.name));
+        const losingPlayers = players.filter(p => !winners.includes(p.name));
+        
+        // Separate existing queue by gender for proper insertion
+        const malePlayers = prevQueue.filter(p => p.gender === "male");
+        const femalePlayers = prevQueue.filter(p => p.gender === "female");
+        
+        // Separate winners by gender
+        const maleWinners = winningPlayers.filter(p => p.gender === "male");
+        const femaleWinners = winningPlayers.filter(p => p.gender === "female");
+        
+        // Create new queue with winners at the top of their respective gender groups
+        const newMaleQueue = [...maleWinners, ...malePlayers];
+        const newFemaleQueue = [...femaleWinners, ...femalePlayers];
+        
+        // Merge the gender queues and add losers at the end
+        return [...newMaleQueue, ...newFemaleQueue, ...losingPlayers];
+      });
+    } else {
+      // Simply add players to the end of queue (for game ended without winners)
+      setQueue(prevQueue => [...prevQueue, ...players]);
+    }
   };
 
   // Remove multiple players from queue and return them
