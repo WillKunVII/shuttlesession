@@ -1,10 +1,10 @@
-
-import { useState } from "react";
-import { Check, CircleDot, Plus, Trophy, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CircleDot, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import React from "react";
 
 interface Player {
   id: number;
@@ -29,6 +29,20 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
   
+  // Ensure selected players are still in the queue
+  useEffect(() => {
+    if (selected.length > 0) {
+      const currentPlayerIds = players.map(player => player.id);
+      const updatedSelection = selected.filter(player => 
+        currentPlayerIds.includes(player.id)
+      );
+      
+      if (updatedSelection.length !== selected.length) {
+        setSelected(updatedSelection);
+      }
+    }
+  }, [players, selected]);
+  
   const togglePlayerSelection = (player: Player) => {
     if (selected.some(p => p.id === player.id)) {
       setSelected(selected.filter(p => p.id !== player.id));
@@ -40,6 +54,15 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   const handleAddPlayer = (player: {name: string, gender: "male" | "female", isGuest: boolean}) => {
     if (onAddPlayer) {
       onAddPlayer(player);
+    }
+  };
+  
+  const handlePlayerLeave = (playerId: number) => {
+    // Remove from selection if present
+    setSelected(selected.filter(p => p.id !== playerId));
+    // Call the provided onPlayerLeave callback
+    if (onPlayerLeave) {
+      onPlayerLeave(playerId);
     }
   };
   
@@ -74,7 +97,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
         <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-2 pr-4">
             {players.map((player, index) => (
-              <>
+              <React.Fragment key={player.id}>
                 {index === playerPoolSize && players.length > playerPoolSize && (
                   <div className="relative my-4">
                     <Separator className="absolute inset-0 my-2" />
@@ -85,8 +108,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                     </div>
                   </div>
                 )}
-                <div 
-                  key={player.id} 
+                <div
                   className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
                     selected.some(p => p.id === player.id) 
                       ? "bg-shuttle-lightBlue border-shuttle-blue" 
@@ -119,14 +141,14 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onPlayerLeave) onPlayerLeave(player.id);
+                        handlePlayerLeave(player.id);
                       }}
                     >
                       Leave
                     </Button>
                   </div>
                 </div>
-              </>
+              </React.Fragment>
             ))}
           </div>
         </ScrollArea>
