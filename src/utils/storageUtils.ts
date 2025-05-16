@@ -39,6 +39,19 @@ export function isScoreKeepingEnabled(): boolean {
   return localStorage.getItem("scoreKeeping") !== "false";
 }
 
+// Session-specific score tracking
+export function getSessionScores() {
+  return getStorageItem("sessionScores", {});
+}
+
+export function setSessionScores(scores: Record<string, {wins: number, losses: number}>) {
+  setStorageItem("sessionScores", scores);
+}
+
+export function clearSessionScores() {
+  localStorage.removeItem("sessionScores");
+}
+
 // Specific data getters/setters
 export function getQueue() {
   return getStorageItem("playerQueue", []);

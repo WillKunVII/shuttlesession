@@ -1,5 +1,7 @@
+
 import { useEffect } from "react";
 import { Player } from "../types/player";
+import { getStorageItem } from "@/utils/storageUtils";
 
 /**
  * Hook for loading/saving player data to localStorage
@@ -15,13 +17,17 @@ export function usePlayerPersistence(queue: Player[], setQueue: React.Dispatch<R
         // Load win/loss records if score keeping is enabled
         if (localStorage.getItem("scoreKeeping") === "true") {
           const membersData = localStorage.getItem("members");
+          const sessionScores = getStorageItem("sessionScores", {});
+          
           if (membersData) {
             try {
               const members = JSON.parse(membersData);
               
-              // Update queue players with win/loss data from members
+              // Update queue players with win/loss data from members and session scores
               const updatedQueue = queueData.map((player: Player) => {
                 const member = members.find((m: any) => m.name === player.name);
+                const sessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
+                
                 if (member) {
                   return {
                     ...player,

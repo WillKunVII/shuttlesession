@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Trophy, Medal, Award, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getStorageItem } from "@/utils/storageUtils";
 import {
   Dialog,
   DialogContent,
@@ -35,14 +36,37 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
   }, [isOpen]);
 
   const loadAndRankPlayers = () => {
-    // Get all members from localStorage
-    const members = localStorage.getItem("members");
-    if (!members) {
+    // Get session scores
+    const sessionScores = getStorageItem("sessionScores", {});
+    
+    if (Object.keys(sessionScores).length === 0) {
       return;
     }
 
     try {
-      const playersList: Player[] = JSON.parse(members);
+      // Get all members to get player metadata
+      const membersData = localStorage.getItem("members");
+      let members: Player[] = [];
+      
+      if (membersData) {
+        try {
+          members = JSON.parse(membersData);
+        } catch (e) {
+          console.error("Error parsing members data", e);
+        }
+      }
+      
+      // Create player list from session scores
+      const playersList: Player[] = Object.entries(sessionScores).map(([name, scores]) => {
+        const member = members.find(m => m.name === name);
+        return {
+          name,
+          gender: member?.gender || "male",
+          isGuest: member?.isGuest || false,
+          wins: scores.wins,
+          losses: scores.losses
+        };
+      });
       
       // Filter players with wins
       const playersWithWins = playersList.filter(player => player.wins && player.wins > 0);
@@ -87,7 +111,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
       
       setTopPlayers([gold, silver, bronze]);
     } catch (e) {
-      console.error("Error parsing members from localStorage", e);
+      console.error("Error processing session player scores", e);
     }
   };
 
@@ -127,7 +151,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Player of the Session</DialogTitle>
           <DialogDescription className="text-center">
-            Congratulations to our top players!
+            Congratulations to our top players of this session!
           </DialogDescription>
         </DialogHeader>
         

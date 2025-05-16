@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getStorageItem, setStorageItem } from "@/utils/storageUtils";
 
 interface Player {
   name: string;
@@ -50,7 +51,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   };
   
   const handleSave = () => {
-    // Get all members
+    // Get all members for total scores
     const membersData = localStorage.getItem("members");
     let members: any[] = [];
     
@@ -62,11 +63,27 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       }
     }
     
+    // Get session scores
+    const sessionScores = getStorageItem("sessionScores", {});
+    
     // Update wins/losses for all players
     players.forEach(player => {
-      // Find if this player is in the members list
-      const memberIndex = members.findIndex(m => m.name === player.name);
-      const isWinner = selectedWinners.includes(player.name);
+      const playerName = player.name;
+      const isWinner = selectedWinners.includes(playerName);
+      
+      // Update session scores
+      if (!sessionScores[playerName]) {
+        sessionScores[playerName] = { wins: 0, losses: 0 };
+      }
+      
+      if (isWinner) {
+        sessionScores[playerName].wins += 1;
+      } else {
+        sessionScores[playerName].losses += 1;
+      }
+      
+      // Update total scores in members
+      const memberIndex = members.findIndex(m => m.name === playerName);
       
       if (memberIndex !== -1) {
         // Update existing member
@@ -78,7 +95,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       } else {
         // Add new member with win/loss record
         members.push({
-          name: player.name,
+          name: playerName,
           gender: player.gender,
           isGuest: player.isGuest,
           wins: isWinner ? 1 : 0,
@@ -87,7 +104,8 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       }
     });
     
-    // Save updated members data
+    // Save updated scores
+    setStorageItem("sessionScores", sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
     
     // Continue with original save

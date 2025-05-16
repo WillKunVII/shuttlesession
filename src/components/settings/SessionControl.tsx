@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PlayerOfSessionDialog } from "@/components/PlayerOfSessionDialog";
+import { clearSessionScores } from "@/utils/storageUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +40,9 @@ export function SessionControl() {
     localStorage.removeItem("playerQueue");
     localStorage.removeItem("nextGamePlayers");
     
+    // Clear session-specific scores
+    clearSessionScores();
+    
     // Navigate back to splash screen
     navigate("/");
     
@@ -62,7 +67,7 @@ export function SessionControl() {
               <AlertDialogTitle>End Current Session?</AlertDialogTitle>
               <AlertDialogDescription>
                 You are about to end the current session and return to the start screen. 
-                This action will clear all player queue data but preserve member information.
+                This action will clear all player queue data and session scores but preserve member information.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
