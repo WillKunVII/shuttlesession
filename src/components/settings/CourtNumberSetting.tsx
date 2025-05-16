@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CourtNumberSetting() {
   const [courtCount, setCourtCount] = useState<number>(() => {
@@ -21,8 +27,8 @@ export function CourtNumberSetting() {
     });
   }, [courtCount, toast]);
 
-  const handleValueChange = (values: number[]) => {
-    setCourtCount(values[0]);
+  const handleValueChange = (value: string) => {
+    setCourtCount(parseInt(value, 10));
   };
 
   return (
@@ -31,21 +37,19 @@ export function CourtNumberSetting() {
         <h3 className="font-medium">Number of Courts</h3>
         <p className="text-sm text-muted-foreground">Configure the number of courts available (1-8)</p>
       </div>
-      <div className="w-1/2">
-        <div className="flex flex-col space-y-4">
-          <Slider 
-            value={[courtCount]} 
-            min={1} 
-            max={8} 
-            step={1} 
-            onValueChange={handleValueChange}
-          />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>1</span>
-            <span className="font-medium text-primary">{courtCount} courts</span>
-            <span>8</span>
-          </div>
-        </div>
+      <div className="w-40">
+        <Select value={courtCount.toString()} onValueChange={handleValueChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select courts" />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((number) => (
+              <SelectItem key={number} value={number.toString()}>
+                {number} {number === 1 ? 'court' : 'courts'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function PlayerPoolSizeSetting() {
   const [playerPoolSize, setPlayerPoolSize] = useState<number>(8); // Default value
@@ -16,8 +22,8 @@ export function PlayerPoolSizeSetting() {
   }, []);
 
   // Handle player pool size change
-  const handlePlayerPoolSizeChange = (value: number[]) => {
-    const size = value[0];
+  const handleValueChange = (value: string) => {
+    const size = parseInt(value, 10);
     setPlayerPoolSize(size);
     localStorage.setItem("playerPoolSize", String(size));
     
@@ -34,21 +40,19 @@ export function PlayerPoolSizeSetting() {
         <h3 className="font-medium">Player Pool Size</h3>
         <p className="text-sm text-muted-foreground">Number of players eligible for the next game (6-12)</p>
       </div>
-      <div className="w-1/2">
-        <div className="flex flex-col space-y-4">
-          <Slider 
-            value={[playerPoolSize]} 
-            min={6} 
-            max={12} 
-            step={1} 
-            onValueChange={handlePlayerPoolSizeChange}
-          />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>6</span>
-            <span className="font-medium text-primary">{playerPoolSize} players</span>
-            <span>12</span>
-          </div>
-        </div>
+      <div className="w-40">
+        <Select value={playerPoolSize.toString()} onValueChange={handleValueChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select size" />
+          </SelectTrigger>
+          <SelectContent>
+            {[6, 7, 8, 9, 10, 11, 12].map((number) => (
+              <SelectItem key={number} value={number.toString()}>
+                {number} players
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
