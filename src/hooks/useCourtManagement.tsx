@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Court } from "@/types/DashboardTypes";
 
 // Initial courts data for up to 8 courts
 const predefinedCourts = [
@@ -11,14 +12,6 @@ const predefinedCourts = [
   { id: 7, name: "Court 7", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 8, name: "Court 8", status: "available" as const, players: [], timeRemaining: 0 },
 ];
-
-export type Court = {
-  id: number;
-  name: string;
-  status: "available" | "occupied";
-  players: Array<{name: string; gender: "male" | "female"; isGuest?: boolean}>;
-  timeRemaining: number;
-}
 
 export type CourtOrdering = "ascending" | "descending";
 

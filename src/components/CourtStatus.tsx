@@ -1,23 +1,9 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
-interface CourtPlayer {
-  name: string;
-  gender: "male" | "female";
-  isGuest?: boolean;
-}
-
-interface Court {
-  id: number;
-  name: string;
-  status: 'available' | 'occupied';
-  players: CourtPlayer[];
-  timeRemaining: number;
-}
+import { Court, CourtPlayer } from "@/types/DashboardTypes";
 
 interface CourtStatusProps {
   court: Court;
