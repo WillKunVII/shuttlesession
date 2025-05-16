@@ -90,7 +90,15 @@ export function usePlayerQueue() {
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     
+    console.log(`Queue length: ${queue.length}, trying to select ${count} players from pool of ${Math.min(poolSize, queue.length)}`);
+    
+    if (queue.length < count) {
+      console.error(`Not enough players in queue (${queue.length}) to select ${count} players`);
+      return [];
+    }
+    
     const selectedPlayers = selectPlayersFromPool(queue, count, poolSize, playCountLookup);
+    console.log("Selected players:", selectedPlayers);
     
     if (selectedPlayers.length === count) {
       // Update play history for the new game

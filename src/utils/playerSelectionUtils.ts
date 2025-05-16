@@ -1,6 +1,5 @@
 
 import { Player } from "@/types/playerTypes";
-import { getPlayCount } from "./playHistoryUtils";
 
 // Auto select top players from the queue based on player pool size and play history
 export function selectPlayersFromPool(
@@ -9,8 +8,11 @@ export function selectPlayersFromPool(
   poolSize: number = 8, 
   playHistoryLookup: (player1Id: string, player2Id: string) => number
 ): Player[] {
+  console.log(`selectPlayersFromPool called with ${queue.length} players in queue, selecting ${count} from max pool of ${poolSize}`);
+  
   // Get the available players from the pool
   const poolPlayers = queue.slice(0, Math.min(poolSize, queue.length));
+  console.log(`Actual pool size: ${poolPlayers.length} players`);
   
   if (poolPlayers.length >= count) {
     // Always select the first player in queue to prioritize waiting time
@@ -21,6 +23,11 @@ export function selectPlayersFromPool(
     
     // For each remaining spot, find the player who has played least with those already selected
     while (selectedPlayers.length < count) {
+      if (remainingPoolPlayers.length === 0) {
+        console.error("Not enough remaining players to complete selection");
+        break; // Ensure we don't get stuck in an endless loop
+      }
+      
       let leastPlayedWithIndex = 0;
       let minTotalPlayCount = Infinity;
       
@@ -50,7 +57,15 @@ export function selectPlayersFromPool(
       remainingPoolPlayers.splice(leastPlayedWithIndex, 1);
     }
     
+    // If we weren't able to get exactly 'count' players, return empty array
+    if (selectedPlayers.length !== count) {
+      console.error(`Could only select ${selectedPlayers.length} players, needed ${count}`);
+      return [];
+    }
+    
     return selectedPlayers;
   }
+  
+  console.error(`Pool size ${poolPlayers.length} is less than required count ${count}`);
   return [];
 }

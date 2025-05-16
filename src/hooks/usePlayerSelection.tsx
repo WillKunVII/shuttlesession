@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export function usePlayerSelection() {
   const { setNextGame, clearNextGame } = useGameAssignment();
-  const { removePlayersFromQueue, returnPlayersToOriginalPositions, autoSelectPlayers } = usePlayerQueue();
+  const { removePlayersFromQueue, returnPlayersToOriginalPositions, autoSelectPlayers, queue } = usePlayerQueue();
 
   // Handle player selection for next game
   const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
@@ -23,7 +23,15 @@ export function usePlayerSelection() {
   // Auto-select players from queue based on play history
   const generateNextGame = useCallback(() => {
     console.log("Attempting to auto-select players");
+    console.log("Current queue size:", queue.length);
+    
+    if (queue.length < 4) {
+      toast.error(`Not enough players in queue (${queue.length}). Need at least 4.`);
+      return false;
+    }
+    
     const selectedPlayers = autoSelectPlayers(4);
+    console.log("Auto-selected players:", selectedPlayers);
     
     if (selectedPlayers.length === 4) {
       // Set selected players as next game
@@ -31,10 +39,10 @@ export function usePlayerSelection() {
       toast.success("Auto-selected players based on least played together");
       return true;
     } else {
-      toast.error("Not enough players to create a game");
+      toast.error("Failed to select players for next game");
       return false;
     }
-  }, [autoSelectPlayers, setNextGame]);
+  }, [autoSelectPlayers, setNextGame, queue.length]);
   
   // Handle clearing the next game selection
   const handleClearNextGame = useCallback(() => {
