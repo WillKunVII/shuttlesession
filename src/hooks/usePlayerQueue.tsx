@@ -150,15 +150,9 @@ export function usePlayerQueue() {
   const returnPlayersToOriginalPositions = (players: Player[]) => {
     if (players.length === 0) return;
     
-    // Get the current player pool size
-    const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
-    
-    // Create a new queue by merging the returned players with the existing queue
-    // Try to maintain original order by sorting by ID (nanoid doesn't have inherent ordering)
-    // Instead of sorting by ID, just add them back in the order they were created
-    const mergedPlayers = [...queue, ...players];
-    
-    setQueue(mergedPlayers);
+    // Add players back to the queue
+    // We're creating a new array with the existing queue and the returned players
+    setQueue([...queue, ...players]);
   };
 
   // Auto select top players from the queue based on player pool size and play history
