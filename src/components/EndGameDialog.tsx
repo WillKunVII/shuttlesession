@@ -30,15 +30,17 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
   const isScoreKeepingEnabled = getStorageItem("scoreKeeping", false);
   
-  // Reset selections when dialog opens
+  // Reset selections when dialog opens with new players
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && players.length > 0) {
       setSelectedWinners([]);
+      console.log("EndGameDialog opened with players:", players);
     }
-  }, [isOpen]);
+  }, [isOpen, players]);
   
-  // Toggle player selection as winner, memoized to avoid rerenders
+  // Toggle player selection as winner
   const toggleWinner = useCallback((playerName: string) => {
+    console.log("Toggling winner:", playerName);
     setSelectedWinners(prev => {
       if (prev.includes(playerName)) {
         return prev.filter(name => name !== playerName);
@@ -50,46 +52,9 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   }, []);
   
   const handleSave = useCallback(() => {
-    if (!isScoreKeepingEnabled) {
-      onClose();
-      return;
-    }
-    
-    // Get all members
-    const members = getStorageItem("members", []);
-    
-    // Update wins/losses for all players
-    players.forEach(player => {
-      // Find if this player is in the members list
-      const memberIndex = members.findIndex((m: any) => m.name === player.name);
-      const isWinner = selectedWinners.includes(player.name);
-      
-      if (memberIndex !== -1) {
-        // Update existing member
-        if (isWinner) {
-          members[memberIndex].wins = (members[memberIndex].wins || 0) + 1;
-        } else {
-          members[memberIndex].losses = (members[memberIndex].losses || 0) + 1;
-        }
-      } else {
-        // Add new member with win/loss record
-        members.push({
-          name: player.name,
-          gender: player.gender,
-          isGuest: player.isGuest,
-          wins: isWinner ? 1 : 0,
-          losses: isWinner ? 0 : 1
-        });
-      }
-    });
-    
-    // Save updated members data
-    setStorageItem("members", members);
-    
-    // Continue with original save
+    console.log("Saving game results with winners:", selectedWinners);
     onSaveResults(selectedWinners);
-    onClose();
-  }, [isScoreKeepingEnabled, onClose, onSaveResults, players, selectedWinners]);
+  }, [onSaveResults, selectedWinners]);
   
   // If score keeping is disabled, just skip dialog
   if (!isScoreKeepingEnabled) {
@@ -97,7 +62,9 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   }
   
   return (
-    <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
+    <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Record Game Results</DialogTitle>

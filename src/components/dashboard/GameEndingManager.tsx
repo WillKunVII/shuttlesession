@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { EndGameDialog } from "@/components/EndGameDialog";
 
 interface GameEndingManagerProps {
@@ -17,6 +18,7 @@ export function GameEndingManager({ finishEndGame }: GameEndingManagerProps) {
   });
 
   const handleEndGame = (courtId: number, players: any[]) => {
+    console.log("GameEndingManager handling end game for court:", courtId, "players:", players);
     if (players.length > 0) {
       // Check if score keeping is enabled
       const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
@@ -34,10 +36,21 @@ export function GameEndingManager({ finishEndGame }: GameEndingManagerProps) {
     }
   };
 
-  const handleDialogClose = () => setEndGameDialogOpen(false);
+  const handleDialogClose = () => {
+    setEndGameDialogOpen(false);
+    
+    // If dialog is closed without selecting winners, still end the game
+    if (currentCourtPlayers.id > 0) {
+      finishEndGame(currentCourtPlayers.id, []);
+      setCurrentCourtPlayers({ id: 0, players: [] });
+    }
+  };
 
   const handleSaveResults = (winnerNames: string[]) => {
-    finishEndGame(currentCourtPlayers.id, winnerNames);
+    if (currentCourtPlayers.id > 0) {
+      finishEndGame(currentCourtPlayers.id, winnerNames);
+      setCurrentCourtPlayers({ id: 0, players: [] });
+    }
     setEndGameDialogOpen(false);
   };
 

@@ -73,19 +73,22 @@ export function useDashboardLogic() {
 
   // Function to handle end game button click
   const handleEndGameClick = (courtId: number) => {
+    console.log("End game clicked for court:", courtId);
     const sortedCourts = getSortedCourts();
-    const players = sortedCourts.find(court => court.id === courtId)?.players || [];
+    const court = sortedCourts.find(court => court.id === courtId);
+    const players = court?.players || [];
     
     if (players.length > 0) {
       // Check if score keeping is enabled
       const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
       
       if (isScoreKeepingEnabled) {
-        // Return the players to be handled by the GameEndingManager
+        // Return the court and players to be handled by the GameEndingManager
         return { courtId, players };
       } else {
         // Just end the game normally without tracking scores
         finishEndGame(courtId, []);
+        return { courtId: 0, players: [] };
       }
     }
     
@@ -94,10 +97,13 @@ export function useDashboardLogic() {
 
   // Function to finish ending the game and update records
   const finishEndGame = (courtId: number, winnerNames: string[]) => {
+    console.log("Finishing game end for court:", courtId, "Winners:", winnerNames);
     const releasedPlayers = endGameOnCourt(courtId);
+    console.log("Released players:", releasedPlayers);
+    
     if (releasedPlayers.length > 0) {
       // Get all members to update win/loss records
-      const savedMembers = localStorage.getItem("clubMembers");
+      const savedMembers = localStorage.getItem("members");
       let members: any[] = [];
       if (savedMembers) {
         try {
@@ -148,9 +154,19 @@ export function useDashboardLogic() {
 
       // Save updated member records
       if (winnerNames.length === 2 && localStorage.getItem("scoreKeeping") === "true") {
-        localStorage.setItem("clubMembers", JSON.stringify(members));
+        localStorage.setItem("members", JSON.stringify(members));
       }
+      
+      // Add players to the end of the queue
+      console.log("Adding players back to queue:", playerObjects);
       addPlayersToQueue(playerObjects);
+      
+      // Force refresh of courts after ending the game
+      setTimeout(() => {
+        getSortedCourts();
+      }, 100);
+      
+      toast.success(`Game ended on Court ${courtId}`);
     }
   };
 

@@ -21,13 +21,13 @@ export default function Dashboard() {
     handleClearNextGame,
   } = useDashboardLogic();
 
-  const [currentCourtId, setCurrentCourtId] = useState<number>(0);
+  const [endGameResult, setEndGameResult] = useState<{courtId: number, players: any[]}>({ courtId: 0, players: [] });
   
   // Handle end game click and prepare dialog if needed
   const onEndGameClick = (courtId: number) => {
     const result = handleEndGameClick(courtId);
-    if (result.courtId > 0) {
-      setCurrentCourtId(result.courtId);
+    if (result && result.courtId > 0) {
+      setEndGameResult(result);
     }
   };
 

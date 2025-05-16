@@ -20,13 +20,17 @@ export function CourtSection({
   
   // Update courts when they change
   useEffect(() => {
+    // Function to update courts
+    const updateCourts = () => {
+      const currentCourts = getSortedCourts();
+      setCourts(currentCourts);
+    };
+    
     // Initial update
-    setCourts(getSortedCourts());
+    updateCourts();
     
     // Set up periodic refresh
-    const intervalId = setInterval(() => {
-      setCourts(getSortedCourts());
-    }, 500); // Refresh more frequently to catch updates
+    const intervalId = setInterval(updateCourts, 1000);
     
     return () => clearInterval(intervalId);
   }, [getSortedCourts]);
