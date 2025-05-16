@@ -19,9 +19,12 @@ export function useGameAssignment() {
     const savedNextGame = localStorage.getItem("nextGamePlayers");
     if (savedNextGame) {
       try {
-        setNextGamePlayers(JSON.parse(savedNextGame));
+        const parsedData = JSON.parse(savedNextGame);
+        // Ensure we're setting an array (even if the stored data is not an array)
+        setNextGamePlayers(Array.isArray(parsedData) ? parsedData : []);
       } catch (e) {
         console.error("Error parsing next game players from localStorage", e);
+        setNextGamePlayers([]);
       }
     }
   }, []);
@@ -33,6 +36,11 @@ export function useGameAssignment() {
 
   // Set next game players 
   const setNextGame = (players: Player[]) => {
+    if (!Array.isArray(players)) {
+      console.error("setNextGame received non-array value:", players);
+      setNextGamePlayers([]);
+      return;
+    }
     setNextGamePlayers(players);
   };
 
@@ -45,7 +53,7 @@ export function useGameAssignment() {
 
   // Check if next game is ready (has 4 players)
   const isNextGameReady = () => {
-    return nextGamePlayers.length === 4;
+    return Array.isArray(nextGamePlayers) && nextGamePlayers.length === 4;
   };
 
   return {
