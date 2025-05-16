@@ -1,12 +1,15 @@
-
 import { useState, useEffect } from "react";
 
-// Initial courts data
-const initialCourts = [
+// Initial courts data for up to 8 courts
+const predefinedCourts = [
   { id: 1, name: "Court 1", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 2, name: "Court 2", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 3, name: "Court 3", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 4, name: "Court 4", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 5, name: "Court 5", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 6, name: "Court 6", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 7, name: "Court 7", status: "available" as const, players: [], timeRemaining: 0 },
+  { id: 8, name: "Court 8", status: "available" as const, players: [], timeRemaining: 0 },
 ];
 
 export type Court = {
@@ -20,18 +23,49 @@ export type Court = {
 export type CourtOrdering = "ascending" | "descending";
 
 export function useCourtManagement() {
-  const [courts, setCourts] = useState<Court[]>(initialCourts);
+  const [courts, setCourts] = useState<Court[]>([]);
   const [courtOrdering, setCourtOrdering] = useState<CourtOrdering>("ascending");
 
   // Load courts from localStorage on component mount
   useEffect(() => {
+    // Get court count setting (default to 4 if not set)
+    const courtCount = parseInt(localStorage.getItem("courtCount") || "4", 10);
+    
+    // Limit court count to valid range
+    const validCourtCount = Math.max(1, Math.min(8, courtCount));
+    
     const savedCourts = localStorage.getItem("courts");
     if (savedCourts) {
       try {
-        setCourts(JSON.parse(savedCourts));
+        let parsedCourts = JSON.parse(savedCourts);
+        
+        // Adjust the number of courts based on the setting
+        if (parsedCourts.length < validCourtCount) {
+          // Add more courts if needed
+          for (let i = parsedCourts.length; i < validCourtCount; i++) {
+            parsedCourts.push(predefinedCourts[i]);
+          }
+        } else if (parsedCourts.length > validCourtCount) {
+          // Remove courts if needed, only keep courts that are available
+          parsedCourts = parsedCourts.filter((court: Court, index: number) => 
+            index < validCourtCount || court.status === "occupied"
+          );
+          
+          // Ensure we have exactly the right number of courts
+          if (parsedCourts.length > validCourtCount) {
+            parsedCourts = parsedCourts.slice(0, validCourtCount);
+          }
+        }
+        
+        setCourts(parsedCourts);
       } catch (e) {
         console.error("Error parsing courts from localStorage", e);
+        // If there was an error, initialize with the default number of courts
+        setCourts(predefinedCourts.slice(0, validCourtCount));
       }
+    } else {
+      // If no courts in localStorage, initialize with the default number of courts
+      setCourts(predefinedCourts.slice(0, validCourtCount));
     }
     
     const savedOrdering = localStorage.getItem("courtOrdering");

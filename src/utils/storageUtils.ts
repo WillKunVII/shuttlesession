@@ -34,6 +34,10 @@ export function getPlayerPoolSize(): number {
   return Number(localStorage.getItem("playerPoolSize")) || 8;
 }
 
+export function getCourtCount(): number {
+  return Number(localStorage.getItem("courtCount")) || 4; // Default to 4 courts
+}
+
 export function isScoreKeepingEnabled(): boolean {
   // Changed to return true by default when no value is set
   return localStorage.getItem("scoreKeeping") !== "false";

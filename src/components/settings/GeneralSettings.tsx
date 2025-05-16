@@ -4,6 +4,7 @@ import { AutoAssignmentSetting } from "./AutoAssignmentSetting";
 import { PlayerPoolSizeSetting } from "./PlayerPoolSizeSetting";
 import { CourtOrderingSetting } from "./CourtOrderingSetting";
 import { PlayerPreferencesSetting } from "./PlayerPreferencesSetting";
+import { CourtNumberSetting } from "./CourtNumberSetting";
 
 export function GeneralSettings() {
   return (
@@ -15,6 +16,7 @@ export function GeneralSettings() {
         <PlayerPoolSizeSetting />
         <CourtOrderingSetting />
         <PlayerPreferencesSetting />
+        <CourtNumberSetting />
       </div>
     </div>
   );
