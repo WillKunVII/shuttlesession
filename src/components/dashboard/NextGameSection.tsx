@@ -16,6 +16,8 @@ export function NextGameSection({
   generateNextGame, 
   queueLength 
 }: NextGameSectionProps) {
+  console.log("NextGameSection rendering with queue length:", queueLength);
+  
   return (
     <div className="bg-white rounded-xl shadow-sm p-3">
       <div className="flex justify-between items-center mb-3">

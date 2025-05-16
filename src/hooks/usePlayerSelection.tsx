@@ -22,18 +22,18 @@ export function usePlayerSelection() {
   
   // Auto-select players from queue based on play history
   const generateNextGame = useCallback(() => {
-    console.log("Attempting to auto-select players");
-    console.log("Current queue size:", queue.length);
+    // Check queue length directly from the latest state
+    console.log(`Attempting to auto-select players from queue of length: ${queue.length}`);
     
-    if (queue.length < 4) {
-      toast.error(`Not enough players in queue (${queue.length}). Need at least 4.`);
+    if (!queue || queue.length < 4) {
+      toast.error(`Not enough players in queue (${queue?.length || 0}). Need at least 4.`);
       return false;
     }
     
     const selectedPlayers = autoSelectPlayers(4);
     console.log("Auto-selected players:", selectedPlayers);
     
-    if (selectedPlayers.length === 4) {
+    if (selectedPlayers && selectedPlayers.length === 4) {
       // Set selected players as next game
       setNextGame(selectedPlayers);
       toast.success("Auto-selected players based on least played together");
@@ -42,7 +42,7 @@ export function usePlayerSelection() {
       toast.error("Failed to select players for next game");
       return false;
     }
-  }, [autoSelectPlayers, setNextGame, queue.length]);
+  }, [autoSelectPlayers, setNextGame, queue]); // Explicitly add queue as a dependency
   
   // Handle clearing the next game selection
   const handleClearNextGame = useCallback(() => {

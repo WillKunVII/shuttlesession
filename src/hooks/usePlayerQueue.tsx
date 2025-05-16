@@ -21,6 +21,7 @@ export function usePlayerQueue() {
         const queueData = JSON.parse(savedQueue);
         const updatedQueue = loadPlayerRecords(queueData);
         setQueue(updatedQueue);
+        console.log("Loaded queue from localStorage:", updatedQueue.length, "players");
       } catch (e) {
         console.error("Error parsing queue from localStorage", e);
       }
@@ -49,24 +50,43 @@ export function usePlayerQueue() {
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
     const newPlayer = createNewPlayer(player);
-    setQueue([...queue, newPlayer]);
+    setQueue(prevQueue => {
+      const updatedQueue = [...prevQueue, newPlayer];
+      console.log("Added player to queue, new length:", updatedQueue.length);
+      return updatedQueue;
+    });
   };
 
   // Remove player from queue
   const removePlayerFromQueue = (playerId: string) => {
-    setQueue(queue.filter(player => player.id !== playerId));
+    setQueue(prevQueue => {
+      const updatedQueue = prevQueue.filter(player => player.id !== playerId);
+      console.log("Removed player from queue, new length:", updatedQueue.length);
+      return updatedQueue;
+    });
   };
 
   // Add multiple players to queue
   const addPlayersToQueue = (players: Player[]) => {
     // Always add players to the end of the queue for fair rotation
-    setQueue([...queue, ...players]);
+    setQueue(prevQueue => {
+      const updatedQueue = [...prevQueue, ...players];
+      console.log("Added multiple players to queue, new length:", updatedQueue.length);
+      return updatedQueue;
+    });
   };
 
   // Remove multiple players from queue and return them
   const removePlayersFromQueue = (playerIds: string[]) => {
-    const selectedPlayers = queue.filter(p => playerIds.includes(p.id));
-    setQueue(queue.filter(p => !playerIds.includes(p.id)));
+    let selectedPlayers: Player[] = [];
+    
+    setQueue(prevQueue => {
+      selectedPlayers = prevQueue.filter(p => playerIds.includes(p.id));
+      const updatedQueue = prevQueue.filter(p => !playerIds.includes(p.id));
+      console.log("Removed multiple players from queue, new length:", updatedQueue.length);
+      return updatedQueue;
+    });
+    
     return selectedPlayers;
   };
 
@@ -82,32 +102,37 @@ export function usePlayerQueue() {
     }));
     
     // Add them to the front of the queue to ensure they have priority
-    setQueue([...playersToReinsert, ...queue]);
+    setQueue(prevQueue => {
+      const updatedQueue = [...playersToReinsert, ...prevQueue];
+      console.log("Returned players to queue, new length:", updatedQueue.length);
+      return updatedQueue;
+    });
   };
 
   // Auto select top players from the queue
   const autoSelectPlayers = (count: number = 4) => {
+    // Make sure we're working with the latest queue data
+    console.log(`Auto-selecting ${count} players from queue of length:`, queue.length);
+    
     // Get player pool size from settings or default to 8
     const poolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
     
-    console.log(`Queue length: ${queue.length}, trying to select ${count} players from pool of ${Math.min(poolSize, queue.length)}`);
-    
-    if (queue.length < count) {
-      console.error(`Not enough players in queue (${queue.length}) to select ${count} players`);
+    if (!queue || queue.length < count) {
+      console.error(`Not enough players in queue (${queue?.length || 0}) to select ${count} players`);
       return [];
     }
     
     const selectedPlayers = selectPlayersFromPool(queue, count, poolSize, playCountLookup);
-    console.log("Selected players:", selectedPlayers);
+    console.log("Selected players from pool:", selectedPlayers);
     
-    if (selectedPlayers.length === count) {
+    if (selectedPlayers && selectedPlayers.length === count) {
       // Update play history for the new game
       const selectedIds = selectedPlayers.map(player => player.id);
       const newHistory = updatePlayHistory(playHistory, selectedIds);
       setPlayHistoryState(newHistory);
       
       // Remove selected players from queue
-      setQueue(queue.filter(p => !selectedIds.includes(p.id)));
+      setQueue(prevQueue => prevQueue.filter(p => !selectedIds.includes(p.id)));
       
       return selectedPlayers;
     }
