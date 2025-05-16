@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 export function ScoreKeepingSetting() {
@@ -13,9 +14,10 @@ export function ScoreKeepingSetting() {
   }, []);
 
   // Handle score keeping change
-  const handleScoreKeepingChange = (value: boolean) => {
-    setScoreKeeping(value);
-    localStorage.setItem("scoreKeeping", String(value));
+  const handleValueChange = (value: string) => {
+    const enabled = value === "enabled";
+    setScoreKeeping(enabled);
+    localStorage.setItem("scoreKeeping", String(enabled));
     
     // Show brief success toast
     toast({
@@ -30,10 +32,20 @@ export function ScoreKeepingSetting() {
         <h3 className="font-medium">Score Keeping</h3>
         <p className="text-sm text-muted-foreground">Track player wins and losses</p>
       </div>
-      <Switch 
-        checked={scoreKeeping}
-        onCheckedChange={handleScoreKeepingChange}
-      />
+      <RadioGroup 
+        value={scoreKeeping ? "enabled" : "disabled"} 
+        onValueChange={handleValueChange}
+        className="flex space-x-4"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="enabled" id="score-enabled" />
+          <Label htmlFor="score-enabled">Enable</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="disabled" id="score-disabled" />
+          <Label htmlFor="score-disabled">Disable</Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { setStorageItem, getStorageItem } from "@/utils/storageUtils";
 
 export function PlayerPreferencesSetting() {
@@ -13,9 +14,10 @@ export function PlayerPreferencesSetting() {
   }, []);
 
   // Save preferences setting to localStorage when it changes using the shared utility
-  const handleToggleChange = (checked: boolean) => {
-    setEnablePreferences(checked);
-    setStorageItem("enablePlayerPreferences", checked);
+  const handleValueChange = (value: string) => {
+    const enabled = value === "enabled";
+    setEnablePreferences(enabled);
+    setStorageItem("enablePlayerPreferences", enabled);
   };
 
   return (
@@ -24,10 +26,20 @@ export function PlayerPreferencesSetting() {
         <h3 className="font-medium">Player Preferences</h3>
         <p className="text-sm text-muted-foreground">Enable play style preferences (Open, Mixed, Ladies)</p>
       </div>
-      <Switch 
-        checked={enablePreferences}
-        onCheckedChange={handleToggleChange}
-      />
+      <RadioGroup 
+        value={enablePreferences ? "enabled" : "disabled"}
+        onValueChange={handleValueChange}
+        className="flex space-x-4"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="enabled" id="preferences-enabled" />
+          <Label htmlFor="preferences-enabled">Enable</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="disabled" id="preferences-disabled" />
+          <Label htmlFor="preferences-disabled">Disable</Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 }
