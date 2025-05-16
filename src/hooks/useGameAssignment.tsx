@@ -1,17 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Player } from "../types/player";
 import { PlayPreference } from "@/types/member";
-
-export type Player = {
-  id: number;
-  name: string;
-  gender: "male" | "female";
-  waitingTime: number;
-  isGuest?: boolean;
-  wins?: number;
-  losses?: number;
-  playPreferences?: PlayPreference[];
-}
 
 export function useGameAssignment() {
   const [nextGamePlayers, setNextGamePlayers] = useState<Player[]>([]);

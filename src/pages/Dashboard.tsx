@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayerQueue } from "@/components/PlayerQueue";
@@ -5,8 +6,10 @@ import { NextGame } from "@/components/NextGame";
 import { CourtStatus } from "@/components/CourtStatus";
 import { EndGameDialog } from "@/components/EndGameDialog";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
-import { useGameAssignment, Player } from "@/hooks/useGameAssignment";
+import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+import { Player } from "@/types/player";
+
 export default function Dashboard() {
   // Use our custom hooks
   const {
