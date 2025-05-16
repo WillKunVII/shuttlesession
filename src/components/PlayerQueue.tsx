@@ -150,12 +150,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       
                       {scoreKeepingEnabled && (
                         <span className="ml-1 text-sm text-gray-500">
-                          <span className="font-medium">Session:</span> W {sessionScore.wins || 0} – L {sessionScore.losses || 0}
-                          {player.wins !== undefined && (
-                            <span className="ml-2">
-                              <span className="font-medium">Total:</span> W {player.wins || 0} – L {player.losses || 0}
-                            </span>
-                          )}
+                          W {sessionScore.wins || 0} – L {sessionScore.losses || 0}
                         </span>
                       )}
                       
