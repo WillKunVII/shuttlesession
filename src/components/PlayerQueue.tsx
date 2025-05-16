@@ -9,6 +9,16 @@ import { isScoreKeepingEnabled, getStorageItem } from "@/utils/storageUtils";
 import { Badge } from "@/components/ui/badge";
 import { PlayPreference } from "@/types/member";
 import { Player } from "@/types/player";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PlayerQueueProps {
   players: Player[];
@@ -21,6 +31,10 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
+  
+  // State for leave confirmation dialog
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [playerToLeave, setPlayerToLeave] = useState<number | null>(null);
   
   // Get player pool size from localStorage or default to 8
   const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
@@ -59,13 +73,27 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     }
   };
   
-  const handlePlayerLeave = (playerId: number) => {
-    // Remove from selection if present
-    setSelected(selected.filter(p => p.id !== playerId));
-    // Call the provided onPlayerLeave callback
-    if (onPlayerLeave) {
-      onPlayerLeave(playerId);
+  const openLeaveConfirmation = (playerId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPlayerToLeave(playerId);
+    setLeaveDialogOpen(true);
+  };
+  
+  const confirmPlayerLeave = () => {
+    if (playerToLeave !== null && onPlayerLeave) {
+      // Remove from selection if present
+      setSelected(selected.filter(p => p.id !== playerToLeave));
+      // Call the provided onPlayerLeave callback
+      onPlayerLeave(playerToLeave);
+      // Reset the state
+      setPlayerToLeave(null);
     }
+    setLeaveDialogOpen(false);
+  };
+  
+  const cancelPlayerLeave = () => {
+    setPlayerToLeave(null);
+    setLeaveDialogOpen(false);
   };
   
   return (
@@ -152,10 +180,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       variant="ghost" 
                       size="sm" 
                       className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlayerLeave(player.id);
-                      }}
+                      onClick={(e) => openLeaveConfirmation(player.id, e)}
                     >
                       Leave
                     </Button>
@@ -166,6 +191,24 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           </div>
         </ScrollArea>
       )}
+      
+      {/* Leave Confirmation Dialog */}
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Player</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this player from the queue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelPlayerLeave}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPlayerLeave}>
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
