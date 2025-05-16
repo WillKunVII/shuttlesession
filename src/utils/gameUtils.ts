@@ -11,31 +11,39 @@ export const canFormValidGame = (players: Player[]): boolean => {
   const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
   if (!prefEnabled) return true;
   
-  // Get all preferences
-  const allPreferences = players.flatMap(p => p.playPreferences || []);
+  // Count genders
+  const maleCount = players.filter(p => p.gender === "male").length;
+  const femaleCount = players.filter(p => p.gender === "female").length;
   
-  // Check if Mixed game is possible and preferred
-  const isMixedPossible = 
-    players.filter(p => p.gender === "male").length === 2 && 
-    players.filter(p => p.gender === "female").length === 2;
+  // Check if Mixed game is possible 
+  const isMixedPossible = maleCount === 2 && femaleCount === 2;
   
-  const hasMixedPreference = allPreferences.includes("Mixed");
+  // Check if Ladies game is possible
+  const isLadiesPossible = femaleCount === 4;
   
-  // Check if Ladies game is possible and preferred
-  const isLadiesPossible = 
-    players.filter(p => p.gender === "female").length === 4;
+  // Check individual preferences
+  const playersWantMixed = players.filter(p => 
+    !p.playPreferences || 
+    p.playPreferences.length === 0 || 
+    p.playPreferences.includes("Mixed")
+  ).length === 4;
   
-  const hasLadiesPreference = allPreferences.includes("Ladies");
+  const playersWantLadies = players.filter(p => 
+    !p.playPreferences || 
+    p.playPreferences.length === 0 || 
+    p.playPreferences.includes("Ladies")
+  ).length === 4;
   
-  // Check if any game type is possible
-  const hasOpenPreference = allPreferences.includes("Open");
+  const playersWantOpen = players.filter(p => 
+    !p.playPreferences || 
+    p.playPreferences.length === 0 || 
+    p.playPreferences.includes("Open")
+  ).length === 4;
   
-  // If Mixed is possible and preferred, or Ladies is possible and preferred,
-  // or if Open play is allowed, then we can form a valid game
-  return (isMixedPossible && hasMixedPreference) || 
-         (isLadiesPossible && hasLadiesPreference) || 
-         hasOpenPreference || 
-         !prefEnabled;
+  // Check if any valid game type is possible
+  return (isMixedPossible && playersWantMixed) || 
+         (isLadiesPossible && playersWantLadies) || 
+         playersWantOpen;
 };
 
 /**
