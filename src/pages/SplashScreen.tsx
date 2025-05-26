@@ -7,7 +7,7 @@ const SplashScreen = () => {
   const handleStartSession = () => {
     navigate("/session");
   };
-  return <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6">
+  return <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6 bg-shuttle-primary">
       <div className="text-center animate-fade-in py-[120px]">
         <div className="flex justify-center mb-6">
           <div className="bg-transparent p-3 rounded-md flex items-center justify-center">

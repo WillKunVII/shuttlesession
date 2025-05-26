@@ -113,10 +113,10 @@ export default function Members() {
       <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="text-2xl font-bold mb-2 text-shuttle-lightBlue">Members</h1>
-          <p className="text-muted-foreground">Manage club members</p>
+          <p className="text-shuttle-lightBlue">Manage club members</p>
         </div>
         
-        <Button onClick={handleAddMember}>Add Member</Button>
+        <Button onClick={handleAddMember} className="text-shuttle-primary bg-shuttle-lightBlue">Add Member</Button>
       </div>
       
       <MemberList members={sortedMembers} isScoreKeepingEnabled={isScoreKeepingEnabled} preferencesEnabled={preferencesEnabled} onEditMember={handleEditClick} onDeleteMember={confirmDeleteMember} />
