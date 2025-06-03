@@ -1,21 +1,29 @@
+
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, Users, Settings } from "lucide-react";
-const navItems = [{
-  name: "Session",
-  path: "/session",
-  icon: Home
-}, {
-  name: "Members",
-  path: "/members",
-  icon: Users
-}, {
-  name: "Settings",
-  path: "/settings",
-  icon: Settings
-}];
+
+const navItems = [
+  {
+    name: "Session",
+    path: "/session",
+    icon: Home
+  },
+  {
+    name: "Members",
+    path: "/members",
+    icon: Users
+  },
+  {
+    name: "Settings",
+    path: "/settings",
+    icon: Settings
+  }
+];
+
 export function AppHeader() {
-  return <header className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-neutral-300 bg-neutral-000 safe-area-padding-top py-[13px]">
+  return (
+    <header className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-neutral-300 bg-neutral-000 safe-area-padding-top py-[13px]">
       <div className="flex items-center gap-2">
         <div className="bg-app-primary-700 p-1 rounded w-8 h-8 flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 28 56" fill="none" xmlns="http://www.w3.org/2000/svg" className="scale-75">
@@ -27,19 +35,30 @@ export function AppHeader() {
             <path fill-rule="evenodd" clip-rule="evenodd" d="M14.0003 0C19.7803 0.000392716 24.4666 4.73082 24.4666 10.566V18.4906C24.4666 18.4906 18.0927 19.0188 14.0003 19.0189C9.92442 19.0189 3.5853 18.4948 3.53401 18.4906V10.566C3.53401 4.73058 8.21992 0 14.0003 0ZM12.9537 7.00722C12.3756 7.00722 11.907 8.12735 11.907 9.50943C11.907 10.8915 12.3756 12.0116 12.9537 12.0116C13.5314 12.0107 14.0003 10.8909 14.0003 9.50943C14.0003 8.12792 13.5314 7.00815 12.9537 7.00722ZM18.1868 7.00722C17.6088 7.00722 17.1402 8.12735 17.1402 9.50943C17.1402 10.8915 17.6088 12.0116 18.1868 12.0116C18.7645 12.0107 19.2334 10.8909 19.2334 9.50943C19.2334 8.12793 18.7645 7.00815 18.1868 7.00722Z" fill="white" />
           </svg>
         </div>
-        <span className="font-bold text-lg text-neutral-900">ShuttleSession</span>
+        <span className="font-bold text-base sm:text-lg md:text-xl text-neutral-900">ShuttleSession</span>
       </div>
       
       {/* Navigation - consistent across all screen sizes */}
       <nav className="flex items-center gap-2">
-        {navItems.map(item => <NavLink key={item.path} to={item.path} aria-label={item.name} className={({
-        isActive
-      }) => cn("flex items-center justify-center transition-colors rounded-md",
-      // Larger touch target for mobile accessibility (WCAG 2.2 compliance)
-      "min-w-12 min-h-12 p-2", isActive ? "bg-app-primary-700 text-neutral-000" : "text-neutral-700 hover:bg-neutral-100")}>
-            <item.icon className="h-6 w-6" />
-            <span className="hidden sm:inline-block ml-2">{item.name}</span>
-          </NavLink>)}
+        {navItems.map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            aria-label={item.name}
+            className={({ isActive }) => cn(
+              "flex items-center justify-center transition-colors rounded-md",
+              // Larger touch target for mobile accessibility (WCAG 2.2 compliance)
+              "min-w-12 min-h-12 p-2",
+              isActive 
+                ? "bg-app-primary-700 text-neutral-000" 
+                : "text-neutral-700 hover:bg-neutral-100"
+            )}
+          >
+            <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="hidden sm:inline-block ml-2 text-sm sm:text-base">{item.name}</span>
+          </NavLink>
+        ))}
       </nav>
-    </header>;
+    </header>
+  );
 }

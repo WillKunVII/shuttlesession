@@ -25,18 +25,18 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
     <Dialog open={isOpen && hasScores} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl">Player of the Session</DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogTitle className="text-center text-xl sm:text-2xl md:text-3xl">Player of the Session</DialogTitle>
+          <DialogDescription className="text-center text-sm sm:text-base">
             Congratulations to our top players of this session!
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-6 space-y-6">
+        <div className="py-6 space-y-6 text-sm sm:text-base">
           <PlayerRankings topPlayers={topPlayers} />
         </div>
         
         <DialogFooter>
-          <Button onClick={onClose} className="w-full">
+          <Button onClick={onClose} className="w-full text-sm sm:text-base">
             Close
           </Button>
         </DialogFooter>
