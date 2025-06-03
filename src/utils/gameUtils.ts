@@ -1,4 +1,3 @@
-
 import { Player } from "../types/player";
 
 /**
@@ -114,4 +113,149 @@ export const determineBestGameType = (players: Player[]): "Mixed" | "Ladies" | "
  */
 export const getPlayerPoolSize = (): number => {
   return Number(localStorage.getItem("playerPoolSize")) || 8;
+};
+
+/**
+ * Gets game history from localStorage
+ */
+export const getGameHistory = (): Array<{players: string[], timestamp: number}> => {
+  try {
+    const history = localStorage.getItem("gameHistory");
+    return history ? JSON.parse(history) : [];
+  } catch (e) {
+    console.error("Error loading game history:", e);
+    return [];
+  }
+};
+
+/**
+ * Records a new game in the history
+ */
+export const recordGame = (playerNames: string[]): void => {
+  try {
+    const history = getGameHistory();
+    const newGame = {
+      players: [...playerNames].sort(), // Sort for consistent comparison
+      timestamp: Date.now()
+    };
+    
+    // Keep only last 50 games to prevent storage bloat
+    const updatedHistory = [newGame, ...history].slice(0, 50);
+    localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));
+  } catch (e) {
+    console.error("Error recording game history:", e);
+  }
+};
+
+/**
+ * Calculates how many times a group of players has played together
+ */
+export const getPlayedTogetherCount = (playerNames: string[]): number => {
+  const history = getGameHistory();
+  const sortedNames = [...playerNames].sort();
+  
+  return history.filter(game => {
+    return game.players.length === sortedNames.length &&
+           game.players.every(name => sortedNames.includes(name));
+  }).length;
+};
+
+/**
+ * Calculates a penalty score for how often players have played together
+ * Higher score = played together more often
+ */
+export const calculateRepeatPenalty = (players: Player[]): number => {
+  const playerNames = players.map(p => p.name);
+  
+  // Check full group of 4
+  const fullGroupCount = getPlayedTogetherCount(playerNames);
+  
+  // Check all possible pairs within the group
+  let pairPenalty = 0;
+  for (let i = 0; i < playerNames.length; i++) {
+    for (let j = i + 1; j < playerNames.length; j++) {
+      const pairCount = getPlayedTogetherCount([playerNames[i], playerNames[j]]);
+      pairPenalty += pairCount;
+    }
+  }
+  
+  // Weight full group repetition more heavily than pair repetition
+  return (fullGroupCount * 10) + (pairPenalty * 2);
+};
+
+/**
+ * Generates all valid 4-player combinations from the player pool
+ */
+export const generateValidCombinations = (poolPlayers: Player[]): Player[][] => {
+  const combinations: Player[][] = [];
+  
+  // Generate all possible 4-player combinations
+  for (let i = 0; i < poolPlayers.length - 3; i++) {
+    for (let j = i + 1; j < poolPlayers.length - 2; j++) {
+      for (let k = j + 1; k < poolPlayers.length - 1; k++) {
+        for (let l = k + 1; l < poolPlayers.length; l++) {
+          const combination = [poolPlayers[i], poolPlayers[j], poolPlayers[k], poolPlayers[l]];
+          if (canFormValidGame(combination)) {
+            combinations.push(combination);
+          }
+        }
+      }
+    }
+  }
+  
+  return combinations;
+};
+
+/**
+ * Finds the best player combination prioritizing the first player and minimizing repeats
+ */
+export const findBestCombination = (poolPlayers: Player[]): Player[] => {
+  if (poolPlayers.length < 4) return [];
+  
+  const topPlayer = poolPlayers[0];
+  
+  // Find all valid combinations that include the top player
+  const validCombinations = generateValidCombinations(poolPlayers)
+    .filter(combo => combo.some(p => p.id === topPlayer.id));
+  
+  if (validCombinations.length === 0) return [];
+  
+  // Score each combination based on:
+  // 1. Position of non-top players in queue (lower position = better)
+  // 2. Repeat penalty (fewer repeats = better)
+  const scoredCombinations = validCombinations.map(combo => {
+    // Calculate position penalty (sum of queue positions for non-top players)
+    const positionPenalty = combo
+      .filter(p => p.id !== topPlayer.id)
+      .reduce((sum, player) => {
+        const position = poolPlayers.findIndex(pp => pp.id === player.id);
+        return sum + position;
+      }, 0);
+    
+    // Calculate repeat penalty
+    const repeatPenalty = calculateRepeatPenalty(combo);
+    
+    // Total score (lower is better)
+    // Weight repeat penalty more heavily to prioritize avoiding repeats
+    const totalScore = positionPenalty + (repeatPenalty * 5);
+    
+    return {
+      combination: combo,
+      score: totalScore,
+      positionPenalty,
+      repeatPenalty
+    };
+  });
+  
+  // Sort by score (lower is better) and return the best combination
+  scoredCombinations.sort((a, b) => a.score - b.score);
+  
+  console.log("Top 3 combinations considered:", scoredCombinations.slice(0, 3).map(sc => ({
+    players: sc.combination.map(p => p.name),
+    score: sc.score,
+    positionPenalty: sc.positionPenalty,
+    repeatPenalty: sc.repeatPenalty
+  })));
+  
+  return scoredCombinations[0].combination;
 };
