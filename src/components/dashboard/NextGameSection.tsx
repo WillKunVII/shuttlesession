@@ -5,7 +5,7 @@ import { NextGame } from "@/components/NextGame";
 import { useDashboard } from "@/contexts/DashboardContext";
 
 export function NextGameSection() {
-  const { nextGamePlayers, generateNextGame, clearNextGame, queue } = useDashboard();
+  const { nextGamePlayers, generateNextGame, clearNextGame, queue, isNextGameReady } = useDashboard();
   
   return (
     <div className="bg-white rounded-xl shadow-sm p-3">
@@ -14,7 +14,7 @@ export function NextGameSection() {
         <Button 
           variant="outline" 
           onClick={() => generateNextGame()} 
-          disabled={queue.length < 4} 
+          disabled={queue.length < 4 || isNextGameReady()} 
           size="sm"
         >
           Auto-Select Players
