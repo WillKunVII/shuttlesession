@@ -25,9 +25,10 @@ interface PlayerQueueProps {
   onPlayerSelect: (selectedPlayers: Player[]) => void;
   onPlayerLeave?: (playerId: number) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
+  isNextGameReady?: boolean;
 }
 
-export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer }: PlayerQueueProps) {
+export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer, isNextGameReady = false }: PlayerQueueProps) {
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
@@ -58,8 +59,20 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
       }
     }
   }, [players, selected]);
+
+  // Clear selection when next game becomes ready
+  useEffect(() => {
+    if (isNextGameReady && selected.length > 0) {
+      setSelected([]);
+    }
+  }, [isNextGameReady, selected.length]);
   
   const togglePlayerSelection = (player: Player) => {
+    // Prevent selection if next game is already ready
+    if (isNextGameReady) {
+      return;
+    }
+
     if (selected.some(p => p.id === player.id)) {
       setSelected(selected.filter(p => p.id !== player.id));
     } else if (selected.length < 4) {
@@ -108,7 +121,7 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           
           <Button
             size="sm"
-            disabled={selected.length !== 4}
+            disabled={selected.length !== 4 || isNextGameReady}
             onClick={() => {
               onPlayerSelect(selected);
               setSelected([]);
@@ -118,6 +131,15 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           </Button>
         </div>
       </div>
+
+      {/* Error message when next game is ready */}
+      {isNextGameReady && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-yellow-800">
+            There's already a next game ready. Players cannot be manually selected until the current next game is assigned to a court.
+          </p>
+        </div>
+      )}
       
       {players.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
@@ -139,10 +161,16 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                   </div>
                 )}
                 <div
-                  className={`border rounded-lg p-3 flex items-center justify-between cursor-pointer ${
+                  className={`border rounded-lg p-3 flex items-center justify-between ${
+                    isNextGameReady 
+                      ? "opacity-60 cursor-not-allowed" 
+                      : "cursor-pointer"
+                  } ${
                     selected.some(p => p.id === player.id) 
                       ? "bg-shuttle-lightBlue border-shuttle-blue" 
-                      : "hover:bg-gray-50"
+                      : isNextGameReady 
+                        ? "" 
+                        : "hover:bg-gray-50"
                   }`}
                   onClick={() => togglePlayerSelection(player)}
                 >

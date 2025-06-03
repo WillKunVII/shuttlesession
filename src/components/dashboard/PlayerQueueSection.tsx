@@ -4,7 +4,7 @@ import { PlayerQueue } from "@/components/PlayerQueue";
 import { useDashboard } from "@/contexts/DashboardContext";
 
 export function PlayerQueueSection() {
-  const { queue, handlePlayerSelect, removePlayerFromQueue, addPlayerToQueue } = useDashboard();
+  const { queue, handlePlayerSelect, removePlayerFromQueue, addPlayerToQueue, isNextGameReady } = useDashboard();
   
   return (
     <div className="bg-white rounded-xl shadow-sm p-3">
@@ -12,7 +12,8 @@ export function PlayerQueueSection() {
         players={queue} 
         onPlayerSelect={handlePlayerSelect} 
         onPlayerLeave={removePlayerFromQueue} 
-        onAddPlayer={player => addPlayerToQueue(player)} 
+        onAddPlayer={player => addPlayerToQueue(player)}
+        isNextGameReady={isNextGameReady()}
       />
     </div>
   );
