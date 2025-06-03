@@ -62,9 +62,6 @@ export function usePlayerQueue() {
   };
 
   // Add multiple players to queue with position control
-  // returnToOriginalPositions: true = put back in original positions (for clearing selection)
-  // returnToOriginalPositions: false = put at end of queue (for game ended)
-  // winners: array of player names who won the game - they go to the end but above losers
   const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) => {
     if (returnToOriginalPositions) {
       // For clearing selection - return players to their original positions
@@ -155,9 +152,9 @@ export function usePlayerQueue() {
     return selectedPlayers;
   };
 
-  // Auto select top players from the queue
-  const autoSelectPlayers = (count: number = 4) => {
-    const selectedPlayers = selectPlayers(count);
+  // Auto select top players from the queue - now async
+  const autoSelectPlayers = async (count: number = 4): Promise<Player[]> => {
+    const selectedPlayers = await selectPlayers(count);
     
     if (selectedPlayers.length === count) {
       // Save original queue state before removing the selected players

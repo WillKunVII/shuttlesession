@@ -10,7 +10,7 @@ export function usePlayerSelection(queue: Player[]) {
    * Auto selects top players from the queue based on player pool size and preferences
    * Now prioritizes avoiding repeat games and minimizing player combinations that have played together
    */
-  const autoSelectPlayers = (count: number = 4): Player[] => {
+  const autoSelectPlayers = async (count: number = 4): Promise<Player[]> => {
     // Check if player preferences are enabled
     const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
     
@@ -28,13 +28,13 @@ export function usePlayerSelection(queue: Player[]) {
     if (!prefEnabled) {
       // If preferences are not enabled, use the new combination logic
       console.log("Preferences disabled, using combination logic for best selection");
-      return findBestCombination(poolPlayers);
+      return await findBestCombination(poolPlayers);
     } else {
       // If preferences are enabled, use the enhanced logic
       console.log("Preferences enabled, using enhanced selection logic");
       
       // Use the new combination-based approach that considers both preferences and history
-      const bestCombination = findBestCombination(poolPlayers);
+      const bestCombination = await findBestCombination(poolPlayers);
       
       if (bestCombination.length === 4) {
         console.log("Selected players:", bestCombination.map(p => p.name));

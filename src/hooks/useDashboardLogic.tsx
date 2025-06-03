@@ -4,6 +4,7 @@ import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
 import { usePlayerQueue } from "@/hooks/usePlayerQueue";
 import { getSessionScores } from "@/utils/storageUtils";
+import { recordGame } from "@/utils/gameUtils";
 
 export function useDashboardLogic() {
   // Use our custom hooks
@@ -43,11 +44,11 @@ export function useDashboardLogic() {
   // Get sorted courts
   const sortedCourts = getSortedCourts();
 
-  // Function to generate next game players (auto mode)
-  const generateNextGame = () => {
+  // Function to generate next game players (auto mode) - now async
+  const generateNextGame = async () => {
     if (queue.length >= 4) {
       console.log("Attempting to auto-select players from queue:", queue);
-      const selectedPlayers = autoSelectPlayers(4);
+      const selectedPlayers = await autoSelectPlayers(4);
       console.log("Auto-selected players:", selectedPlayers);
       if (selectedPlayers.length === 4) {
         setNextGame(selectedPlayers);
@@ -56,10 +57,14 @@ export function useDashboardLogic() {
   };
 
   // Function to assign next game to a court
-  const assignToFreeCourt = (courtId: number) => {
+  const assignToFreeCourt = async (courtId: number) => {
     if (isNextGameReady()) {
       const success = assignPlayersToCourtById(courtId, nextGamePlayers);
       if (success) {
+        // Record the game in IndexedDB
+        const playerNames = nextGamePlayers.map(p => p.name);
+        await recordGame(playerNames);
+        
         clearGamePlayers();
       }
     }

@@ -1,4 +1,5 @@
 import { Player } from "../types/player";
+import { gameHistoryDB } from "./indexedDbUtils";
 
 /**
  * Checks if a set of players can form a valid game based on preferences
@@ -116,65 +117,91 @@ export const getPlayerPoolSize = (): number => {
 };
 
 /**
- * Gets game history from localStorage
+ * Gets game history from IndexedDB (with fallback to localStorage)
  */
-export const getGameHistory = (): Array<{players: string[], timestamp: number}> => {
+export const getGameHistory = async (): Promise<Array<{players: string[], timestamp: number}>> => {
   try {
-    const history = localStorage.getItem("gameHistory");
-    return history ? JSON.parse(history) : [];
+    const games = await gameHistoryDB.getGameHistory(50);
+    return games.map(game => ({
+      players: game.players,
+      timestamp: game.timestamp
+    }));
   } catch (e) {
-    console.error("Error loading game history:", e);
-    return [];
+    console.error("Error loading game history from IndexedDB:", e);
+    
+    // Fallback to localStorage
+    try {
+      const history = localStorage.getItem("gameHistory");
+      return history ? JSON.parse(history) : [];
+    } catch (fallbackError) {
+      console.error("Error loading game history from localStorage fallback:", fallbackError);
+      return [];
+    }
   }
 };
 
 /**
- * Records a new game in the history
+ * Records a new game in IndexedDB (with fallback to localStorage)
  */
-export const recordGame = (playerNames: string[]): void => {
+export const recordGame = async (playerNames: string[]): Promise<void> => {
   try {
-    const history = getGameHistory();
-    const newGame = {
-      players: [...playerNames].sort(), // Sort for consistent comparison
-      timestamp: Date.now()
-    };
-    
-    // Keep only last 50 games to prevent storage bloat
-    const updatedHistory = [newGame, ...history].slice(0, 50);
-    localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));
+    await gameHistoryDB.addGame(playerNames);
+    console.log("Game recorded in IndexedDB");
   } catch (e) {
-    console.error("Error recording game history:", e);
+    console.error("Error recording game to IndexedDB:", e);
+    
+    // Fallback to localStorage
+    try {
+      const history = await getGameHistory();
+      const newGame = {
+        players: [...playerNames].sort(),
+        timestamp: Date.now()
+      };
+      
+      const updatedHistory = [newGame, ...history].slice(0, 50);
+      localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));
+      console.log("Game recorded in localStorage as fallback");
+    } catch (fallbackError) {
+      console.error("Error recording game to localStorage fallback:", fallbackError);
+    }
   }
 };
 
 /**
  * Calculates how many times a group of players has played together
  */
-export const getPlayedTogetherCount = (playerNames: string[]): number => {
-  const history = getGameHistory();
-  const sortedNames = [...playerNames].sort();
-  
-  return history.filter(game => {
-    return game.players.length === sortedNames.length &&
-           game.players.every(name => sortedNames.includes(name));
-  }).length;
+export const getPlayedTogetherCount = async (playerNames: string[]): Promise<number> => {
+  try {
+    return await gameHistoryDB.getPlayedTogetherCount(playerNames);
+  } catch (e) {
+    console.error("Error getting played together count from IndexedDB:", e);
+    
+    // Fallback to localStorage
+    const history = await getGameHistory();
+    const sortedNames = [...playerNames].sort();
+    
+    return history.filter(game => {
+      return game.players.length === sortedNames.length &&
+             game.players.every(name => sortedNames.includes(name));
+    }).length;
+  }
 };
 
 /**
  * Calculates a penalty score for how often players have played together
  * Higher score = played together more often
  */
-export const calculateRepeatPenalty = (players: Player[]): number => {
+export const calculateRepeatPenalty = async (players: Player[]): Promise<number> => {
   const playerNames = players.map(p => p.name);
   
   // Check full group of 4
-  const fullGroupCount = getPlayedTogetherCount(playerNames);
+  const fullGroupCount = await getPlayedTogetherCount(playerNames);
   
   // Check all possible pairs within the group
   let pairPenalty = 0;
   for (let i = 0; i < playerNames.length; i++) {
     for (let j = i + 1; j < playerNames.length; j++) {
-      const pairCount = getPlayedTogetherCount([playerNames[i], playerNames[j]]);
+      const pairCount = await getPlayedTogetherCount([playerNames[i], playerNames[j]]);
       pairPenalty += pairCount;
     }
   }
@@ -209,7 +236,7 @@ export const generateValidCombinations = (poolPlayers: Player[]): Player[][] => 
 /**
  * Finds the best player combination prioritizing the first player and minimizing repeats
  */
-export const findBestCombination = (poolPlayers: Player[]): Player[] => {
+export const findBestCombination = async (poolPlayers: Player[]): Promise<Player[]> => {
   if (poolPlayers.length < 4) return [];
   
   const topPlayer = poolPlayers[0];
@@ -223,7 +250,7 @@ export const findBestCombination = (poolPlayers: Player[]): Player[] => {
   // Score each combination based on:
   // 1. Position of non-top players in queue (lower position = better)
   // 2. Repeat penalty (fewer repeats = better)
-  const scoredCombinations = validCombinations.map(combo => {
+  const scoredCombinations = await Promise.all(validCombinations.map(async combo => {
     // Calculate position penalty (sum of queue positions for non-top players)
     const positionPenalty = combo
       .filter(p => p.id !== topPlayer.id)
@@ -233,7 +260,7 @@ export const findBestCombination = (poolPlayers: Player[]): Player[] => {
       }, 0);
     
     // Calculate repeat penalty
-    const repeatPenalty = calculateRepeatPenalty(combo);
+    const repeatPenalty = await calculateRepeatPenalty(combo);
     
     // Total score (lower is better)
     // Weight repeat penalty more heavily to prioritize avoiding repeats
@@ -245,7 +272,7 @@ export const findBestCombination = (poolPlayers: Player[]): Player[] => {
       positionPenalty,
       repeatPenalty
     };
-  });
+  }));
   
   // Sort by score (lower is better) and return the best combination
   scoredCombinations.sort((a, b) => a.score - b.score);
@@ -259,3 +286,6 @@ export const findBestCombination = (poolPlayers: Player[]): Player[] => {
   
   return scoredCombinations[0].combination;
 };
+
+// Migrate existing localStorage data to IndexedDB on app start
+gameHistoryDB.migrateFromLocalStorage().catch(console.error);
