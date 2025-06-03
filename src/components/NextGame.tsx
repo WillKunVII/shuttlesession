@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { PlayPreference } from "@/types/member";
+import { CheckCircle } from "lucide-react";
+
 interface Player {
   id: number;
   name: string;
@@ -9,10 +11,12 @@ interface Player {
   isGuest?: boolean;
   playPreferences?: PlayPreference[];
 }
+
 interface NextGameProps {
   players: Player[];
   onClear: () => void;
 }
+
 export function NextGame({
   players,
   onClear
@@ -27,6 +31,9 @@ export function NextGame({
     team2: []
   });
   const [gameType, setGameType] = useState<PlayPreference>("Open");
+  
+  const isGameReady = safePlayers.length === 4;
+  
   useEffect(() => {
     if (safePlayers.length === 4) {
       // Determine game type
@@ -79,32 +86,70 @@ export function NextGame({
       });
     }
   }, [safePlayers]);
-  return <div className="border rounded-lg p-3">
-      {safePlayers.length === 0 ? <div className="text-center py-8 text-muted-foreground">No game ready.
-Select players from the queue.</div> : <>
-          {safePlayers.length === 4 && <div className="mb-3 text-center">
-              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+  
+  return (
+    <div className={`border rounded-lg p-3 transition-all duration-300 ${
+      isGameReady 
+        ? 'border-green-500 bg-green-50 shadow-lg ring-2 ring-green-200' 
+        : 'border-gray-200'
+    }`}>
+      {safePlayers.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground text-sm">
+          No game ready. Select players from the queue.
+        </div>
+      ) : (
+        <>
+          {isGameReady && (
+            <div className="mb-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-lg font-semibold text-green-800">
+                  Next Game Ready!
+                </span>
+              </div>
+              <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-medium border border-green-200">
                 {gameType} Game
               </span>
-            </div>}
+            </div>
+          )}
+          
+          {!isGameReady && safePlayers.length > 0 && (
+            <div className="mb-3 text-center">
+              <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                {safePlayers.length}/4 Players Selected
+              </span>
+            </div>
+          )}
           
           <div className="grid grid-cols-2 gap-4">
             {/* Team 1 (Left Column) */}
             <div className="space-y-2">
-              {sortedPlayers.team1.map(player => <div key={player.id} className="flex items-center gap-2 text-sm py-1 px-3 rounded-full bg-gray-100">
+              {sortedPlayers.team1.map(player => (
+                <div key={player.id} className={`flex items-center gap-2 text-sm py-2 px-3 rounded-full transition-colors ${
+                  isGameReady ? 'bg-green-100 border border-green-200' : 'bg-gray-100'
+                }`}>
                   <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                  <span>{player.name}</span>
-                  {player.isGuest && <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>}
-                </div>)}
+                  <span className={isGameReady ? 'font-medium text-green-800' : ''}>{player.name}</span>
+                  {player.isGuest && (
+                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                  )}
+                </div>
+              ))}
             </div>
             
             {/* Team 2 (Right Column) */}
             <div className="space-y-2">
-              {sortedPlayers.team2.map(player => <div key={player.id} className="flex items-center gap-2 text-sm py-1 px-3 rounded-full bg-gray-100">
+              {sortedPlayers.team2.map(player => (
+                <div key={player.id} className={`flex items-center gap-2 text-sm py-2 px-3 rounded-full transition-colors ${
+                  isGameReady ? 'bg-green-100 border border-green-200' : 'bg-gray-100'
+                }`}>
                   <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                  <span>{player.name}</span>
-                  {player.isGuest && <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>}
-                </div>)}
+                  <span className={isGameReady ? 'font-medium text-green-800' : ''}>{player.name}</span>
+                  {player.isGuest && (
+                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
           
@@ -113,6 +158,8 @@ Select players from the queue.</div> : <>
               Clear Selection
             </Button>
           </div>
-        </>}
-    </div>;
+        </>
+      )}
+    </div>
+  );
 }
