@@ -38,15 +38,15 @@ export function ScoreKeepingSetting() {
       <RadioGroup 
         value={scoreKeeping ? "enabled" : "disabled"} 
         onValueChange={handleValueChange}
-        className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-4"}`}
+        className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-2"}`}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="enabled" id="score-enabled" />
-          <Label htmlFor="score-enabled">Enable</Label>
+          <Label htmlFor="score-enabled" className="cursor-pointer">Enable</Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="disabled" id="score-disabled" />
-          <Label htmlFor="score-disabled">Disable</Label>
+          <Label htmlFor="score-disabled" className="cursor-pointer">Disable</Label>
         </div>
       </RadioGroup>
     </div>

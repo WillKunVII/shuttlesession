@@ -31,15 +31,15 @@ export function PlayerPreferencesSetting() {
       <RadioGroup 
         value={enablePreferences ? "enabled" : "disabled"}
         onValueChange={handleValueChange}
-        className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-4"}`}
+        className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-2"}`}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="enabled" id="preferences-enabled" />
-          <Label htmlFor="preferences-enabled">Enable</Label>
+          <Label htmlFor="preferences-enabled" className="cursor-pointer">Enable</Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="disabled" id="preferences-disabled" />
-          <Label htmlFor="preferences-disabled">Disable</Label>
+          <Label htmlFor="preferences-disabled" className="cursor-pointer">Disable</Label>
         </div>
       </RadioGroup>
     </div>

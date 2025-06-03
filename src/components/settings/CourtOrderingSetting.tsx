@@ -40,15 +40,15 @@ export function CourtOrderingSetting() {
         <RadioGroup 
           value={courtOrdering} 
           onValueChange={handleCourtOrderingChange}
-          className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-4"}`}
+          className={`flex ${isMobile ? "flex-col space-y-2" : "space-x-2"}`}
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
             <RadioGroupItem value="ascending" id="ascending" />
-            <Label htmlFor="ascending">Ascending</Label>
+            <Label htmlFor="ascending" className="cursor-pointer">Ascending</Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
             <RadioGroupItem value="descending" id="descending" />
-            <Label htmlFor="descending">Descending</Label>
+            <Label htmlFor="descending" className="cursor-pointer">Descending</Label>
           </div>
         </RadioGroup>
       </div>
