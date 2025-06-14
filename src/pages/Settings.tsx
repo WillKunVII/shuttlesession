@@ -1,11 +1,19 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SessionControl } from "@/components/settings/SessionControl";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { PlayerOfMonthDialog } from "@/components/PlayerOfMonthDialog";
 
 export default function Settings() {
   const [showMonthDialog, setShowMonthDialog] = useState(false);
+
+  // Add debug logs to track dialog open state
+  useEffect(() => {
+    if (showMonthDialog) {
+      console.log("Settings: PlayerOfMonthDialog opened");
+    } else {
+      console.log("Settings: PlayerOfMonthDialog closed");
+    }
+  }, [showMonthDialog]);
 
   return (
     <div className="space-y-6 w-full col-span-full">

@@ -36,6 +36,7 @@ export function SessionControl() {
   };
 
   const finishEndSession = () => {
+    console.log("SessionControl: finishEndSession called");
     // Clear player queue and next game data
     localStorage.removeItem("playerQueue");
     localStorage.removeItem("nextGamePlayers");
