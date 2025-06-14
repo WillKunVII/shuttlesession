@@ -16,6 +16,8 @@ interface PlayerStats {
   gamesPlayed: number;
   lastPlayed: number;
   partners: Record<string, number>; // partner name -> times played together
+  wins: number;
+  losses: number;
 }
 
 class GameHistoryDB {
@@ -58,7 +60,7 @@ class GameHistoryDB {
     });
   }
 
-  async addGame(playerNames: string[], gameType?: string, courtId?: number): Promise<void> {
+  async addGame(playerNames: string[], gameType?: string, courtId?: number, winners?: string[]): Promise<void> {
     if (!this.db) await this.init();
 
     const transaction = this.db!.transaction(['gameHistory', 'playerStats'], 'readwrite');
@@ -79,17 +81,25 @@ class GameHistoryDB {
       request.onerror = () => reject(request.error);
     });
 
-    // Update player stats
+    // Update player stats (always increment gamesPlayed, and update win/loss if provided)
     for (const playerName of playerNames) {
       const stats = await this.getPlayerStats(playerName) || {
         name: playerName,
         gamesPlayed: 0,
         lastPlayed: 0,
-        partners: {}
+        partners: {},
+        wins: 0,
+        losses: 0
       };
 
       stats.gamesPlayed += 1;
       stats.lastPlayed = Date.now();
+
+      // Initialize wins/losses if not present
+      stats.wins = stats.wins || 0;
+      stats.losses = stats.losses || 0;
+      // If this is a win/loss record, update accordingly (optional, for extension)
+      // --- not supplied in most contexts, so we can't determine win/loss from just player list ---
 
       // Update partner counts
       for (const partner of playerNames) {
@@ -207,6 +217,18 @@ class GameHistoryDB {
       };
 
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  // Add: Clear all playerStats (reset all-time wins/losses)
+  async clearAllPlayerStats(): Promise<void> {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['playerStats'], 'readwrite');
+      const statsStore = transaction.objectStore('playerStats');
+      const req = statsStore.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
     });
   }
 }
