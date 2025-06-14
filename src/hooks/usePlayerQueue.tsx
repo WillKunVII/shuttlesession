@@ -15,8 +15,49 @@ export function usePlayerQueue() {
   // Use the persistence hook for loading/saving player data
   usePlayerPersistence(queue, setQueue);
   
+  // Piggyback state: stores up to 2 player IDs
+  const [piggybackPair, setPiggybackPair] = useState<number[]>(() => {
+    // Try to load piggyback from storage
+    const saved = localStorage.getItem("piggybackPair");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length <= 2) {
+          return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  // persist piggyback pair to localStorage
+  const savePiggybackPair = (pair: number[]) => {
+    setPiggybackPair(pair);
+    localStorage.setItem("piggybackPair", JSON.stringify(pair));
+  };
+
+  // Add or remove a player to piggyback pair
+  const togglePiggybackPlayer = (playerId: number) => {
+    if (piggybackPair.includes(playerId)) {
+      // Remove player from pair
+      const newPair = piggybackPair.filter(id => id !== playerId);
+      savePiggybackPair(newPair);
+    } else if (piggybackPair.length < 2) {
+      savePiggybackPair([...piggybackPair, playerId]);
+    } else {
+      // If 2 already, replace the oldest
+      savePiggybackPair([piggybackPair[1], playerId]);
+    }
+  };
+
+  // Clear piggyback (e.g. after assignment)
+  const clearPiggyback = () => {
+    savePiggybackPair([]);
+  };
+  
   // Use the player selection hook for auto-selecting players
-  const { autoSelectPlayers: selectPlayers } = usePlayerSelection(queue);
+  // Pass piggybackPair!
+  const { autoSelectPlayers: selectPlayers } = usePlayerSelection(queue, { piggybackPair });
 
   // Add player to queue
   const addPlayerToQueue = (player: Omit<Player, "id" | "waitingTime">) => {
@@ -183,46 +224,6 @@ export function usePlayerQueue() {
           : player
       )
     );
-  };
-
-  // Piggyback state: stores up to 2 player IDs
-  const [piggybackPair, setPiggybackPair] = useState<number[]>(() => {
-    // Try to load piggyback from storage
-    const saved = localStorage.getItem("piggybackPair");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length <= 2) {
-          return parsed;
-        }
-      } catch {}
-    }
-    return [];
-  });
-
-  // persist piggyback pair to localStorage
-  const savePiggybackPair = (pair: number[]) => {
-    setPiggybackPair(pair);
-    localStorage.setItem("piggybackPair", JSON.stringify(pair));
-  };
-
-  // Add or remove a player to piggyback pair
-  const togglePiggybackPlayer = (playerId: number) => {
-    if (piggybackPair.includes(playerId)) {
-      // Remove player from pair
-      const newPair = piggybackPair.filter(id => id !== playerId);
-      savePiggybackPair(newPair);
-    } else if (piggybackPair.length < 2) {
-      savePiggybackPair([...piggybackPair, playerId]);
-    } else {
-      // If 2 already, replace the oldest
-      savePiggybackPair([piggybackPair[1], playerId]);
-    }
-  };
-
-  // Clear piggyback (e.g. after assignment)
-  const clearPiggyback = () => {
-    savePiggybackPair([]);
   };
 
   return {
