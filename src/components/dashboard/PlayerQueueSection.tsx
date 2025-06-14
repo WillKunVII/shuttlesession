@@ -10,9 +10,11 @@ export function PlayerQueueSection() {
     removePlayerFromQueue, 
     addPlayerToQueue, 
     isNextGameReady,
-    piggybackPair, // <-- add these lines
-    togglePiggybackPlayer,
-    clearPiggyback
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair,
+    clearPiggybackPairs,
   } = useDashboard();
   
   return (
@@ -23,9 +25,11 @@ export function PlayerQueueSection() {
         onPlayerLeave={removePlayerFromQueue}
         onAddPlayer={player => addPlayerToQueue(player)}
         isNextGameReady={isNextGameReady()}
-        piggybackPair={piggybackPair} // <-- pass new props
-        togglePiggybackPlayer={togglePiggybackPlayer}
-        clearPiggyback={clearPiggyback}
+        piggybackPairs={piggybackPairs}
+        addPiggybackPair={addPiggybackPair}
+        removePiggybackPair={removePiggybackPair}
+        findPiggybackPair={findPiggybackPair}
+        clearPiggybackPairs={clearPiggybackPairs}
       />
     </div>
   );
