@@ -129,6 +129,14 @@ export function PlayerQueue({
     if (playerToLeave !== null && onPlayerLeave) {
       // Remove from selection if present
       setSelected(selected.filter(p => p.id !== playerToLeave));
+      // Check for piggyback pair and remove if this player is involved
+      if (findPiggybackPair && removePiggybackPair) {
+        const pair = findPiggybackPair(playerToLeave);
+        if (pair) {
+          // Remove the piggyback pair by master ID
+          removePiggybackPair(pair.master);
+        }
+      }
       // Call the provided onPlayerLeave callback
       onPlayerLeave(playerToLeave);
       // Reset the state
