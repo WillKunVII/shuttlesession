@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Court, CourtPlayer } from "@/types/DashboardTypes";
+import { PlayerCardSmall } from "./PlayerCardSmall";
 
 interface CourtStatusProps {
   court: Court;
@@ -100,7 +101,10 @@ function PlayersList({ players }: PlayersListProps) {
   return (
     <div className="grid grid-cols-2 gap-2">
       {players.map((player, idx) => (
-        <PlayerTag key={idx} player={player} />
+        <PlayerCardSmall
+          key={idx}
+          player={player}
+        />
       ))}
     </div>
   );

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { PlayPreference } from "@/types/member";
 import { CheckCircle } from "lucide-react";
+import { PlayerCardSmall } from "./PlayerCardSmall";
 
 interface Player {
   id: number;
@@ -125,30 +126,22 @@ export function NextGame({
             {/* Team 1 (Left Column) */}
             <div className="space-y-2">
               {sortedPlayers.team1.map(player => (
-                <div key={player.id} className={`flex items-center gap-2 text-sm py-2 px-3 rounded-full transition-colors ${
-                  isGameReady ? 'bg-green-100 border border-green-200' : 'bg-gray-100'
-                }`}>
-                  <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                  <span className={isGameReady ? 'font-medium text-green-800' : ''}>{player.name}</span>
-                  {player.isGuest && (
-                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                  )}
-                </div>
+                <PlayerCardSmall
+                  key={player.id}
+                  player={player}
+                  highlight={isGameReady}
+                />
               ))}
             </div>
             
             {/* Team 2 (Right Column) */}
             <div className="space-y-2">
               {sortedPlayers.team2.map(player => (
-                <div key={player.id} className={`flex items-center gap-2 text-sm py-2 px-3 rounded-full transition-colors ${
-                  isGameReady ? 'bg-green-100 border border-green-200' : 'bg-gray-100'
-                }`}>
-                  <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                  <span className={isGameReady ? 'font-medium text-green-800' : ''}>{player.name}</span>
-                  {player.isGuest && (
-                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                  )}
-                </div>
+                <PlayerCardSmall
+                  key={player.id}
+                  player={player}
+                  highlight={isGameReady}
+                />
               ))}
             </div>
           </div>
