@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,10 @@ export function SessionControl() {
   // Check if score keeping is enabled
   const scoreKeeping = localStorage.getItem("scoreKeeping") !== "false";
 
-  const handleEndSession = () => {
+  const handleEndSession = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent AlertDialogAction from closing the dialog and unmounting before our code runs
+    if (event) event.preventDefault();
+
     // Show Player of Session dialog if score keeping is enabled
     if (scoreKeeping) {
       setShowPlayerOfSession(true);
@@ -73,7 +75,10 @@ export function SessionControl() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleEndSession}>
+              <AlertDialogAction
+                onClick={handleEndSession}
+                // Radix will pass an event. Our handler safely .preventDefault()'s.
+              >
                 End Session
               </AlertDialogAction>
             </AlertDialogFooter>
