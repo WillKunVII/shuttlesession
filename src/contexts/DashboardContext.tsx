@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState } from "react";
+
+import React, { createContext, useContext } from "react";
 import { Player } from "@/types/player";
 import { Court } from "@/types/DashboardTypes";
 import { PlayPreference } from "@/types/member";
-import { usePlayerQueue } from "@/hooks/usePlayerQueue";
-import { useCourtManagement } from "@/hooks/useCourtManagement";
+import { useDashboardLogic } from "@/hooks/useDashboardLogic";
 import { CurrentCourtPlayers } from "@/types/DashboardTypes";
 
 interface DashboardContextType {
@@ -33,51 +33,39 @@ interface DashboardContextType {
   canFormValidGame: (players: Player[]) => boolean;
 }
 
+// Create the context object
 export const DashboardContext = createContext<DashboardContextType | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const playerQueue = usePlayerQueue();
-  const courtMgmt = useCourtManagement();
+  // Use the hook with all logic
+  const logic = useDashboardLogic();
 
-  // Add updateActivePlayerInfo for member edits
-  const updateActivePlayerInfo = (memberUpdate: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: any[] }) => {
-    playerQueue.updatePlayerInfo(memberUpdate);
-    courtMgmt.updateCourtPlayerInfo(memberUpdate);
+  // updateActivePlayerInfo just updates the queue/courts with new member info
+  const updateActivePlayerInfo = (memberUpdate: {
+    name: string,
+    gender?: "male" | "female",
+    isGuest?: boolean,
+    playPreferences?: PlayPreference[]
+  }) => {
+    // Attempt to update via props if present
+    if (logic.updatePlayerInfo) {
+      logic.updatePlayerInfo(memberUpdate);
+    }
+    if (logic.updateCourtPlayerInfo) {
+      logic.updateCourtPlayerInfo(memberUpdate);
+    }
   };
 
-  // State for endGameDialog and for the court currently ending a game
-  const [endGameDialogOpen, setEndGameDialogOpen] = useState(false);
-
-  const initialCurrentCourtPlayers: CurrentCourtPlayers = { id: 0, players: [] };
-  const [currentCourtPlayers, setCurrentCourtPlayers] = useState<CurrentCourtPlayers>(initialCurrentCourtPlayers);
-
-  // NOTE: The rest of your hook composition for queue/courts/etc
-  // The actual logic like handleEndGameClick, assignToFreeCourt, etc should now use setCurrentCourtPlayers when needed
-
+  // Expose everything expected by context
   return (
-    <DashboardContext.Provider value={{
-      ...playerQueue,
-      ...courtMgmt,
-      currentCourtPlayers,
-      setCurrentCourtPlayers,
-      endGameDialogOpen,
-      setEndGameDialogOpen,
-      updateActivePlayerInfo,
-      queue: playerQueue.queue,
-      nextGamePlayers: [],
-      sortedCourts: courtMgmt.getSortedCourts(),
-      addPlayerToQueue: playerQueue.addPlayerToQueue,
-      removePlayerFromQueue: playerQueue.removePlayerFromQueue,
-      generateNextGame: async () => {},
-      assignToFreeCourt: async (courtId: number) => {},
-      handleEndGameClick: (courtId: number) => {},
-      handlePlayerSelect: (selectedPlayers: Player[]) => {},
-      clearNextGame: () => {},
-      finishEndGame: (courtId: number, winnerNames: string[]) => {},
-      isNextGameReady: () => false,
-      getPlayerPoolSize: () => 0,
-      canFormValidGame: (players: Player[]) => false,
-    }}>
+    <DashboardContext.Provider
+      value={{
+        ...logic,
+        updateActivePlayerInfo,
+        getPlayerPoolSize: logic.getPlayerPoolSize || (() => 0),
+        canFormValidGame: logic.canFormValidGame || (() => false),
+      }}
+    >
       {children}
     </DashboardContext.Provider>
   );
