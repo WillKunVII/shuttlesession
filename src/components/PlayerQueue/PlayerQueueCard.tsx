@@ -46,9 +46,9 @@ export function PlayerQueueCard({
       }`}
       onClick={() => onPlayerSelect(player)}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap min-w-0">
         <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
-        <span className="font-medium">{player.name}</span>
+        <span className="font-medium truncate max-w-[100px]">{player.name}</span>
         {player.isGuest && (
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
         )}
@@ -60,11 +60,20 @@ export function PlayerQueueCard({
         )}
         {/* (Optionally add play preferences and scores here as before) */}
         {scoreKeepingEnabled && (
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 flex items-center gap-1">
             W {player.sessionWins || 0} – L {player.sessionLosses || 0}
+            {selected && (
+              <span className="ml-2 h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center">
+                <Check className="h-3 w-3 text-white" />
+              </span>
+            )}
           </span>
         )}
-
+        {(!scoreKeepingEnabled && selected) && (
+          <span className="ml-1 h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center">
+            <Check className="h-3 w-3 text-white" />
+          </span>
+        )}
         {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
           <div className="flex gap-1 ml-2">
             {player.playPreferences.map((pref) => (
@@ -75,7 +84,7 @@ export function PlayerQueueCard({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-4">
         {togglePiggybackPlayer && (
           <Button
             variant={piggybackPair.includes(player.id) ? "secondary" : "ghost"}
@@ -90,11 +99,6 @@ export function PlayerQueueCard({
             {piggybackPair.includes(player.id) ? "Unpiggyback" : piggybackPair.length < 2 ? "Piggyback" : "Swap Piggyback"}
             <Users className="w-4 h-4 ml-1" />
           </Button>
-        )}
-        {selected && (
-          <div className="h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center mr-2">
-            <Check className="h-3 w-3 text-white" />
-          </div>
         )}
         <Button 
           variant="ghost" 
