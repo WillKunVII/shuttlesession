@@ -20,6 +20,9 @@ export type CurrentCourtPlayers = {
   players: CourtPlayer[];
 };
 
+// ADD PiggybackPair type here as well for DashboardContextType
+export type PiggybackPair = { master: number; partner: number };
+
 export type DashboardContextType = {
   queue: Player[];
   nextGamePlayers: Player[];
@@ -36,9 +39,12 @@ export type DashboardContextType = {
   setEndGameDialogOpen: (open: boolean) => void;
   finishEndGame: (courtId: number, winnerNames: string[]) => void;
   isNextGameReady: () => boolean;
-  piggybackPair: number[];
-  togglePiggybackPlayer: (playerId: number) => void;
-  clearPiggyback: () => void;
+  // --- Piggyback MULTIPLE pairs ---
+  piggybackPairs: PiggybackPair[];
+  addPiggybackPair: (master: number, partner: number) => void;
+  removePiggybackPair: (master: number) => void;
+  findPiggybackPair: (playerId: number) => PiggybackPair | undefined;
+  clearPiggybackPairs?: () => void;
   // ADDED (fix): updateActivePlayerInfo
   updateActivePlayerInfo: (memberUpdate: {
     name: string;

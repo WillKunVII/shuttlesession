@@ -7,11 +7,13 @@ import { getSessionScores } from "@/utils/storageUtils";
 import { recordGame } from "@/utils/gameUtils";
 
 // ADD PROPS: piggybackPair state and handlers
+type PiggybackPair = { master: number; partner: number };
+
 type DashboardLogicArgs = {
-  piggybackPairs: { master: number; partner: number }[];
+  piggybackPairs: PiggybackPair[];
   addPiggybackPair: (master: number, partner: number) => void;
   removePiggybackPair: (master: number) => void;
-  findPiggybackPair: (playerId: number) => { master: number; partner: number } | undefined;
+  findPiggybackPair: (playerId: number) => PiggybackPair | undefined;
 };
 
 export function useDashboardLogic({
@@ -20,7 +22,7 @@ export function useDashboardLogic({
   removePiggybackPair,
   findPiggybackPair
 }: DashboardLogicArgs) {
-  // Use our custom hooks, NOW PASS piggyback props!
+  // Use our custom hooks, NOW PASS piggybackPairs!
   const {
     queue,
     addPlayerToQueue,
@@ -28,7 +30,7 @@ export function useDashboardLogic({
     addPlayersToQueue,
     removePlayersFromQueue,
     autoSelectPlayers
-  } = usePlayerQueue({ piggybackPairs });
+  } = usePlayerQueue({ piggybackPairs }); // pass as piggybackPairs
 
   const {
     nextGamePlayers,

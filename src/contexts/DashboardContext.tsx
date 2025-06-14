@@ -81,11 +81,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     updateActivePlayerInfo,
     getPlayerPoolSize,
     canFormValidGame,
-    // Piggyback additions
+    // fixed: use piggybackPairs array for multi-pair support
     piggybackPairs: piggyback.piggybackPairs,
     addPiggybackPair: piggyback.addPair,
     removePiggybackPair: piggyback.removePairByMaster,
     findPiggybackPair: piggyback.findPairOf,
+    clearPiggybackPairs: piggyback.clearAllPairs,
   };
 
   return (

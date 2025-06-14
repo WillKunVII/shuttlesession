@@ -1,9 +1,10 @@
 
 import { Player } from "../types/player";
 import { canFormValidGame, determineBestGameType, getPlayerPoolSize, findBestCombination } from "../utils/gameUtils";
+import { PiggybackPair } from "./usePiggybackPairs";
 
 type UsePlayerSelectionOptions = {
-  piggybackPairs?: { master: number; partner: number }[];
+  piggybackPairs?: PiggybackPair[];
 };
 
 export function usePlayerSelection(queue: Player[], options?: UsePlayerSelectionOptions) {

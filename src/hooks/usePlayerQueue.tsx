@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
@@ -11,10 +10,13 @@ import { useQueueMutations } from "./useQueueMutations";
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
 
+type PiggybackPair = { master: number; partner: number };
 type UsePlayerQueueArgs = {
-  piggybackPair: number[];
-  togglePiggybackPlayer: (playerId: number) => void;
-  clearPiggyback: () => void;
+  piggybackPairs: PiggybackPair[];
+  addPiggybackPair?: (master: number, partner: number) => void;
+  removePiggybackPair?: (master: number) => void;
+  findPiggybackPair?: (playerId: number) => PiggybackPair | undefined;
+  clearPiggybackPairs?: () => void;
 };
 
 export function usePlayerQueue(args: UsePlayerQueueArgs) {
@@ -24,10 +26,10 @@ export function usePlayerQueue(args: UsePlayerQueueArgs) {
   usePlayerPersistence(queue, setQueue);
 
   // Piggyback from props/args
-  const { piggybackPair, togglePiggybackPlayer, clearPiggyback } = args;
+  const { piggybackPairs } = args;
 
-  // Use the player selection hook for auto-selecting players, and pass piggybackPair!
-  const { autoSelectPlayers: selectPlayers } = usePlayerSelection(queue, { piggybackPair });
+  // Use the player selection hook for auto-selecting players, and pass piggybackPairs!
+  const { autoSelectPlayers: selectPlayers } = usePlayerSelection(queue, { piggybackPairs });
 
   // Expose queue mutation helpers
   const {
@@ -93,9 +95,6 @@ export function usePlayerQueue(args: UsePlayerQueueArgs) {
     getPlayerPoolSize,
     canFormValidGame,
     updatePlayerInfo: updatePlayer,
-    piggybackPair,
-    togglePiggybackPlayer,
-    clearPiggyback,
+    piggybackPairs,
   };
 }
-
