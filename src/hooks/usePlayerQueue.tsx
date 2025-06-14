@@ -169,6 +169,22 @@ export function usePlayerQueue() {
     return [];
   };
 
+  // Update a player's info in queue (by name)
+  const updatePlayerInfo = (updated: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: PlayPreference[] }) => {
+    setQueue(prevQueue =>
+      prevQueue.map(player =>
+        player.name === updated.name
+          ? {
+              ...player,
+              ...(updated.gender && { gender: updated.gender }),
+              ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+              ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+            }
+          : player
+      )
+    );
+  };
+
   return {
     queue,
     addPlayerToQueue,
@@ -177,6 +193,7 @@ export function usePlayerQueue() {
     removePlayersFromQueue,
     autoSelectPlayers,
     getPlayerPoolSize,
-    canFormValidGame
+    canFormValidGame,
+    updatePlayerInfo // <--- Expose updater
   };
 }

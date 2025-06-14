@@ -130,10 +130,30 @@ export function useCourtManagement() {
     return [];
   };
 
+  // Update a player's info in all courts by name
+  const updateCourtPlayerInfo = (updated: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: any[] }) => {
+    setCourts((prevCourts) =>
+      prevCourts.map((court) => ({
+        ...court,
+        players: court.players.map((p: any) =>
+          p.name === updated.name
+            ? {
+                ...p,
+                ...(updated.gender && { gender: updated.gender }),
+                ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+                ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+              }
+            : p
+        )
+      }))
+    );
+  };
+
   return {
     courts,
     getSortedCourts,
     assignPlayersToCourtById,
-    endGameOnCourt
+    endGameOnCourt,
+    updateCourtPlayerInfo // <--- Expose updater
   };
 }

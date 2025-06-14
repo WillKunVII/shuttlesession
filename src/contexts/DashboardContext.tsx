@@ -1,24 +1,63 @@
-
 import React, { createContext, useContext } from "react";
-import { useDashboardLogic } from "@/hooks/useDashboardLogic";
-import { DashboardContextType } from "@/types/DashboardTypes";
+import { Player } from "@/types/player";
+import { Court } from "@/types/DashboardTypes";
+import { PlayPreference } from "@/types/member";
+import { usePlayerQueue } from "@/hooks/usePlayerQueue";
+import { useCourtManagement } from "@/hooks/useCourtManagement";
 
-const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+interface DashboardContextType {
+  queue: Player[];
+  nextGamePlayers: Player[];
+  sortedCourts: Court[];
+  endGameDialogOpen: boolean;
+  currentCourtPlayers: { id: number; players: any[] };
+  addPlayerToQueue: (player: Omit<Player, "id" | "waitingTime">) => void;
+  removePlayerFromQueue: (playerId: number) => void;
+  generateNextGame: () => Promise<void>;
+  assignToFreeCourt: (courtId: number) => Promise<void>;
+  handleEndGameClick: (courtId: number) => void;
+  handlePlayerSelect: (selectedPlayers: Player[]) => void;
+  clearNextGame: () => void;
+  setEndGameDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  finishEndGame: (courtId: number, winnerNames: string[]) => void;
+  isNextGameReady: () => boolean;
+  updateActivePlayerInfo: (memberUpdate: {
+    name: string;
+    gender?: "male" | "female";
+    isGuest?: boolean;
+    playPreferences?: PlayPreference[];
+  }) => void;
+  getPlayerPoolSize: () => number;
+  canFormValidGame: (players: Player[]) => boolean;
+}
 
-export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const dashboardState = useDashboardLogic();
-  
+export const DashboardContext = createContext<any>(null);
+
+export function DashboardProvider({ children }: { children: React.ReactNode }) {
+  const playerQueue = usePlayerQueue();
+  const courtMgmt = useCourtManagement();
+
+  // Add updateActivePlayerInfo for member edits
+  const updateActivePlayerInfo = (memberUpdate: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: any[] }) => {
+    playerQueue.updatePlayerInfo(memberUpdate);
+    courtMgmt.updateCourtPlayerInfo(memberUpdate);
+  };
+
   return (
-    <DashboardContext.Provider value={dashboardState}>
+    <DashboardContext.Provider value={{
+      ...playerQueue,
+      ...courtMgmt,
+      updateActivePlayerInfo,
+    }}>
       {children}
     </DashboardContext.Provider>
   );
-};
+}
 
-export const useDashboard = () => {
+export function useDashboard(): DashboardContextType {
   const context = useContext(DashboardContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useDashboard must be used within a DashboardProvider");
   }
   return context;
-};
+}

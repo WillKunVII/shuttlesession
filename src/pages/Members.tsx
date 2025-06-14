@@ -6,6 +6,7 @@ import { Member } from "@/types/member";
 import { MemberForm } from "@/components/members/MemberForm";
 import { MemberList } from "@/components/members/MemberList";
 import { DeleteConfirmDialog } from "@/components/members/DeleteConfirmDialog";
+import { useDashboard } from "@/contexts/DashboardContext";
 
 // Empty initial members list
 const initialMembers: Member[] = [];
@@ -17,6 +18,8 @@ export default function Members() {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
+
+  const { updateActivePlayerInfo } = useDashboard();
 
   // Load members from localStorage on component mount
   useEffect(() => {
@@ -75,6 +78,13 @@ export default function Members() {
       } : member);
       setMembers(updatedMembers);
       toast.success("Member updated successfully");
+      // --- SYNC if player is active ---
+      updateActivePlayerInfo({
+        name: memberData.name,
+        gender: memberData.gender,
+        isGuest: memberData.isGuest,
+        playPreferences: preferencesEnabled ? memberData.playPreferences : [],
+      });
     } else {
       // Add new member
       const newMember = {
@@ -88,6 +98,13 @@ export default function Members() {
       };
       setMembers([...members, newMember]);
       toast.success("Member added successfully");
+      // --- SYNC new member if player is active ---
+      updateActivePlayerInfo({
+        name: memberData.name,
+        gender: memberData.gender,
+        isGuest: memberData.isGuest,
+        playPreferences: preferencesEnabled ? memberData.playPreferences : [],
+      });
     }
     setIsDialogOpen(false);
     setEditMode(false);
