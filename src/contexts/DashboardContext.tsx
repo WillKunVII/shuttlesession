@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { Player } from "@/types/player";
 import { Court } from "@/types/DashboardTypes";
@@ -43,11 +44,17 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     courtMgmt.updateCourtPlayerInfo(memberUpdate);
   };
 
+  // Ensure these are present in the context and, if undefined, fallback to safe values
+  // This is a minimal addition, in practice the hooks used should always initialize like this
+  const initialCurrentCourtPlayers = { id: 0, players: [] };
+  
   return (
     <DashboardContext.Provider value={{
       ...playerQueue,
       ...courtMgmt,
       updateActivePlayerInfo,
+      // Add fallback to ensure undefined value never happens
+      currentCourtPlayers: playerQueue.currentCourtPlayers || initialCurrentCourtPlayers,
     }}>
       {children}
     </DashboardContext.Provider>
@@ -61,3 +68,4 @@ export function useDashboard(): DashboardContextType {
   }
   return context;
 }
+

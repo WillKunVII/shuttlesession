@@ -14,7 +14,15 @@ function DashboardContent() {
     currentCourtPlayers, 
     finishEndGame 
   } = useDashboard();
-  
+
+  // Always provide a fallback for players
+  const courtPlayers = currentCourtPlayers && Array.isArray(currentCourtPlayers.players) 
+    ? currentCourtPlayers.players 
+    : [];
+  const courtId = currentCourtPlayers && typeof currentCourtPlayers.id === "number"
+    ? currentCourtPlayers.id
+    : 0;
+
   return (
     <>
       {/* Left column: Courts - stacked vertically */}
@@ -35,8 +43,8 @@ function DashboardContent() {
       <EndGameDialog 
         isOpen={endGameDialogOpen} 
         onClose={() => setEndGameDialogOpen(false)} 
-        players={currentCourtPlayers.players} 
-        onSaveResults={winnerNames => finishEndGame(currentCourtPlayers.id, winnerNames)} 
+        players={courtPlayers}
+        onSaveResults={winnerNames => finishEndGame(courtId, winnerNames)} 
       />
     </>
   );
