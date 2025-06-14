@@ -48,43 +48,37 @@ interface DashboardContextType {
 export const DashboardContext = createContext<DashboardContextType | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  // Use the central logic hook which should expose all needed properties
+  // Use the logic hook
   const logic = useDashboardLogic();
 
-  // Provide no-op fallbacks for any optional or missing functions
+  // Provide fallback functions for missing optional logic properties
   const noop = () => {};
+  const noopSet: React.Dispatch<React.SetStateAction<any>> = () => {};
 
-  // Ensure all required context props are present, using logic or fallback if needed
-  const {
-    queue,
-    nextGamePlayers,
-    sortedCourts,
-    endGameDialogOpen,
-    setEndGameDialogOpen,
-    currentCourtPlayers,
-    setCurrentCourtPlayers,
-    addPlayerToQueue,
-    removePlayerFromQueue,
-    generateNextGame,
-    assignToFreeCourt,
-    handleEndGameClick,
-    handlePlayerSelect,
-    clearNextGame,
-    finishEndGame,
-    isNextGameReady,
-    getPlayerPoolSize,
-    canFormValidGame,
-    updatePlayerInfo,
-    updateCourtPlayerInfo
-  } = {
-    ...logic,
-    // Fallbacks for required values not present in logic
-    getPlayerPoolSize: logic.getPlayerPoolSize || (() => 0),
-    canFormValidGame: logic.canFormValidGame || (() => false),
-    updatePlayerInfo: logic.updatePlayerInfo || noop,
-    updateCourtPlayerInfo: logic.updateCourtPlayerInfo || noop,
-    setCurrentCourtPlayers: logic.setCurrentCourtPlayers || noop,
-  };
+  // Extract all required context values and supply fallbacks where missing
+  const queue = logic.queue ?? [];
+  const nextGamePlayers = logic.nextGamePlayers ?? [];
+  const sortedCourts = logic.sortedCourts ?? [];
+  const endGameDialogOpen = logic.endGameDialogOpen ?? false;
+  const setEndGameDialogOpen = logic.setEndGameDialogOpen ?? noopSet;
+  const currentCourtPlayers = logic.currentCourtPlayers ?? { id: 0, players: [] };
+  const setCurrentCourtPlayers = logic.setCurrentCourtPlayers ?? noopSet;
+
+  const addPlayerToQueue = logic.addPlayerToQueue ?? noop;
+  const removePlayerFromQueue = logic.removePlayerFromQueue ?? noop;
+  const generateNextGame = logic.generateNextGame ?? (async () => {});
+  const assignToFreeCourt = logic.assignToFreeCourt ?? (async () => {});
+  const handleEndGameClick = logic.handleEndGameClick ?? noop;
+  const handlePlayerSelect = logic.handlePlayerSelect ?? noop;
+  const clearNextGame = logic.clearNextGame ?? noop;
+  const finishEndGame = logic.finishEndGame ?? noop;
+  const isNextGameReady = logic.isNextGameReady ?? (() => false);
+
+  const getPlayerPoolSize = logic.getPlayerPoolSize ?? (() => 0);
+  const canFormValidGame = logic.canFormValidGame ?? (() => false);
+
+  const updatePlayerInfo = logic.updatePlayerInfo ?? noop;
+  const updateCourtPlayerInfo = logic.updateCourtPlayerInfo ?? noop;
 
   // updateActivePlayerInfo updates both queue/courts for the member if possible
   const updateActivePlayerInfo = (memberUpdate: {
@@ -93,15 +87,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     isGuest?: boolean;
     playPreferences?: PlayPreference[];
   }) => {
-    if (updatePlayerInfo) {
-      updatePlayerInfo(memberUpdate);
-    }
-    if (updateCourtPlayerInfo) {
-      updateCourtPlayerInfo(memberUpdate);
-    }
+    updatePlayerInfo(memberUpdate);
+    updateCourtPlayerInfo(memberUpdate);
   };
 
-  // Provide context to children
   return (
     <DashboardContext.Provider
       value={{
@@ -125,7 +114,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         getPlayerPoolSize,
         canFormValidGame,
         updatePlayerInfo,
-        updateCourtPlayerInfo
+        updateCourtPlayerInfo,
       }}
     >
       {children}
