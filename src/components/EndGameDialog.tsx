@@ -13,18 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { getStorageItem, setStorageItem, getSessionScores, setSessionScores } from "@/utils/storageUtils";
 import { updatePlayersElo } from "@/utils/eloUtils";
-
-interface Player {
-  name: string;
-  gender: "male" | "female";
-  isGuest?: boolean;
-  id?: number;
-}
+import { Player } from "@/types/player"; // Use project-wide Player type
 
 interface EndGameDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  players: Player[];
+  players: Player[]; // Use imported Player type
   onSaveResults: (winnerIds: string[]) => void;
 }
 
