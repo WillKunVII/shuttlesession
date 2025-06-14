@@ -18,24 +18,33 @@ import {
 
 export function SessionControl() {
   const [showPlayerOfSession, setShowPlayerOfSession] = useState<boolean>(false);
+  const [showEndDialog, setShowEndDialog] = useState(false);
+  const [shouldEndSession, setShouldEndSession] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
   // Check if score keeping is enabled
   const scoreKeeping = localStorage.getItem("scoreKeeping") !== "false";
 
-  const handleEndSession = (event?: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevent AlertDialogAction from closing the dialog and unmounting before our code runs
-    if (event) event.preventDefault();
-
-    // Show Player of Session dialog if score keeping is enabled
-    if (scoreKeeping) {
-      setShowPlayerOfSession(true);
-    } else {
-      // Otherwise, just end the session immediately
-      finishEndSession();
-    }
+  const handleDialogConfirm = () => {
+    setShowEndDialog(false); // this will trigger onOpenChange to run finishEndSession
+    setShouldEndSession(true);
   };
+
+  // Effect: when the dialog closes after confirm, do the ending logic
+  // (The dialog unmounts after open=false)
+  React.useEffect(() => {
+    if (!showEndDialog && shouldEndSession) {
+      // Show Player of Session dialog if score keeping is enabled
+      if (scoreKeeping) {
+        setShowPlayerOfSession(true);
+      } else {
+        finishEndSession();
+      }
+      setShouldEndSession(false);
+    }
+    // eslint-disable-next-line
+  }, [showEndDialog, shouldEndSession]);
 
   const finishEndSession = () => {
     console.log("SessionControl: finishEndSession called");
@@ -61,7 +70,7 @@ export function SessionControl() {
       <h2 className="text-xl font-semibold mb-4 text-destructive">Session Control</h2>
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">End the current badminton session and return to the start screen</p>
-        <AlertDialog>
+        <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="lg" className="w-full sm:w-auto">End Session</Button>
           </AlertDialogTrigger>
@@ -76,10 +85,17 @@ export function SessionControl() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleEndSession}
-                // Radix will pass an event. Our handler safely .preventDefault()'s.
+                asChild
               >
-                End Session
+                <Button
+                  variant="destructive"
+                  onClick={handleDialogConfirm}
+                  autoFocus
+                  type="button"
+                  className="w-full sm:w-auto"
+                >
+                  End Session
+                </Button>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
