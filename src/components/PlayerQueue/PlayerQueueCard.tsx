@@ -1,3 +1,4 @@
+
 import React from "react";
 import { CircleDot, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 
 interface PlayerQueueCardProps {
   player: Player;
+  players: Player[]; // new: all players in queue
   selected: boolean;
   isNextGameReady: boolean;
   scoreKeepingEnabled: boolean;
@@ -22,6 +24,7 @@ interface PlayerQueueCardProps {
 
 export function PlayerQueueCard({
   player,
+  players, // now available
   selected,
   isNextGameReady,
   scoreKeepingEnabled,
@@ -39,6 +42,10 @@ export function PlayerQueueCard({
   const isMaster = pair?.master === player.id;
   const isPartner = pair?.partner === player.id;
   const partnerId = isMaster ? pair?.partner : isPartner ? pair?.master : undefined;
+
+  // Find partner/master name, if exists in queue
+  const partnerPlayer = players.find(p => p.id === partnerId);
+  const partnerName = partnerPlayer ? partnerPlayer.name : "Unknown";
 
   return (
     <div
@@ -71,7 +78,7 @@ export function PlayerQueueCard({
             <span>
               {isMaster ? "( " : ""}
               {isMaster ? "Partner: " : "With: "}
-              <span className="font-bold">{/* show partner name (not this player) */}{/* not null safe, need parent to pass all players info */}</span>
+              <span className="font-bold">{partnerName}</span>
               {isMaster ? " )" : ""}
             </span>
           </span>

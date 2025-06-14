@@ -34,7 +34,7 @@ export function PlayerQueueList({
   removePiggybackPair,
   findPiggybackPair,
   setPiggybackManualWarningShown,
-}: PlayerQueueListProps) {
+}: any) {
   return (
     <div className="space-y-2 pr-4">
       {players.map((player, index) => (
@@ -51,7 +51,8 @@ export function PlayerQueueList({
           )}
           <PlayerQueueCard
             player={player}
-            selected={selected.some(p => p.id === player.id)}
+            players={players} {/* PASS the full player array so partner names display */}
+            selected={selected.some((p: any) => p.id === player.id)}
             isNextGameReady={isNextGameReady}
             scoreKeepingEnabled={scoreKeepingEnabled}
             preferencesEnabled={preferencesEnabled}
