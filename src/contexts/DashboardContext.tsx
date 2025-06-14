@@ -43,16 +43,16 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const getPlayerPoolSize = (logic as any).getPlayerPoolSize ?? noopReturnNumber;
   const canFormValidGame = (logic as any).canFormValidGame ?? noopCanFormValidGame;
 
-  const updatePlayerInfo = (logic as any).updatePlayerInfo ?? noop;
-  const updateCourtPlayerInfo = (logic as any).updateCourtPlayerInfo ?? noop;
-
   // updateActivePlayerInfo updates both queue/courts for the member if possible
   const updateActivePlayerInfo = (memberUpdate: {
     name: string;
     gender?: "male" | "female";
     isGuest?: boolean;
-    playPreferences?: PlayPreference[];
+    playPreferences?: any[];
   }) => {
+    // The following calls may exist in logic, but do not need to be provided via context
+    const updatePlayerInfo = (logic as any).updatePlayerInfo ?? (() => {});
+    const updateCourtPlayerInfo = (logic as any).updateCourtPlayerInfo ?? (() => {});
     updatePlayerInfo(memberUpdate);
     updateCourtPlayerInfo(memberUpdate);
   };
@@ -83,8 +83,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         updateActivePlayerInfo,
         getPlayerPoolSize,
         canFormValidGame,
-        updatePlayerInfo,
-        updateCourtPlayerInfo,
         // Piggyback additions
         piggybackPair,
         togglePiggybackPlayer,
