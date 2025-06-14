@@ -22,17 +22,14 @@ export function useSessionScores(isOpen: boolean) {
   const loadAndRankPlayers = () => {
     // Get session scores
     const sessionScores = getStorageItem<Record<string, SessionScore>>("sessionScores", {});
-    
-    if (Object.keys(sessionScores).length === 0) {
-      setHasScores(false);
-      return;
-    }
+    // Always show dialog, even if there are no session scores.
+    // No early returns.
 
     try {
       // Get all members to get player metadata
       const membersData = localStorage.getItem("members");
       let members: Player[] = [];
-      
+
       if (membersData) {
         try {
           members = JSON.parse(membersData);
@@ -40,35 +37,41 @@ export function useSessionScores(isOpen: boolean) {
           console.error("Error parsing members data", e);
         }
       }
-      
-      // Create player list from session scores
-      const playersList: Player[] = Object.entries(sessionScores).map(([name, scores], index) => {
-        const member = members.find(m => m.name === name);
-        return {
-          id: member?.id || index + 1000, // Use member ID if available, or generate one
-          name,
-          gender: member?.gender || "male",
-          isGuest: member?.isGuest || false,
-          waitingTime: 0, // Required property by Player interface
-          wins: scores.wins,
-          losses: scores.losses,
-          sessionWins: scores.wins,
-          sessionLosses: scores.losses
-        };
-      });
 
-      // Ignore players who haven't played any games
-      const playersWithGames = playersList.filter(player =>
-        (player.wins ?? 0) + (player.losses ?? 0) > 0
-      );
-
-      if (playersWithGames.length === 0) {
-        setHasScores(false);
-        return;
+      // Create player list from session scores OR from all members if scores are empty
+      let playersList: Player[];
+      if (Object.keys(sessionScores).length > 0) {
+        playersList = Object.entries(sessionScores).map(([name, scores], index) => {
+          const member = members.find(m => m.name === name);
+          return {
+            id: member?.id || index + 1000, // Use member ID if available, or generate one
+            name,
+            gender: member?.gender || "male",
+            isGuest: member?.isGuest || false,
+            waitingTime: 0, // Required property by Player interface
+            wins: scores.wins,
+            losses: scores.losses,
+            sessionWins: scores.wins,
+            sessionLosses: scores.losses
+          };
+        });
+      } else {
+        // If sessionScores are empty, use members
+        playersList = members.map((member, i) => ({
+          id: member.id ?? i + 1000,
+          name: member.name,
+          gender: member.gender ?? "male",
+          isGuest: !!member.isGuest,
+          waitingTime: 0,
+          wins: 0,
+          losses: 0,
+          sessionWins: 0,
+          sessionLosses: 0
+        }));
       }
 
-      // Calculate win rate, add winRate as a property (not in type, but for sorting)
-      const playersWithWinRate = playersWithGames.map(player => {
+      // Calculate win rate for all players (even with 0 games)
+      const playersWithWinRate = playersList.map(player => {
         const wins = player.wins ?? 0;
         const losses = player.losses ?? 0;
         const gamesPlayed = wins + losses;
@@ -113,10 +116,11 @@ export function useSessionScores(isOpen: boolean) {
       });
 
       setTopPlayers([gold, silver, bronze]);
-      setHasScores(true);
+      setHasScores(true); // Always set to true to always open dialog
     } catch (e) {
       console.error("Error processing session player scores", e);
-      setHasScores(false);
+      setTopPlayers([[], [], []]);
+      setHasScores(true); // Still force dialog open in error case
     }
   };
 
