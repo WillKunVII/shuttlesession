@@ -21,10 +21,12 @@ export function usePiggybackPair() {
   const savePiggybackPair = (pair: number[]) => {
     setPiggybackPair(pair);
     localStorage.setItem("piggybackPair", JSON.stringify(pair));
+    console.log("Piggyback pair saved:", pair);
   };
 
   // Add or remove a player to piggyback pair
   const togglePiggybackPlayer = (playerId: number) => {
+    console.log("togglePiggybackPlayer called with id:", playerId);
     if (piggybackPair.includes(playerId)) {
       const newPair = piggybackPair.filter(id => id !== playerId);
       savePiggybackPair(newPair);

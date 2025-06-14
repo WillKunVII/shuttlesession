@@ -31,6 +31,10 @@ export function PlayerQueueCard({
   onPlayerLeave,
   setPiggybackManualWarningShown
 }: PlayerQueueCardProps) {
+  // For debugging: see what props we get
+  React.useEffect(() => {
+    console.log("PlayerQueueCard", player.name, "piggybackPair", piggybackPair);
+  }, [piggybackPair, player.name]);
   return (
     <div
       className={`border rounded-lg p-3 flex items-center justify-between ${
@@ -92,6 +96,7 @@ export function PlayerQueueCard({
             className={piggybackPair.includes(player.id) ? "bg-purple-100 text-purple-700" : "hover:bg-purple-50 hover:text-purple-700"}
             onClick={e => {
               e.stopPropagation();
+              console.log("Piggyback button clicked for", player.id, player.name);
               togglePiggybackPlayer(player.id);
               setPiggybackManualWarningShown && setPiggybackManualWarningShown(false);
             }}
