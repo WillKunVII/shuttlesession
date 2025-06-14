@@ -77,7 +77,11 @@ class GameHistoryDB {
     // Add game record
     await new Promise((resolve, reject) => {
       const request = gameStore.add(game);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        // [DEBUG] Game record successfully added
+        console.log("IndexedDB: Added game record", game);
+        resolve(request.result);
+      };
       request.onerror = () => reject(request.error);
     });
 
@@ -110,7 +114,11 @@ class GameHistoryDB {
 
       await new Promise((resolve, reject) => {
         const request = statsStore.put(stats);
-        request.onsuccess = () => resolve(request.result);
+        request.onsuccess = () => {
+          // [DEBUG] PlayerStats successfully updated
+          console.log(`IndexedDB: Updated playerStats for`, stats.name, stats);
+          resolve(request.result);
+        };
         request.onerror = () => reject(request.error);
       });
     }

@@ -48,6 +48,9 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
         })
       );
 
+      // [DEBUG] Print all stats regardless of eligibility
+      console.log("All playerStats objects found:", playerStats);
+
       // Remove nulls and players < 3 games
       const eligibleStats = playerStats
         .filter(
@@ -58,6 +61,9 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
             typeof stats.wins === "number" &&
             typeof stats.losses === "number"
         );
+
+      // [DEBUG] Print players that are eligible (should have >=3 games)
+      console.log("Eligible stats for Player of Month:", eligibleStats);
 
       if (eligibleStats.length === 0) {
         setHasScores(false);
@@ -112,3 +118,4 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
 
   return { topPlayers, hasScores };
 }
+
