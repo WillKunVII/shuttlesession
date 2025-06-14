@@ -6,11 +6,19 @@ import { Member } from "@/types/member";
 import { MemberForm } from "@/components/members/MemberForm";
 import { MemberList } from "@/components/members/MemberList";
 import { DeleteConfirmDialog } from "@/components/members/DeleteConfirmDialog";
-import { useDashboard } from "@/contexts/DashboardContext";
+import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 
 // Empty initial members list
 const initialMembers: Member[] = [];
 export default function Members() {
+  return (
+    <DashboardProvider>
+      <MembersPageContent />
+    </DashboardProvider>
+  );
+}
+
+function MembersPageContent() {
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
