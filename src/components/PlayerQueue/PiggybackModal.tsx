@@ -1,0 +1,66 @@
+
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Player } from "@/types/player";
+import { Check } from "lucide-react";
+
+interface PiggybackModalProps {
+  open: boolean;
+  onClose: () => void;
+  candidates: Player[];
+  onConfirm: (partnerId: number) => void;
+}
+
+export function PiggybackModal({ open, onClose, candidates, onConfirm }: PiggybackModalProps) {
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  React.useEffect(() => { setSelectedId(null); }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Choose Piggyback Partner</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-56 overflow-y-auto">
+          {candidates.length === 0 ? (
+            <div className="text-muted-foreground py-6 text-center text-sm">No available players to pair with.</div>
+          ) : (
+            candidates.map(player =>
+              <button
+                key={player.id}
+                type="button"
+                className={`w-full flex items-center justify-between p-3 rounded-lg border transition
+                  ${selectedId === player.id ? "bg-purple-100 border-purple-400" : "hover:bg-purple-50 border-gray-200"}
+                `}
+                onClick={() => setSelectedId(player.id)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={player.gender === "male" ? "text-blue-500" : "text-pink-500"}>●</span>
+                  <span>{player.name}</span>
+                  {player.isGuest && <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>}
+                </div>
+                {selectedId === player.id && (
+                  <span className="rounded-full bg-purple-600 p-1">
+                    <Check className="w-4 h-4 text-white" />
+                  </span>
+                )}
+              </button>
+            )
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            className="w-full bg-purple-700 text-white"
+            disabled={selectedId === null}
+            onClick={() => selectedId !== null && onConfirm(selectedId)}
+          >
+            Confirm
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { Player } from "@/types/player";
 import { Court } from "@/types/DashboardTypes";
@@ -6,19 +5,20 @@ import { PlayPreference } from "@/types/member";
 import { useDashboardLogic } from "@/hooks/useDashboardLogic";
 import { CurrentCourtPlayers } from "@/types/DashboardTypes";
 import { DashboardContextType } from "@/types/DashboardTypes";
-import { usePiggybackPair } from "@/hooks/usePiggybackPair";
+import { usePiggybackPairs } from "@/hooks/usePiggybackPairs";
 
 export const DashboardContext = React.createContext<DashboardContextType | undefined>(undefined);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  // Instantiate piggyback state ONCE at context level:
-  const piggyback = usePiggybackPair();
+  // Piggyback pairs hook!
+  const piggyback = usePiggybackPairs();
 
-  // Pass piggyback state/handlers to useDashboardLogic!
+  // Pass piggybackPairs and handlers down
   const logic = useDashboardLogic({
-    piggybackPair: piggyback.piggybackPair,
-    togglePiggybackPlayer: piggyback.togglePiggybackPlayer,
-    clearPiggyback: piggyback.clearPiggyback,
+    piggybackPairs: piggyback.piggybackPairs,
+    addPiggybackPair: piggyback.addPair,
+    removePiggybackPair: piggyback.removePairByMaster,
+    findPiggybackPair: piggyback.findPairOf,
   });
 
   // fallback no-ops
@@ -82,9 +82,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     getPlayerPoolSize,
     canFormValidGame,
     // Piggyback additions
-    piggybackPair: piggyback.piggybackPair,
-    togglePiggybackPlayer: piggyback.togglePiggybackPlayer,
-    clearPiggyback: piggyback.clearPiggyback,
+    piggybackPairs: piggyback.piggybackPairs,
+    addPiggybackPair: piggyback.addPair,
+    removePiggybackPair: piggyback.removePairByMaster,
+    findPiggybackPair: piggyback.findPairOf,
   };
 
   return (

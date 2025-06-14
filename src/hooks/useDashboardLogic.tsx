@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Player } from "@/types/player";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
@@ -9,15 +8,17 @@ import { recordGame } from "@/utils/gameUtils";
 
 // ADD PROPS: piggybackPair state and handlers
 type DashboardLogicArgs = {
-  piggybackPair: number[];
-  togglePiggybackPlayer: (playerId: number) => void;
-  clearPiggyback: () => void;
+  piggybackPairs: { master: number; partner: number }[];
+  addPiggybackPair: (master: number, partner: number) => void;
+  removePiggybackPair: (master: number) => void;
+  findPiggybackPair: (playerId: number) => { master: number; partner: number } | undefined;
 };
 
 export function useDashboardLogic({
-  piggybackPair,
-  togglePiggybackPlayer,
-  clearPiggyback,
+  piggybackPairs,
+  addPiggybackPair,
+  removePiggybackPair,
+  findPiggybackPair
 }: DashboardLogicArgs) {
   // Use our custom hooks, NOW PASS piggyback props!
   const {
@@ -27,7 +28,7 @@ export function useDashboardLogic({
     addPlayersToQueue,
     removePlayersFromQueue,
     autoSelectPlayers
-  } = usePlayerQueue({ piggybackPair, togglePiggybackPlayer, clearPiggyback });
+  } = usePlayerQueue({ piggybackPairs });
 
   const {
     nextGamePlayers,
@@ -187,5 +188,9 @@ export function useDashboardLogic({
     setEndGameDialogOpen,
     finishEndGame,
     isNextGameReady,
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair,
   };
 }

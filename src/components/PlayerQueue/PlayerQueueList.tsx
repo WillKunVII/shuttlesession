@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { Player } from "@/types/player";
 import { PlayerQueueCard } from "./PlayerQueueCard";
+import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 
 interface PlayerQueueListProps {
   players: Player[];
@@ -13,8 +13,10 @@ interface PlayerQueueListProps {
   playerPoolSize: number;
   scoreKeepingEnabled: boolean;
   preferencesEnabled: boolean;
-  piggybackPair: number[];
-  togglePiggybackPlayer?: (playerId: number) => void;
+  piggybackPairs: PiggybackPair[];
+  onOpenPiggybackModal?: (player: Player) => void;
+  removePiggybackPair?: (masterId: number) => void;
+  findPiggybackPair: (playerId: number) => PiggybackPair | undefined;
   setPiggybackManualWarningShown?: (b: boolean) => void;
 }
 
@@ -27,8 +29,10 @@ export function PlayerQueueList({
   playerPoolSize,
   scoreKeepingEnabled,
   preferencesEnabled,
-  piggybackPair,
-  togglePiggybackPlayer,
+  piggybackPairs,
+  onOpenPiggybackModal,
+  removePiggybackPair,
+  findPiggybackPair,
   setPiggybackManualWarningShown,
 }: PlayerQueueListProps) {
   return (
@@ -51,8 +55,10 @@ export function PlayerQueueList({
             isNextGameReady={isNextGameReady}
             scoreKeepingEnabled={scoreKeepingEnabled}
             preferencesEnabled={preferencesEnabled}
-            piggybackPair={piggybackPair}
-            togglePiggybackPlayer={togglePiggybackPlayer}
+            piggybackPairs={piggybackPairs}
+            onOpenPiggybackModal={onOpenPiggybackModal}
+            removePiggybackPair={removePiggybackPair}
+            findPiggybackPair={findPiggybackPair}
             onPlayerSelect={onPlayerSelect}
             onPlayerLeave={onPlayerLeave}
             setPiggybackManualWarningShown={setPiggybackManualWarningShown}

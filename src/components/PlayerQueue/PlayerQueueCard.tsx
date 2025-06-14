@@ -1,10 +1,9 @@
-
 import React from "react";
-import { CircleDot, Check, Users } from "lucide-react";
+import { CircleDot, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Player } from "@/types/player";
-import { PlayPreference } from "@/types/member";
+import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 
 interface PlayerQueueCardProps {
   player: Player;
@@ -12,8 +11,10 @@ interface PlayerQueueCardProps {
   isNextGameReady: boolean;
   scoreKeepingEnabled: boolean;
   preferencesEnabled: boolean;
-  piggybackPair: number[];
-  togglePiggybackPlayer?: (playerId: number) => void;
+  piggybackPairs: PiggybackPair[];
+  onOpenPiggybackModal?: (player: Player) => void;
+  removePiggybackPair?: (masterId: number) => void;
+  findPiggybackPair: (playerId: number) => PiggybackPair | undefined;
   onPlayerSelect: (player: Player) => void;
   onPlayerLeave: (playerId: number, e: React.MouseEvent) => void;
   setPiggybackManualWarningShown?: (b: boolean) => void;
@@ -25,16 +26,20 @@ export function PlayerQueueCard({
   isNextGameReady,
   scoreKeepingEnabled,
   preferencesEnabled,
-  piggybackPair,
-  togglePiggybackPlayer,
+  piggybackPairs,
+  onOpenPiggybackModal,
+  removePiggybackPair,
+  findPiggybackPair,
   onPlayerSelect,
   onPlayerLeave,
   setPiggybackManualWarningShown
 }: PlayerQueueCardProps) {
-  // For debugging: see what props we get
-  React.useEffect(() => {
-    console.log("PlayerQueueCard", player.name, "piggybackPair", piggybackPair);
-  }, [piggybackPair, player.name]);
+  // Find piggyback data for this player (if any)
+  const pair = findPiggybackPair(player.id);
+  const isMaster = pair?.master === player.id;
+  const isPartner = pair?.partner === player.id;
+  const partnerId = isMaster ? pair?.partner : isPartner ? pair?.master : undefined;
+
   return (
     <div
       className={`border rounded-lg p-3 flex items-center justify-between ${
@@ -56,26 +61,25 @@ export function PlayerQueueCard({
         {player.isGuest && (
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
         )}
-        {/* PIGGYBACK ICON */}
-        {piggybackPair.includes(player.id) && (
-          <span title="Piggybacked" className="ml-1 flex items-center text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-1 py-0.5 rounded gap-1">
-            <Users className="w-4 h-4 inline-block text-purple-700" /> Piggyback
+        {/* PIGGYBACK BADGE */}
+        {pair && partnerId !== undefined && (
+          <span
+            title="Piggybacked"
+            className="ml-1 flex items-center text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-1 py-0.5 rounded gap-1"
+          >
+            <Users className="w-4 h-4 inline-block text-purple-700" />
+            <span>
+              {isMaster ? "( " : ""}
+              {isMaster ? "Partner: " : "With: "}
+              <span className="font-bold">{/* show partner name (not this player) */}{/* not null safe, need parent to pass all players info */}</span>
+              {isMaster ? " )" : ""}
+            </span>
           </span>
         )}
-        {/* (Optionally add play preferences and scores here as before) */}
+        {/* (Optionally add play preferences and scores) */}
         {scoreKeepingEnabled && (
           <span className="ml-1 text-sm text-gray-500 flex items-center gap-1">
             W {player.sessionWins || 0} – L {player.sessionLosses || 0}
-            {selected && (
-              <span className="ml-2 h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center">
-                <Check className="h-3 w-3 text-white" />
-              </span>
-            )}
-          </span>
-        )}
-        {(!scoreKeepingEnabled && selected) && (
-          <span className="ml-1 h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center">
-            <Check className="h-3 w-3 text-white" />
           </span>
         )}
         {preferencesEnabled && player.playPreferences && player.playPreferences.length > 0 && (
@@ -89,19 +93,34 @@ export function PlayerQueueCard({
         )}
       </div>
       <div className="flex items-center gap-2 ml-4">
-        {togglePiggybackPlayer && (
+        {/* Only show button if not already in a pair */}
+        {!pair && onOpenPiggybackModal && (
           <Button
-            variant={piggybackPair.includes(player.id) ? "secondary" : "ghost"}
+            variant="ghost"
             size="sm"
-            className={piggybackPair.includes(player.id) ? "bg-purple-100 text-purple-700" : "hover:bg-purple-50 hover:text-purple-700"}
+            className="hover:bg-purple-50 hover:text-purple-700"
             onClick={e => {
               e.stopPropagation();
-              console.log("Piggyback button clicked for", player.id, player.name);
-              togglePiggybackPlayer(player.id);
+              onOpenPiggybackModal(player);
               setPiggybackManualWarningShown && setPiggybackManualWarningShown(false);
             }}
           >
-            {piggybackPair.includes(player.id) ? "Unpiggyback" : piggybackPair.length < 2 ? "Piggyback" : "Swap Piggyback"}
+            Piggyback
+            <Users className="w-4 h-4 ml-1" />
+          </Button>
+        )}
+        {/* Only masters can unpiggyback */}
+        {isMaster && removePiggybackPair && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-purple-100 text-purple-700"
+            onClick={e => {
+              e.stopPropagation();
+              removePiggybackPair(player.id);
+            }}
+          >
+            Unpiggyback
             <Users className="w-4 h-4 ml-1" />
           </Button>
         )}

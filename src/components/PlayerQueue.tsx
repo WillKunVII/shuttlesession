@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
@@ -10,6 +9,8 @@ import { PlayPreference } from "@/types/member";
 import { Player } from "@/types/player";
 import { PlayerQueueList } from "./PlayerQueue/PlayerQueueList";
 import { PiggybackNotice } from "./PlayerQueue/PiggybackNotice";
+import { PiggybackModal } from "./PlayerQueue/PiggybackModal";
+import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 
 interface PlayerQueueProps {
   players: Player[];
@@ -17,9 +18,11 @@ interface PlayerQueueProps {
   onPlayerLeave?: (playerId: number) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
   isNextGameReady?: boolean;
-  piggybackPair?: number[];
-  togglePiggybackPlayer?: (playerId: number) => void;
-  clearPiggyback?: () => void;
+  piggybackPairs?: PiggybackPair[];
+  addPiggybackPair?: (master: number, partner: number) => void;
+  removePiggybackPair?: (master: number) => void;
+  findPiggybackPair?: (playerId: number) => PiggybackPair | undefined;
+  clearPiggybackPairs?: () => void;
 }
 
 export function PlayerQueue({
@@ -28,10 +31,12 @@ export function PlayerQueue({
   onPlayerLeave,
   onAddPlayer,
   isNextGameReady = false,
-  piggybackPair = [],
-  togglePiggybackPlayer,
-  clearPiggyback
-}: PlayerQueueProps) {
+  piggybackPairs = [],
+  addPiggybackPair,
+  removePiggybackPair,
+  findPiggybackPair,
+  clearPiggybackPairs
+}: any) {
   const { toast } = useToast();
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
@@ -96,8 +101,8 @@ export function PlayerQueue({
     // Show nudge if the selection does NOT include (both) piggybacked players
     const selectedIds = selected.map(p => p.id);
     if (
-      piggybackPair.length === 2 &&
-      (!selectedIds.includes(piggybackPair[0]) || !selectedIds.includes(piggybackPair[1]))
+      piggybackPairs.length === 2 &&
+      (!selectedIds.includes(piggybackPairs[0].master) || !selectedIds.includes(piggybackPairs[0].partner))
     ) {
       if (!piggybackManualWarningShown) {
         toast({
@@ -135,6 +140,36 @@ export function PlayerQueue({
   const cancelPlayerLeave = () => {
     setPlayerToLeave(null);
     setLeaveDialogOpen(false);
+  };
+
+  // Piggyback modal state
+  const [piggybackModalOpen, setPiggybackModalOpen] = useState(false);
+  const [piggybackMaster, setPiggybackMaster] = useState<Player | null>(null);
+
+  // Open piggyback modal for the chosen master
+  const handleOpenPiggybackModal = (player: Player) => {
+    setPiggybackMaster(player);
+    setPiggybackModalOpen(true);
+  };
+  const handleClosePiggybackModal = () => {
+    setPiggybackModalOpen(false);
+    setPiggybackMaster(null);
+  };
+
+  // Get available candidates (not already in a pair, not self)
+  const getPiggybackCandidates = () => {
+    if (!piggybackMaster) return [];
+    const pairedIds = new Set(piggybackPairs.flatMap(p => [p.master, p.partner]));
+    return players.filter(p =>
+      p.id !== piggybackMaster.id && !pairedIds.has(p.id)
+    );
+  };
+
+  const handlePiggybackPartnerConfirm = (partnerId: number) => {
+    if (piggybackMaster) {
+      addPiggybackPair(piggybackMaster.id, partnerId);
+    }
+    handleClosePiggybackModal();
   };
 
   return (
@@ -180,12 +215,22 @@ export function PlayerQueue({
             playerPoolSize={playerPoolSize}
             scoreKeepingEnabled={scoreKeepingEnabled}
             preferencesEnabled={preferencesEnabled}
-            piggybackPair={piggybackPair}
-            togglePiggybackPlayer={togglePiggybackPlayer}
+            piggybackPairs={piggybackPairs}
+            onOpenPiggybackModal={handleOpenPiggybackModal}
+            removePiggybackPair={removePiggybackPair}
+            findPiggybackPair={findPiggybackPair}
             setPiggybackManualWarningShown={setPiggybackManualWarningShown}
           />
         </ScrollArea>
       )}
+
+      {/* Piggyback modal */}
+      <PiggybackModal
+        open={piggybackModalOpen}
+        onClose={handleClosePiggybackModal}
+        candidates={getPiggybackCandidates()}
+        onConfirm={handlePiggybackPartnerConfirm}
+      />
 
       {/* Leave Confirmation Dialog */}
       <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
@@ -206,8 +251,8 @@ export function PlayerQueue({
       </AlertDialog>
 
       {/* If piggybackPair.length === 2, show piggyback notice */}
-      {piggybackPair.length === 2 && clearPiggyback && (
-        <PiggybackNotice clearPiggyback={clearPiggyback} />
+      {piggybackPairs.length === 2 && clearPiggybackPairs && (
+        <PiggybackNotice clearPiggyback={clearPiggybackPairs} />
       )}
     </div>
   );
