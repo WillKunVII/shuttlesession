@@ -31,39 +31,101 @@ interface DashboardContextType {
   }) => void;
   getPlayerPoolSize: () => number;
   canFormValidGame: (players: Player[]) => boolean;
+  updatePlayerInfo?: (memberUpdate: {
+    name: string;
+    gender?: "male" | "female";
+    isGuest?: boolean;
+    playPreferences?: PlayPreference[];
+  }) => void;
+  updateCourtPlayerInfo?: (memberUpdate: {
+    name: string;
+    gender?: "male" | "female";
+    isGuest?: boolean;
+    playPreferences?: PlayPreference[];
+  }) => void;
 }
 
-// Create the context object
 export const DashboardContext = createContext<DashboardContextType | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  // Use the hook with all logic
+  // Use the central logic hook which should expose all needed properties
   const logic = useDashboardLogic();
 
-  // updateActivePlayerInfo just updates the queue/courts with new member info
+  // Provide no-op fallbacks for any optional or missing functions
+  const noop = () => {};
+
+  // Ensure all required context props are present, using logic or fallback if needed
+  const {
+    queue,
+    nextGamePlayers,
+    sortedCourts,
+    endGameDialogOpen,
+    setEndGameDialogOpen,
+    currentCourtPlayers,
+    setCurrentCourtPlayers,
+    addPlayerToQueue,
+    removePlayerFromQueue,
+    generateNextGame,
+    assignToFreeCourt,
+    handleEndGameClick,
+    handlePlayerSelect,
+    clearNextGame,
+    finishEndGame,
+    isNextGameReady,
+    getPlayerPoolSize,
+    canFormValidGame,
+    updatePlayerInfo,
+    updateCourtPlayerInfo
+  } = {
+    ...logic,
+    // Fallbacks for required values not present in logic
+    getPlayerPoolSize: logic.getPlayerPoolSize || (() => 0),
+    canFormValidGame: logic.canFormValidGame || (() => false),
+    updatePlayerInfo: logic.updatePlayerInfo || noop,
+    updateCourtPlayerInfo: logic.updateCourtPlayerInfo || noop,
+    setCurrentCourtPlayers: logic.setCurrentCourtPlayers || noop,
+  };
+
+  // updateActivePlayerInfo updates both queue/courts for the member if possible
   const updateActivePlayerInfo = (memberUpdate: {
-    name: string,
-    gender?: "male" | "female",
-    isGuest?: boolean,
-    playPreferences?: PlayPreference[]
+    name: string;
+    gender?: "male" | "female";
+    isGuest?: boolean;
+    playPreferences?: PlayPreference[];
   }) => {
-    // Attempt to update via props if present
-    if (logic.updatePlayerInfo) {
-      logic.updatePlayerInfo(memberUpdate);
+    if (updatePlayerInfo) {
+      updatePlayerInfo(memberUpdate);
     }
-    if (logic.updateCourtPlayerInfo) {
-      logic.updateCourtPlayerInfo(memberUpdate);
+    if (updateCourtPlayerInfo) {
+      updateCourtPlayerInfo(memberUpdate);
     }
   };
 
-  // Expose everything expected by context
+  // Provide context to children
   return (
     <DashboardContext.Provider
       value={{
-        ...logic,
+        queue,
+        nextGamePlayers,
+        sortedCourts,
+        endGameDialogOpen,
+        setEndGameDialogOpen,
+        currentCourtPlayers,
+        setCurrentCourtPlayers,
+        addPlayerToQueue,
+        removePlayerFromQueue,
+        generateNextGame,
+        assignToFreeCourt,
+        handleEndGameClick,
+        handlePlayerSelect,
+        clearNextGame,
+        finishEndGame,
+        isNextGameReady,
         updateActivePlayerInfo,
-        getPlayerPoolSize: logic.getPlayerPoolSize || (() => 0),
-        canFormValidGame: logic.canFormValidGame || (() => false),
+        getPlayerPoolSize,
+        canFormValidGame,
+        updatePlayerInfo,
+        updateCourtPlayerInfo
       }}
     >
       {children}
@@ -78,3 +140,4 @@ export function useDashboard(): DashboardContextType {
   }
   return context;
 }
+
