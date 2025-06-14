@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { Player } from "@/types/player";
@@ -49,9 +50,10 @@ export function PlayerQueueList({
               </div>
             </div>
           )}
+          {/* Pass the full player array so partner names display */}
           <PlayerQueueCard
             player={player}
-            players={players} {/* PASS the full player array so partner names display */}
+            players={players}
             selected={selected.some((p: any) => p.id === player.id)}
             isNextGameReady={isNextGameReady}
             scoreKeepingEnabled={scoreKeepingEnabled}
