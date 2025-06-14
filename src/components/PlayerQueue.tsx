@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { CircleDot, Check } from "lucide-react";
+import { CircleDot, Check, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlayerQueueProps {
   players: Player[];
@@ -26,9 +26,22 @@ interface PlayerQueueProps {
   onPlayerLeave?: (playerId: number) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
   isNextGameReady?: boolean;
+  piggybackPair?: number[];
+  togglePiggybackPlayer?: (playerId: number) => void;
+  clearPiggyback?: () => void;
 }
 
-export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlayer, isNextGameReady = false }: PlayerQueueProps) {
+export function PlayerQueue({
+  players,
+  onPlayerSelect,
+  onPlayerLeave,
+  onAddPlayer,
+  isNextGameReady = false,
+  piggybackPair = [],
+  togglePiggybackPlayer,
+  clearPiggyback
+}: PlayerQueueProps) {
+  const { toast } = useToast();
   const [selected, setSelected] = useState<Player[]>([]);
   const scoreKeepingEnabled = isScoreKeepingEnabled();
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
@@ -67,6 +80,9 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     }
   }, [isNextGameReady, selected.length]);
   
+  // Piggyback recommend warning for manual selection
+  const [piggybackManualWarningShown, setPiggybackManualWarningShown] = useState(false);
+
   const togglePlayerSelection = (player: Player) => {
     // Prevent selection if next game is already ready
     if (isNextGameReady) {
@@ -84,6 +100,28 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
     if (onAddPlayer) {
       onAddPlayer(player);
     }
+  };
+  
+  const handleManualCreateGame = () => {
+    // Show nudge if the selection does NOT include (both) piggybacked players
+    const selectedIds = selected.map(p => p.id);
+    if (
+      piggybackPair.length === 2 &&
+      (!selectedIds.includes(piggybackPair[0]) || !selectedIds.includes(piggybackPair[1]))
+    ) {
+      if (!piggybackManualWarningShown) {
+        toast({
+          title: "Piggyback Pair Suggestion",
+          description:
+            "There is a piggyback pair set! Consider including both piggybacked players in the same game.",
+          variant: "warning"
+        });
+        setPiggybackManualWarningShown(true);
+        // Still allow manual selection
+      }
+    }
+    onPlayerSelect(selected);
+    setSelected([]);
   };
   
   const openLeaveConfirmation = (playerId: number, e: React.MouseEvent) => {
@@ -181,6 +219,14 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
                     )}
                     
+                    {/* PIGGYBACK ICON */}
+                    {piggybackPair.includes(player.id) && (
+                      <span title="Piggybacked" className="ml-1 flex items-center text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-1 py-0.5 rounded gap-1">
+                        <Users className="w-4 h-4 inline-block text-purple-700" /> Piggyback
+                      </span>
+                    )}
+
+                    {/* (Optionally add play preferences and scores here as before) */}
                     {scoreKeepingEnabled && (
                       <span className="ml-1 text-sm text-gray-500">
                         W {player.sessionWins || 0} – L {player.sessionLosses || 0}
@@ -198,7 +244,22 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    {togglePiggybackPlayer && (
+                      <Button
+                        variant={piggybackPair.includes(player.id) ? "secondary" : "ghost"}
+                        size="sm"
+                        className={`${piggybackPair.includes(player.id) ? "bg-purple-100 text-purple-700" : "hover:bg-purple-50 hover:text-purple-700"}`}
+                        onClick={e => {
+                          e.stopPropagation();
+                          togglePiggybackPlayer(player.id);
+                          setPiggybackManualWarningShown(false); // reset warning on set/change piggyback
+                        }}
+                      >
+                        {piggybackPair.includes(player.id) ? "Unpiggyback" : piggybackPair.length < 2 ? "Piggyback" : "Swap Piggyback"}
+                        <Users className="w-4 h-4 ml-1" />
+                      </Button>
+                    )}
                     {selected.some(p => p.id === player.id) && (
                       <div className="h-5 w-5 rounded-full bg-shuttle-blue flex items-center justify-center mr-2">
                         <Check className="h-3 w-3 text-white" />
@@ -237,6 +298,26 @@ export function PlayerQueue({ players, onPlayerSelect, onPlayerLeave, onAddPlaye
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* If piggybackPair.length === 2
+        Add a section below: (the user can clear piggyback here)
+      */}
+      {piggybackPair.length === 2 && clearPiggyback && (
+        <div className="flex items-center justify-between bg-purple-50 border border-purple-200 mt-2 p-2 rounded">
+          <span className="flex items-center font-medium text-purple-800 gap-1">
+            <Users className="w-5 h-5 mr-1 text-purple-700" />
+            Piggyback pair set! Both players will be paired next game.
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-purple-600 hover:text-purple-800"
+            onClick={clearPiggyback}
+          >
+            Clear Piggyback
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -185,6 +185,46 @@ export function usePlayerQueue() {
     );
   };
 
+  // Piggyback state: stores up to 2 player IDs
+  const [piggybackPair, setPiggybackPair] = useState<number[]>(() => {
+    // Try to load piggyback from storage
+    const saved = localStorage.getItem("piggybackPair");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length <= 2) {
+          return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  // persist piggyback pair to localStorage
+  const savePiggybackPair = (pair: number[]) => {
+    setPiggybackPair(pair);
+    localStorage.setItem("piggybackPair", JSON.stringify(pair));
+  };
+
+  // Add or remove a player to piggyback pair
+  const togglePiggybackPlayer = (playerId: number) => {
+    if (piggybackPair.includes(playerId)) {
+      // Remove player from pair
+      const newPair = piggybackPair.filter(id => id !== playerId);
+      savePiggybackPair(newPair);
+    } else if (piggybackPair.length < 2) {
+      savePiggybackPair([...piggybackPair, playerId]);
+    } else {
+      // If 2 already, replace the oldest
+      savePiggybackPair([piggybackPair[1], playerId]);
+    }
+  };
+
+  // Clear piggyback (e.g. after assignment)
+  const clearPiggyback = () => {
+    savePiggybackPair([]);
+  };
+
   return {
     queue,
     addPlayerToQueue,
@@ -194,6 +234,9 @@ export function usePlayerQueue() {
     autoSelectPlayers,
     getPlayerPoolSize,
     canFormValidGame,
-    updatePlayerInfo // <--- Expose updater
+    updatePlayerInfo, // <--- Expose updater
+    piggybackPair,
+    togglePiggybackPlayer,
+    clearPiggyback,
   };
 }
