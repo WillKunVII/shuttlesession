@@ -104,9 +104,10 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       }
     });
     
-    // Save updated scores
+    // Save updated scores to BOTH localStorage keys (for Members page sync)
     setSessionScores(sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
+    localStorage.setItem("clubMembers", JSON.stringify(members)); // <-- ensures Members page sync
     
     // Continue with original save
     onSaveResults(selectedWinners);
