@@ -14,7 +14,13 @@ export default function Settings() {
         <p className="text-shuttle-lightBlue">Configure application settings</p>
       </div>
       
-      {/* Player of the Month section */}
+      {/* Session Control Section */}
+      <SessionControl />
+      
+      {/* General Settings Section */}
+      <GeneralSettings />
+
+      {/* Player of the Month section (moved to BOTTOM) */}
       <div className="bg-white rounded-xl shadow-sm p-6 border-2 border-yellow-300/50">
         <h2 className="text-xl font-semibold mb-2 text-yellow-700 flex items-center gap-2">
           <span role="img" aria-label="Medal">🥇</span>
@@ -30,13 +36,6 @@ export default function Settings() {
           Show Player of the Month
         </button>
       </div>
-
-      {/* Session Control Section */}
-      <SessionControl />
-      
-      {/* General Settings Section */}
-      <GeneralSettings />
-
       {/* Player of Month Dialog */}
       <PlayerOfMonthDialog
         isOpen={showMonthDialog}

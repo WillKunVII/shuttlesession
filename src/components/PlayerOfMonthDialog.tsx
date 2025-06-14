@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { PlayerRankings } from "./PlayerOfSession/PlayerRankings";
 import { useAllTimePlayerRankings } from "@/hooks/useAllTimePlayerRankings";
 import { gameHistoryDB } from "@/utils/indexedDbUtils";
+import { Medal } from "lucide-react";
 
 interface PlayerOfMonthDialogProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
   };
 
   return (
-    <Dialog open={isOpen && hasScores} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl sm:text-2xl md:text-3xl">
@@ -41,7 +42,17 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
           </DialogDescription>
         </DialogHeader>
         <div className="py-6 space-y-6 text-sm sm:text-base">
-          <PlayerRankings topPlayers={topPlayers} />
+          {hasScores ? (
+            <PlayerRankings topPlayers={topPlayers} />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-yellow-700 gap-3 py-8">
+              <Medal className="w-9 h-9 text-yellow-400" />
+              <span className="font-medium">Not enough players have played 3 games yet!</span>
+              <span className="text-xs text-yellow-900 text-center max-w-xs">
+                At least one player must play 3+ games for Player of the Month to be crowned.
+              </span>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={handleClose} className="w-full text-sm sm:text-base" disabled={resetting}>
