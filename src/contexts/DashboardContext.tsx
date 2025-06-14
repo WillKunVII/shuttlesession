@@ -48,21 +48,24 @@ interface DashboardContextType {
 export const DashboardContext = createContext<DashboardContextType | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  // Use the logic hook
   const logic = useDashboardLogic();
 
-  // Provide fallback functions for missing optional logic properties
+  // fallback no-ops
   const noop = () => {};
   const noopSet: React.Dispatch<React.SetStateAction<any>> = () => {};
+  const noopReturnNumber = () => 0;
+  const noopReturnBool = () => false;
+  const noopCanFormValidGame = (_players: Player[]) => false;
 
-  // Extract all required context values and supply fallbacks where missing
+  // Provide context values, preferring logic or fallbacks
   const queue = logic.queue ?? [];
   const nextGamePlayers = logic.nextGamePlayers ?? [];
   const sortedCourts = logic.sortedCourts ?? [];
   const endGameDialogOpen = logic.endGameDialogOpen ?? false;
   const setEndGameDialogOpen = logic.setEndGameDialogOpen ?? noopSet;
   const currentCourtPlayers = logic.currentCourtPlayers ?? { id: 0, players: [] };
-  const setCurrentCourtPlayers = logic.setCurrentCourtPlayers ?? noopSet;
+  // ERROR HERE: logic may not have setCurrentCourtPlayers; use fallback if not present!
+  const setCurrentCourtPlayers = (logic as any).setCurrentCourtPlayers ?? noopSet;
 
   const addPlayerToQueue = logic.addPlayerToQueue ?? noop;
   const removePlayerFromQueue = logic.removePlayerFromQueue ?? noop;
@@ -72,13 +75,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const handlePlayerSelect = logic.handlePlayerSelect ?? noop;
   const clearNextGame = logic.clearNextGame ?? noop;
   const finishEndGame = logic.finishEndGame ?? noop;
-  const isNextGameReady = logic.isNextGameReady ?? (() => false);
+  const isNextGameReady = logic.isNextGameReady ?? noopReturnBool;
 
-  const getPlayerPoolSize = logic.getPlayerPoolSize ?? (() => 0);
-  const canFormValidGame = logic.canFormValidGame ?? (() => false);
+  // These helpers may not exist in logic
+  const getPlayerPoolSize = (logic as any).getPlayerPoolSize ?? noopReturnNumber;
+  const canFormValidGame = (logic as any).canFormValidGame ?? noopCanFormValidGame;
 
-  const updatePlayerInfo = logic.updatePlayerInfo ?? noop;
-  const updateCourtPlayerInfo = logic.updateCourtPlayerInfo ?? noop;
+  const updatePlayerInfo = (logic as any).updatePlayerInfo ?? noop;
+  const updateCourtPlayerInfo = (logic as any).updateCourtPlayerInfo ?? noop;
 
   // updateActivePlayerInfo updates both queue/courts for the member if possible
   const updateActivePlayerInfo = (memberUpdate: {
