@@ -7,7 +7,9 @@ import { CurrentCourtPlayers } from "@/types/DashboardTypes";
 
 import { DashboardContextType } from "@/types/DashboardTypes";
 
-export const DashboardContext = createContext<DashboardContextType | null>(null);
+import { usePiggybackPair } from "@/hooks/usePiggybackPair";
+
+export const DashboardContext = React.createContext<DashboardContextType | undefined>(undefined);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const logic = useDashboardLogic();
@@ -18,6 +20,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const noopReturnNumber = () => 0;
   const noopReturnBool = () => false;
   const noopCanFormValidGame = (_players: Player[]) => false;
+
+  // Instantiate piggyback state ONCE at context level:
+  const piggyback = usePiggybackPair();
 
   // Provide context values, preferring logic or fallbacks
   const queue = logic.queue ?? [];
@@ -57,38 +62,34 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     updateCourtPlayerInfo(memberUpdate);
   };
 
-  // Piggyback integration
-  const piggybackPair = (logic as any).piggybackPair ?? [];
-  const togglePiggybackPlayer = (logic as any).togglePiggybackPlayer ?? noop;
-  const clearPiggyback = (logic as any).clearPiggyback ?? noop;
+  // In your value, provide piggyback state & handlers:
+  const value: DashboardContextType = {
+    queue,
+    nextGamePlayers,
+    sortedCourts,
+    endGameDialogOpen,
+    setEndGameDialogOpen,
+    currentCourtPlayers,
+    addPlayerToQueue,
+    removePlayerFromQueue,
+    generateNextGame,
+    assignToFreeCourt,
+    handleEndGameClick,
+    handlePlayerSelect,
+    clearNextGame,
+    finishEndGame,
+    isNextGameReady,
+    updateActivePlayerInfo,
+    getPlayerPoolSize,
+    canFormValidGame,
+    // Piggyback additions
+    piggybackPair: piggyback.piggybackPair,
+    togglePiggybackPlayer: piggyback.togglePiggybackPlayer,
+    clearPiggyback: piggyback.clearPiggyback,
+  };
 
   return (
-    <DashboardContext.Provider
-      value={{
-        queue,
-        nextGamePlayers,
-        sortedCourts,
-        endGameDialogOpen,
-        setEndGameDialogOpen,
-        currentCourtPlayers,
-        addPlayerToQueue,
-        removePlayerFromQueue,
-        generateNextGame,
-        assignToFreeCourt,
-        handleEndGameClick,
-        handlePlayerSelect,
-        clearNextGame,
-        finishEndGame,
-        isNextGameReady,
-        updateActivePlayerInfo,
-        getPlayerPoolSize,
-        canFormValidGame,
-        // Piggyback additions
-        piggybackPair,
-        togglePiggybackPlayer,
-        clearPiggyback,
-      }}
-    >
+    <DashboardContext.Provider value={value}>
       {children}
     </DashboardContext.Provider>
   );

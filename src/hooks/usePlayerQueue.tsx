@@ -6,20 +6,25 @@ import { usePlayerSelection } from "./usePlayerSelection";
 import { usePlayerPersistence } from "./usePlayerPersistence";
 import { canFormValidGame, getPlayerPoolSize } from "../utils/gameUtils";
 import { getSessionScores } from "../utils/storageUtils";
-import { usePiggybackPair } from "./usePiggybackPair";
 import { useQueueMutations } from "./useQueueMutations";
 
 // Starting with no players in the queue
 const initialPlayers: Player[] = [];
 
-export function usePlayerQueue() {
+type UsePlayerQueueArgs = {
+  piggybackPair: number[];
+  togglePiggybackPlayer: (playerId: number) => void;
+  clearPiggyback: () => void;
+};
+
+export function usePlayerQueue(args: UsePlayerQueueArgs) {
   const [queue, setQueue] = useState<Player[]>(initialPlayers);
 
   // Use the persistence hook for loading/saving player data
   usePlayerPersistence(queue, setQueue);
 
-  // Use piggyback state
-  const { piggybackPair, togglePiggybackPlayer, clearPiggyback } = usePiggybackPair();
+  // Piggyback from props/args
+  const { piggybackPair, togglePiggybackPlayer, clearPiggyback } = args;
 
   // Use the player selection hook for auto-selecting players, and pass piggybackPair!
   const { autoSelectPlayers: selectPlayers } = usePlayerSelection(queue, { piggybackPair });
@@ -93,3 +98,4 @@ export function usePlayerQueue() {
     clearPiggyback,
   };
 }
+
