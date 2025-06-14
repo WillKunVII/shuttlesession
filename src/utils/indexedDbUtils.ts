@@ -166,12 +166,89 @@ class GameHistoryDB {
   async getPlayerStats(playerName: string): Promise<PlayerStats | null> {
     if (!this.db) await this.init();
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const transaction = this.db!.transaction(['playerStats'], 'readonly');
       const store = transaction.objectStore('playerStats');
       const request = store.get(playerName);
 
-      request.onsuccess = () => resolve(request.result || null);
+      request.onsuccess = async () => {
+        if (request.result) {
+          // Normal case, found in playerStats
+          resolve(request.result);
+        } else {
+          // [PATCH] Not found in playerStats – attempt to reconstruct from gameHistory
+          // Will walk through all games and tally record for this player
+          console.log(`[PATCH] playerStats for "${playerName}" missing, rebuilding from gameHistory...`);
+          try {
+            const allGames: GameRecord[] = await this.getGameHistory(10000); // Arbitrary large, capped by client
+            let gamesPlayed = 0;
+            let wins = 0;
+            let losses = 0;
+            let lastPlayed = 0;
+            const partners: Record<string, number> = {};
+            // To detect wins/losses, since older games may not have this info, we'll assume win/loss based on first two players = "winners"
+            for (const game of allGames) {
+              if (game.players.includes(playerName)) {
+                gamesPlayed += 1;
+                lastPlayed = Math.max(lastPlayed, game.timestamp);
+
+                // Add partner counts
+                for (const partner of game.players) {
+                  if (partner !== playerName) {
+                    partners[partner] = (partners[partner] || 0) + 1;
+                  }
+                }
+
+                // Reconstruct win/loss if we have explicit winners info per record (future-proof: check if game has 'winners')
+                // Otherwise, default to: first two are winners, rest losers (old games)
+                // NOTE: For 4-person games, this convention applies. If game.players.length !== 4, this may be inaccurate.
+                if ('winners' in game && Array.isArray((game as any).winners)) {
+                  if ((game as any).winners.includes(playerName)) {
+                    wins += 1;
+                  } else {
+                    losses += 1;
+                  }
+                } else if (Array.isArray(game.players) && game.players.length === 4) {
+                  // Fallback heuristic: first 2 are winners for legacy data
+                  let winners = game.players.slice(0, 2);
+                  if (winners.includes(playerName)) {
+                    wins += 1;
+                  } else {
+                    losses += 1;
+                  }
+                }
+              }
+            }
+            if (gamesPlayed === 0) {
+              resolve(null);
+              return;
+            }
+            const stats: PlayerStats = {
+              name: playerName,
+              gamesPlayed,
+              lastPlayed,
+              partners,
+              wins,
+              losses,
+            };
+            // Save back to IndexedDB for later fast lookup
+            const writeTxn = this.db!.transaction(['playerStats'], 'readwrite');
+            const writeStore = writeTxn.objectStore('playerStats');
+            const putReq = writeStore.put(stats);
+            putReq.onsuccess = () => {
+              console.log(`[PATCH] playerStats for "${playerName}" rebuilt and saved.`, stats);
+              resolve(stats);
+            };
+            putReq.onerror = () => {
+              console.error(`[PATCH] Failed to save rebuilt playerStats for "${playerName}"`, putReq.error);
+              resolve(stats); // Still return calculated stats for now
+            };
+          } catch (err) {
+            console.error(`[PATCH] Error rebuilding stats for "${playerName}":`, err);
+            resolve(null);
+          }
+        }
+      };
       request.onerror = () => reject(request.error);
     });
   }
