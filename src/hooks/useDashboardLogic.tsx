@@ -62,8 +62,7 @@ export function useDashboardLogic() {
       const success = assignPlayersToCourtById(courtId, nextGamePlayers);
       if (success) {
         // Record the game in IndexedDB
-        const playerNames = nextGamePlayers.map(p => p.name);
-        await recordGame(playerNames);
+        await recordGame(nextGamePlayers);
         
         clearGamePlayers();
       }
