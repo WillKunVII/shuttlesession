@@ -36,7 +36,6 @@ export type DashboardContextType = {
   setEndGameDialogOpen: (open: boolean) => void;
   finishEndGame: (courtId: number, winnerNames: string[]) => void;
   isNextGameReady: () => boolean;
-  // Added for piggyback
   piggybackPair: number[];
   togglePiggybackPlayer: (playerId: number) => void;
   clearPiggyback: () => void;
@@ -47,6 +46,8 @@ export type DashboardContextType = {
     isGuest?: boolean;
     playPreferences?: any[];
   }) => void;
+  // Add the missing helpers to fix context error:
+  getPlayerPoolSize: () => number;
+  canFormValidGame: (players: Player[]) => boolean;
   // (Optional) future: updatePlayerInfo?: ... and updateCourtPlayerInfo?: ...
 };
-
