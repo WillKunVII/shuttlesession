@@ -114,7 +114,7 @@ export function PlayerQueue({
           title: "Piggyback Pair Suggestion",
           description:
             "There is a piggyback pair set! Consider including both piggybacked players in the same game.",
-          variant: "warning"
+          variant: "default"
         });
         setPiggybackManualWarningShown(true);
         // Still allow manual selection
