@@ -36,4 +36,8 @@ export type DashboardContextType = {
   setEndGameDialogOpen: (open: boolean) => void;
   finishEndGame: (courtId: number, winnerNames: string[]) => void;
   isNextGameReady: () => boolean;
+  // Added for piggyback
+  piggybackPair: number[];
+  togglePiggybackPlayer: (playerId: number) => void;
+  clearPiggyback: () => void;
 };
