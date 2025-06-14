@@ -23,6 +23,15 @@ function DashboardContent() {
     ? currentCourtPlayers.id
     : 0;
 
+  // Convert CourtPlayer[] to Player[] for EndGameDialog
+  const courtPlayersAsPlayers = courtPlayers.map((p, idx) => ({
+    id: Date.now() + idx, // Use timestamp + idx as dummy unique id
+    name: p.name,
+    gender: p.gender,
+    waitingTime: 0,
+    isGuest: p.isGuest,
+  }));
+
   return (
     <>
       {/* Left column: Courts - stacked vertically */}
@@ -43,7 +52,7 @@ function DashboardContent() {
       <EndGameDialog 
         isOpen={endGameDialogOpen} 
         onClose={() => setEndGameDialogOpen(false)} 
-        players={courtPlayers}
+        players={courtPlayersAsPlayers}
         onSaveResults={winnerNames => finishEndGame(courtId, winnerNames)} 
       />
     </>
