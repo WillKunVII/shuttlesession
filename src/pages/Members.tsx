@@ -40,11 +40,11 @@ function MembersPageContent() {
         const parsedMembers = JSON.parse(savedMembers);
         const updatedMembers = parsedMembers.map((member: any) => ({
           ...member,
-          // Remove status field if it exists
           status: undefined,
           wins: member.wins !== undefined ? member.wins : 0,
           losses: member.losses !== undefined ? member.losses : 0,
-          playPreferences: member.playPreferences || []
+          playPreferences: member.playPreferences || [],
+          rating: typeof member.rating === "number" ? member.rating : 1000
         }));
         setMembers(updatedMembers);
         // Save the updated members back to localStorage

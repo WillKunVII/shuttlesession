@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getStorageItem, setStorageItem, getSessionScores, setSessionScores } from "@/utils/storageUtils";
+import { updatePlayersElo } from "@/utils/eloUtils";
 
 interface Player {
   name: string;
@@ -66,6 +67,29 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
     // Get session scores
     const sessionScores = getSessionScores();
     
+    // ---- ELO RATING UPDATE: hidden ----
+    // 1. Compute new ratings for all four players
+    const prevRatingsLookup: Record<string, number> = {};
+    players.forEach(player => {
+      const memberRating =
+        (members.find((m: any) => m.name === player.name)?.rating) ??
+        (player.rating ?? 1000);
+      prevRatingsLookup[player.name] = memberRating;
+    });
+    const updated = updatePlayersElo(
+      players.map(p => ({
+        name: p.name,
+        rating: prevRatingsLookup[p.name]
+      })),
+      selectedWinners
+    );
+    // 2. Update members' ELO in place
+    for (const upd of updated) {
+      const idx = members.findIndex((m: any) => m.name === upd.name);
+      if (idx !== -1) members[idx].rating = upd.rating;
+    }
+    // 3. (Optional: update other stores if needed)
+    
     // Update wins/losses for all players
     players.forEach(player => {
       const playerName = player.name;
@@ -104,7 +128,7 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       }
     });
     
-    // Save updated scores to BOTH localStorage keys (for Members page sync)
+    // Save updated scores and ELO ratings
     setSessionScores(sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
     localStorage.setItem("clubMembers", JSON.stringify(members)); // <-- ensures Members page sync

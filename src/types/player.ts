@@ -12,4 +12,5 @@ export interface Player {
   sessionWins?: number;
   sessionLosses?: number;
   playPreferences?: PlayPreference[];
+  rating?: number; // HIDDEN ELO
 }

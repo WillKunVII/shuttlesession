@@ -9,4 +9,5 @@ export type Member = {
   wins: number;
   losses: number;
   playPreferences?: PlayPreference[];
+  rating?: number; // HIDDEN ELO
 };
