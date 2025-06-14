@@ -1,19 +1,18 @@
 
+// All references now use IDs exclusively for stats/game records
+
 import { gameHistoryDB } from "./indexedDbUtils";
+import { Player } from "../types/player";
 
 /**
- * Gets game history from IndexedDB (with fallback to localStorage)
+ * Gets game history from IndexedDB (returns array of GameRecord objects with IDs)
  */
-export const getGameHistory = async (): Promise<Array<{players: string[], timestamp: number}>> => {
+export const getGameHistory = async (): Promise<any[]> => {
   try {
     const games = await gameHistoryDB.getGameHistory(50);
-    return games.map(game => ({
-      players: game.players,
-      timestamp: game.timestamp
-    }));
+    return games;
   } catch (e) {
     console.error("Error loading game history from IndexedDB:", e);
-    
     // Fallback to localStorage
     try {
       const history = localStorage.getItem("gameHistory");
@@ -26,23 +25,22 @@ export const getGameHistory = async (): Promise<Array<{players: string[], timest
 };
 
 /**
- * Records a new game in IndexedDB (with fallback to localStorage)
+ * Records a new game in IndexedDB (with fallback). Now expects complete player objects (with ID)
  */
-export const recordGame = async (playerNames: string[]): Promise<void> => {
+export const recordGame = async (players: Player[], winnerIds?: number[]): Promise<void> => {
   try {
-    await gameHistoryDB.addGame(playerNames);
-    console.log("Game recorded in IndexedDB");
+    await gameHistoryDB.addGame(players, undefined, undefined, winnerIds);
+    console.log("Game recorded in IndexedDB (IDs)");
   } catch (e) {
     console.error("Error recording game to IndexedDB:", e);
-    
+
     // Fallback to localStorage
     try {
       const history = await getGameHistory();
       const newGame = {
-        players: [...playerNames].sort(),
+        playerIds: players.map(p => p.id),
         timestamp: Date.now()
       };
-      
       const updatedHistory = [newGame, ...history].slice(0, 50);
       localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));
       console.log("Game recorded in localStorage as fallback");
@@ -53,44 +51,37 @@ export const recordGame = async (playerNames: string[]): Promise<void> => {
 };
 
 /**
- * Calculates how many times a group of players has played together
+ * Calculates how many times a group of players has played together by IDs
  */
-export const getPlayedTogetherCount = async (playerNames: string[]): Promise<number> => {
+export const getPlayedTogetherCount = async (playerIds: number[]): Promise<number> => {
   try {
-    return await gameHistoryDB.getPlayedTogetherCount(playerNames);
+    return await gameHistoryDB.getPlayedTogetherCount(playerIds);
   } catch (e) {
-    console.error("Error getting played together count from IndexedDB:", e);
-    
+    console.error("Error getting played together count by ID from IndexedDB:", e);
     // Fallback to localStorage
     const history = await getGameHistory();
-    const sortedNames = [...playerNames].sort();
-    
+    const sortedIds = [...playerIds].sort();
     return history.filter(game => {
-      return game.players.length === sortedNames.length &&
-             game.players.every(name => sortedNames.includes(name));
+      return game.playerIds &&
+        game.playerIds.length === sortedIds.length &&
+        game.playerIds.every((id: number) => sortedIds.includes(id));
     }).length;
   }
 };
 
 /**
- * Calculates a penalty score for how often players have played together
- * Higher score = played together more often
+ * Calculates a penalty score for how often players have played together.
+ * Higher score = played together more often. IDs only!
  */
-export const calculateRepeatPenalty = async (players: import("../types/player").Player[]): Promise<number> => {
-  const playerNames = players.map(p => p.name);
-  
-  // Check full group of 4
-  const fullGroupCount = await getPlayedTogetherCount(playerNames);
-  
-  // Check all possible pairs within the group
+export const calculateRepeatPenalty = async (players: Player[]): Promise<number> => {
+  const playerIds = players.map(p => p.id);
+  const fullGroupCount = await getPlayedTogetherCount(playerIds);
   let pairPenalty = 0;
-  for (let i = 0; i < playerNames.length; i++) {
-    for (let j = i + 1; j < playerNames.length; j++) {
-      const pairCount = await getPlayedTogetherCount([playerNames[i], playerNames[j]]);
+  for (let i = 0; i < playerIds.length; i++) {
+    for (let j = i + 1; j < playerIds.length; j++) {
+      const pairCount = await getPlayedTogetherCount([playerIds[i], playerIds[j]]);
       pairPenalty += pairCount;
     }
   }
-  
-  // Weight full group repetition more heavily than pair repetition
   return (fullGroupCount * 10) + (pairPenalty * 2);
 };

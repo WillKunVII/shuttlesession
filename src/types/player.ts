@@ -2,7 +2,7 @@
 import { PlayPreference } from "./member";
 
 export interface Player {
-  id: number;
+  id: number; // Unique identifier
   name: string;
   gender: "male" | "female";
   waitingTime: number;

@@ -4,7 +4,10 @@ import { Player } from "@/types/player";
 import { gameHistoryDB } from "@/utils/indexedDbUtils";
 import { getMembers } from "@/utils/storageUtils";
 
-// Stats stored in IndexedDB playerStats: {name, gamesPlayed, lastPlayed, partners, wins, losses}
+/**
+ * Stats stored in IndexedDB playerStats: {playerId, ...}
+ * All lookups/merges now use playerId for safety
+ */
 interface AllTimeRankingPlayer extends Player {
   gamesPlayed: number;
   winRate: number;
@@ -23,28 +26,21 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
   }, [isOpen]);
 
   const loadAllTimeRankings = async () => {
-    // Get playerStats from IndexedDB
     try {
-      // Get all members for metadata (gender, guest, etc)
+      // Get members WITH ids for lookup (id is now required)
       const members: Player[] = getMembers();
 
-      // Get all playerStats from indexedDB (players that have played at any time)
-      // We'll use a little trick: get recent games, extract all player names, then load their stats
+      // Get all stats in a single scan (using all IDs seen in games)
       const allGames = await gameHistoryDB.getGameHistory(500);
-      const allNamesSet = new Set<string>();
-      allGames.forEach(game => {
-        game.players.forEach(name => allNamesSet.add(name));
-      });
-      const allNames = Array.from(allNamesSet);
+      const allIdsSet = new Set<number>();
+      allGames.forEach(game => (game.playerIds || []).forEach((id: number) => allIdsSet.add(id)));
+      const allIds = Array.from(allIdsSet);
 
       const playerStats = await Promise.all(
-        allNames.map(async name => {
-          // We'll extend playerStats to store wins/losses directly. 
-          // Fallback: count wins/losses by parsing games if needed.
-          // We expect gameHistoryDB.getPlayerStats to have .wins and .losses (see below).
-          const stats: any = await gameHistoryDB.getPlayerStats(name);
+        allIds.map(async id => {
+          const stats: any = await gameHistoryDB.getPlayerStats(id);
           if (!stats) return null;
-          return { ...stats, name };
+          return { ...stats, playerId: id };
         })
       );
 
@@ -52,15 +48,14 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
       console.log("All playerStats objects found:", playerStats);
 
       // Remove nulls and players < 3 games
-      const eligibleStats = playerStats
-        .filter(
-          stats =>
-            stats &&
-            typeof stats.gamesPlayed === "number" &&
-            stats.gamesPlayed >= 3 &&
-            typeof stats.wins === "number" &&
-            typeof stats.losses === "number"
-        );
+      const eligibleStats = playerStats.filter(
+        stats =>
+          stats &&
+          typeof stats.gamesPlayed === "number" &&
+          stats.gamesPlayed >= 3 &&
+          typeof stats.wins === "number" &&
+          typeof stats.losses === "number"
+      );
 
       // [DEBUG] Print players that are eligible (should have >=3 games)
       console.log("Eligible stats for Player of Month:", eligibleStats);
@@ -73,13 +68,13 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
 
       // Merge metadata for display
       const playersForRanking: AllTimeRankingPlayer[] = eligibleStats.map((stats, i) => {
-        const member = members.find(m => m.name === stats.name);
+        const member = members.find(m => m.id === stats.playerId);
         const gamesPlayed = stats.gamesPlayed;
         const wins = stats.wins;
         const losses = stats.losses;
         return {
-          id: member?.id || i + 1000,
-          name: stats.name,
+          id: stats.playerId,
+          name: member?.name || stats.name || `Player ${stats.playerId}`,
           gender: member?.gender || "male",
           isGuest: member?.isGuest || false,
           waitingTime: 0,
@@ -118,4 +113,3 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
 
   return { topPlayers, hasScores };
 }
-
