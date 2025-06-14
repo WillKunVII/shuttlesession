@@ -4,55 +4,54 @@ import { generateValidCombinations } from "./playerCombinations";
 import { calculateRepeatPenalty } from "./gameHistory";
 
 /**
- * Finds the best player combination prioritizing the first player and minimizing repeats
+ * Finds a varied best player combination prioritizing those who have played together the least,
+ * but with some randomness for variety.
  */
 export const findBestCombination = async (poolPlayers: Player[]): Promise<Player[]> => {
   if (poolPlayers.length < 4) return [];
-  
-  const topPlayer = poolPlayers[0];
-  
-  // Find all valid combinations that include the top player
-  const validCombinations = generateValidCombinations(poolPlayers)
-    .filter(combo => combo.some(p => p.id === topPlayer.id));
-  
+
+  // Find all valid combinations
+  const validCombinations = generateValidCombinations(poolPlayers);
+
   if (validCombinations.length === 0) return [];
-  
-  // Score each combination based on:
-  // 1. Position of non-top players in queue (lower position = better)
-  // 2. Repeat penalty (fewer repeats = better)
-  const scoredCombinations = await Promise.all(validCombinations.map(async combo => {
-    // Calculate position penalty (sum of queue positions for non-top players)
-    const positionPenalty = combo
-      .filter(p => p.id !== topPlayer.id)
-      .reduce((sum, player) => {
-        const position = poolPlayers.findIndex(pp => pp.id === player.id);
-        return sum + position;
-      }, 0);
-    
-    // Calculate repeat penalty
-    const repeatPenalty = await calculateRepeatPenalty(combo);
-    
-    // Total score (lower is better)
-    // Weight repeat penalty more heavily to prioritize avoiding repeats
-    const totalScore = positionPenalty + (repeatPenalty * 5);
-    
-    return {
-      combination: combo,
-      score: totalScore,
-      positionPenalty,
-      repeatPenalty
-    };
-  }));
-  
-  // Sort by score (lower is better) and return the best combination
-  scoredCombinations.sort((a, b) => a.score - b.score);
-  
-  console.log("Top 3 combinations considered:", scoredCombinations.slice(0, 3).map(sc => ({
-    players: sc.combination.map(p => p.name),
-    score: sc.score,
-    positionPenalty: sc.positionPenalty,
-    repeatPenalty: sc.repeatPenalty
+
+  // Score each combination by repeat penalty (played together score)
+  const scoredCombinations = await Promise.all(
+    validCombinations.map(async combo => {
+      const repeatPenalty = await calculateRepeatPenalty(combo);
+      return {
+        combination: combo,
+        repeatPenalty,
+      };
+    })
+  );
+
+  // Sort combinations by repeatPenalty ascending (least repeats come first)
+  scoredCombinations.sort((a, b) => a.repeatPenalty - b.repeatPenalty);
+
+  // Find the lowest penalty
+  const lowestPenalty = scoredCombinations[0].repeatPenalty;
+
+  // From top-N best penalty combinations, randomly pick one for variety
+  // N is max 5, or less if fewer with minimal penalties
+  const topN = 5;
+  const topBest = scoredCombinations.filter(
+    c => c.repeatPenalty === lowestPenalty
+  );
+  let candidates = topBest;
+  if (topBest.length < topN) {
+    // If fewer than N best, include next best scores to fill up to N
+    const allTopN = scoredCombinations.slice(0, topN);
+    candidates = allTopN;
+  }
+
+  // Randomly select one candidate
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+
+  console.log("Randomly picking from top candidates:", candidates.map(c => ({
+    players: c.combination.map(p => p.name),
+    repeatPenalty: c.repeatPenalty
   })));
-  
-  return scoredCombinations[0].combination;
+
+  return picked.combination;
 };
