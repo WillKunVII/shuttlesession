@@ -40,4 +40,13 @@ export type DashboardContextType = {
   piggybackPair: number[];
   togglePiggybackPlayer: (playerId: number) => void;
   clearPiggyback: () => void;
+  // ADDED (fix): updateActivePlayerInfo
+  updateActivePlayerInfo: (memberUpdate: {
+    name: string;
+    gender?: "male" | "female";
+    isGuest?: boolean;
+    playPreferences?: any[];
+  }) => void;
+  // (Optional) future: updatePlayerInfo?: ... and updateCourtPlayerInfo?: ...
 };
+

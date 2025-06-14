@@ -71,7 +71,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         endGameDialogOpen,
         setEndGameDialogOpen,
         currentCourtPlayers,
-        setCurrentCourtPlayers,
         addPlayerToQueue,
         removePlayerFromQueue,
         generateNextGame,
