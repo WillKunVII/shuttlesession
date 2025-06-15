@@ -44,11 +44,11 @@ export function CourtOrderingSetting() {
         >
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
             <RadioGroupItem value="ascending" id="ascending" />
-            <Label htmlFor="ascending" className="cursor-pointer">Ascending</Label>
+            <Label htmlFor="ascending" className="cursor-pointer text-foreground">Ascending</Label>
           </div>
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
             <RadioGroupItem value="descending" id="descending" />
-            <Label htmlFor="descending" className="cursor-pointer">Descending</Label>
+            <Label htmlFor="descending" className="cursor-pointer text-foreground">Descending</Label>
           </div>
         </RadioGroup>
       </div>
