@@ -32,7 +32,7 @@ export function ScoreKeepingSetting() {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
-        <h3 className="font-medium">Score Keeping</h3>
+        <h3 className="font-medium text-foreground">Score Keeping</h3>
         <p className="text-sm text-muted-foreground">Track player wins and losses</p>
       </div>
       <RadioGroup 

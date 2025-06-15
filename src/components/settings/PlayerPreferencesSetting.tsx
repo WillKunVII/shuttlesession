@@ -25,7 +25,7 @@ export function PlayerPreferencesSetting() {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
-        <h3 className="font-medium">Player Preferences</h3>
+        <h3 className="font-medium text-foreground">Player Preferences</h3>
         <p className="text-sm text-muted-foreground">Enable play style preferences (Open, Mixed, Ladies)</p>
       </div>
       <RadioGroup 
