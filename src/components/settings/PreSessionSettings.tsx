@@ -1,6 +1,7 @@
 
 import React from "react";
 import { GeneralSettings } from "./GeneralSettings";
+import { CourtNumberDropdown } from "./CourtNumberDropdown";
 
 interface PreSessionSettingsProps {
   isOpen: boolean;
@@ -21,6 +22,10 @@ export const PreSessionSettings: React.FC<PreSessionSettingsProps> = ({ isOpen, 
         <p className="mb-5 text-sm text-muted-foreground">
           Configure session settings as required before starting your session.
         </p>
+        {/* Show the exact same court dropdown UI as /settings */}
+        <div className="mb-6">
+          <CourtNumberDropdown />
+        </div>
         <GeneralSettings />
       </div>
     </div>
