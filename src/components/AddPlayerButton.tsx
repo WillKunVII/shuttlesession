@@ -38,8 +38,9 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   const [playPreferences, setPlayPreferences] = useState<PlayPreference[]>([]);
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
   const [activeQueue, setActiveQueue] = useState<{ name: string; }[]>([]);
+  const [activeSessionNames, setActiveSessionNames] = useState<Set<string>>(new Set());
 
-  // Load members from localStorage + current player queue
+  // Load members and aggregate ALL active player names (queue, next game, courts)
   useEffect(() => {
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
@@ -50,36 +51,74 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       }
     }
 
-    // Check if play preferences are enabled
     const enablePref = localStorage.getItem("enablePlayerPreferences");
     setPreferencesEnabled(enablePref === "true");
 
-    // Load active player queue for duplicate checking (by name, case-insensitive)
+    // Get player queue (names, case-insensitive)
+    let queuePlayers: any[] = [];
     const playerQueue = localStorage.getItem("playerQueue");
     if (playerQueue) {
       try {
-        const players = JSON.parse(playerQueue);
-        setActiveQueue(Array.isArray(players) ? players : []);
+        queuePlayers = JSON.parse(playerQueue);
+        setActiveQueue(Array.isArray(queuePlayers) ? queuePlayers : []);
       } catch (e) {
         setActiveQueue([]);
       }
     } else {
       setActiveQueue([]);
     }
+
+    // Get 'Next Game' players
+    let nextGamePlayers: any[] = [];
+    const ng = localStorage.getItem("nextGamePlayers");
+    if (ng) {
+      try {
+        nextGamePlayers = JSON.parse(ng);
+      } catch (e) {
+        nextGamePlayers = [];
+      }
+    }
+
+    // Get all court players (from 'courts')
+    let courtPlayers: any[] = [];
+    const courtsRaw = localStorage.getItem("courts");
+    if (courtsRaw) {
+      try {
+        const courtsParsed = JSON.parse(courtsRaw);
+        if (Array.isArray(courtsParsed)) {
+          for (const court of courtsParsed) {
+            if (Array.isArray(court.players)) {
+              courtPlayers = courtPlayers.concat(court.players);
+            }
+          }
+        }
+      } catch (e) {
+        courtPlayers = [];
+      }
+    }
+
+    // Combine all names (queue, next game, courts)
+    const allNames = [
+      ...(Array.isArray(queuePlayers) ? queuePlayers : []),
+      ...(Array.isArray(nextGamePlayers) ? nextGamePlayers : []),
+      ...(Array.isArray(courtPlayers) ? courtPlayers : []),
+    ]
+      .map((p: any) => (p.name || "").trim().toLowerCase())
+      .filter(Boolean);
+
+    setActiveSessionNames(new Set(allNames));
   }, [isOpen]);
 
   const handleAddPlayer = () => {
     if (name && onAddPlayer) {
-      // Check queue for duplicates by name (case-insensitive)
-      const duplicate = activeQueue.find(
-        (player: any) => player.name.trim().toLowerCase() === name.trim().toLowerCase()
-      );
-      if (duplicate) {
-        toast.error(`${name} is already in the queue!`);
+      // Prevent duplicates by checking name against ALL involved players (queue, nextGame, courts)
+      const dup = activeSessionNames.has(name.trim().toLowerCase());
+      if (dup) {
+        toast.error(`${name} is already participating in this session!`);
         return;
       }
 
-      // Check if player already exists in members list for suggestion
+      // Check queue for duplicates by name (case-insensitive)
       const existingMember = membersList.find(
         member => member.name.toLowerCase() === name.toLowerCase()
       );
@@ -145,10 +184,8 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     member.name.toLowerCase().includes(name.toLowerCase())
   );
 
-  // Create a set of queue names (case-insensitive) for easier reference in UI
-  const queueNameSet = new Set(
-    activeQueue.map(q => (q.name || "").trim().toLowerCase())
-  );
+  // Create a set of ALL session player names for the suggestion UI
+  const sessionNameSet = activeSessionNames;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -185,7 +222,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
               {/* Suggestions dropdown extracted */}
               <PlayerSuggestions
                 members={filteredMembers}
-                queueNameSet={queueNameSet}
+                queueNameSet={sessionNameSet}
                 name={name}
                 show={showSuggestions}
                 onSelect={selectMember}
