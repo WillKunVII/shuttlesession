@@ -47,17 +47,17 @@ export function useAllTimePlayerRankings(isOpen: boolean) {
       // [DEBUG] Print all stats regardless of eligibility
       console.log("All playerStats objects found:", playerStats);
 
-      // Remove nulls and players < 3 games
+      // Remove nulls and players with no recorded games (REMOVED the 3+ games restriction)
       const eligibleStats = playerStats.filter(
         stats =>
           stats &&
           typeof stats.gamesPlayed === "number" &&
-          stats.gamesPlayed >= 3 &&
+          stats.gamesPlayed >= 1 && // only require at least 1 game played for eligibility now
           typeof stats.wins === "number" &&
           typeof stats.losses === "number"
       );
 
-      // [DEBUG] Print players that are eligible (should have >=3 games)
+      // [DEBUG] Print players that are eligible (should have >=1 games now)
       console.log("Eligible stats for Player of Month:", eligibleStats);
 
       if (eligibleStats.length === 0) {
