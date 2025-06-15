@@ -35,14 +35,17 @@ export function CourtNumberSetting() {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4">
       <div>
-        <h3 className="font-medium">Number of Courts</h3>
+        <h3 className="font-medium text-foreground">Number of Courts</h3>
         <p className="text-sm text-muted-foreground">Configure the number of courts available (1-8)</p>
       </div>
       <div className="w-full sm:w-40">
         <Label className="mb-1 block text-foreground font-medium">Courts</Label>
         <Select value={courtCount.toString()} onValueChange={handleValueChange}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select courts" />
+            {/* Instead of placeholder-only, always show selected value */}
+            <span>
+              {courtCount} {courtCount === 1 ? "court" : "courts"}
+            </span>
           </SelectTrigger>
           <SelectContent>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((number) => (
