@@ -8,12 +8,15 @@ import { PiggybackSetting } from "./PiggybackSetting";
 
 export function GeneralSettings() {
   return (
-    <div className="flex flex-col gap-6">
-      <PlayerPoolSizeSetting />
-      <CourtNumberSetting />
-      <PlayerPreferencesSetting />
-      <ScoreKeepingSetting />
-      <PiggybackSetting />
+    <div className="bg-white rounded-xl shadow-sm p-6 border">
+      <h2 className="text-xl font-semibold mb-3 text-foreground">General Game Settings</h2>
+      <div className="flex flex-col gap-6">
+        <PlayerPoolSizeSetting />
+        <CourtNumberSetting />
+        <PlayerPreferencesSetting />
+        <ScoreKeepingSetting />
+        <PiggybackSetting />
+      </div>
     </div>
   );
 }
