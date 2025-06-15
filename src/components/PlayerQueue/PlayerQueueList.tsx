@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Player } from "@/types/player";
 import { PlayerQueueCard } from "./PlayerQueueCard";
 import { PiggybackPair } from "@/hooks/usePiggybackPairs";
+import { getPiggybackEnabled } from "@/utils/storageUtils";
 
 interface PlayerQueueListProps {
   players: Player[];
@@ -36,6 +37,7 @@ export function PlayerQueueList({
   findPiggybackPair,
   setPiggybackManualWarningShown,
 }: any) {
+  const piggybackEnabled = getPiggybackEnabled();
   return (
     <div className="space-y-2 pr-4">
       {players.map((player, index) => (
@@ -50,7 +52,6 @@ export function PlayerQueueList({
               </div>
             </div>
           )}
-          {/* Pass the full player array so partner names display */}
           <PlayerQueueCard
             player={player}
             players={players}
@@ -58,13 +59,13 @@ export function PlayerQueueList({
             isNextGameReady={isNextGameReady}
             scoreKeepingEnabled={scoreKeepingEnabled}
             preferencesEnabled={preferencesEnabled}
-            piggybackPairs={piggybackPairs}
-            onOpenPiggybackModal={onOpenPiggybackModal}
-            removePiggybackPair={removePiggybackPair}
-            findPiggybackPair={findPiggybackPair}
+            piggybackPairs={piggybackEnabled ? piggybackPairs : []}
+            onOpenPiggybackModal={piggybackEnabled ? onOpenPiggybackModal : undefined}
+            removePiggybackPair={piggybackEnabled ? removePiggybackPair : undefined}
+            findPiggybackPair={piggybackEnabled ? findPiggybackPair : () => undefined}
             onPlayerSelect={onPlayerSelect}
             onPlayerLeave={onPlayerLeave}
-            setPiggybackManualWarningShown={setPiggybackManualWarningShown}
+            setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
           />
         </div>
       ))}

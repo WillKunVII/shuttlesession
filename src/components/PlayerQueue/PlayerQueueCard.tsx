@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Player } from "@/types/player";
 import { PiggybackPair } from "@/hooks/usePiggybackPairs";
+import { getPiggybackEnabled } from "@/utils/storageUtils";
 
 interface PlayerQueueCardProps {
   player: Player;
@@ -37,12 +38,11 @@ export function PlayerQueueCard({
   setPiggybackManualWarningShown
 }: PlayerQueueCardProps) {
   // Find piggyback data for this player (if any)
-  const pair = findPiggybackPair(player.id);
+  const piggybackEnabled = getPiggybackEnabled();
+  const pair = piggybackEnabled && findPiggybackPair ? findPiggybackPair(player.id) : undefined;
   const isMaster = pair?.master === player.id;
   const isPartner = pair?.partner === player.id;
   const partnerId = isMaster ? pair?.partner : isPartner ? pair?.master : undefined;
-
-  // Find partner/master name, if exists in queue
   const partnerPlayer = players.find(p => p.id === partnerId);
   const partnerName = partnerPlayer ? partnerPlayer.name : "Unknown";
 
@@ -68,7 +68,7 @@ export function PlayerQueueCard({
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
         )}
         {/* PIGGYBACK BADGE */}
-        {pair && partnerId !== undefined && (
+        {piggybackEnabled && pair && partnerId !== undefined && (
           <span
             title="Piggybacked"
             className="ml-1 flex items-center text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-1 py-0.5 rounded gap-1"
@@ -82,7 +82,6 @@ export function PlayerQueueCard({
             </span>
           </span>
         )}
-        {/* (Optionally add play preferences and scores) */}
         {scoreKeepingEnabled && (
           <span className="ml-1 text-sm text-gray-500 flex items-center gap-1">
             W {player.sessionWins || 0} – L {player.sessionLosses || 0}
@@ -105,8 +104,8 @@ export function PlayerQueueCard({
           md:w-28 md:gap-3
         "
       >
-        {/* Only show button if not already in a pair */}
-        {!pair && onOpenPiggybackModal && (
+        {/* Only show piggyback buttons if enabled and not already in a pair */}
+        {piggybackEnabled && !pair && onOpenPiggybackModal && (
           <Button
             variant="ghost"
             size="sm"
@@ -126,7 +125,7 @@ export function PlayerQueueCard({
           </Button>
         )}
         {/* Only masters can unpiggyback */}
-        {isMaster && removePiggybackPair && (
+        {piggybackEnabled && isMaster && removePiggybackPair && (
           <Button
             variant="secondary"
             size="sm"

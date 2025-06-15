@@ -10,6 +10,7 @@ import { usePlayerQueueLogic } from "./PlayerQueue/usePlayerQueueLogic";
 import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 import { PlayPreference } from "@/types/member";
 import { Player } from "@/types/player";
+import { getPiggybackEnabled } from "@/utils/storageUtils";
 
 interface PlayerQueueProps {
   players: Player[];
@@ -54,6 +55,8 @@ export function PlayerQueue(props: any) {
     clearPiggybackPairs
   } = props;
 
+  const piggybackEnabled = getPiggybackEnabled();
+
   return (
     <div className="space-y-4 max-h-[calc(100vh-24rem)]">
       <div className="flex justify-between items-center mb-4">
@@ -72,7 +75,6 @@ export function PlayerQueue(props: any) {
           </Button>
         </div>
       </div>
-
       {isNextGameReady && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
           <p className="text-sm text-yellow-800">
@@ -80,7 +82,6 @@ export function PlayerQueue(props: any) {
           </p>
         </div>
       )}
-
       {players.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           No players in queue
@@ -96,31 +97,30 @@ export function PlayerQueue(props: any) {
             playerPoolSize={playerPoolSize}
             scoreKeepingEnabled={scoreKeepingEnabled}
             preferencesEnabled={preferencesEnabled}
-            piggybackPairs={piggybackPairs}
-            onOpenPiggybackModal={handleOpenPiggybackModal}
-            removePiggybackPair={props.removePiggybackPair}
-            findPiggybackPair={props.findPiggybackPair}
-            setPiggybackManualWarningShown={setPiggybackManualWarningShown}
+            piggybackPairs={piggybackEnabled ? piggybackPairs : []}
+            onOpenPiggybackModal={piggybackEnabled ? handleOpenPiggybackModal : undefined}
+            removePiggybackPair={piggybackEnabled ? props.removePiggybackPair : undefined}
+            findPiggybackPair={piggybackEnabled ? props.findPiggybackPair : () => undefined}
+            setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
           />
         </ScrollArea>
       )}
-
       {/* Piggyback modal */}
-      <PiggybackModal
-        open={piggybackModalOpen}
-        onClose={handleClosePiggybackModal}
-        candidates={getPiggybackCandidates()}
-        onConfirm={handlePiggybackPartnerConfirm}
-      />
-
+      {piggybackEnabled && (
+        <PiggybackModal
+          open={piggybackModalOpen}
+          onClose={handleClosePiggybackModal}
+          candidates={getPiggybackCandidates()}
+          onConfirm={handlePiggybackPartnerConfirm}
+        />
+      )}
       {/* Leave Confirmation Dialog */}
       <LeaveConfirmationDialog
         open={leaveDialogOpen}
         onCancel={cancelPlayerLeave}
         onConfirm={confirmPlayerLeave}
       />
-
-      {piggybackPairs.length === 2 && clearPiggybackPairs && (
+      {(piggybackEnabled && piggybackPairs.length === 2 && clearPiggybackPairs) && (
         <PiggybackNotice clearPiggyback={clearPiggybackPairs} />
       )}
     </div>

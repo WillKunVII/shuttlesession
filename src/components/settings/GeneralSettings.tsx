@@ -1,21 +1,18 @@
-
-import { ScoreKeepingSetting } from "./ScoreKeepingSetting";
+import React from "react";
 import { PlayerPoolSizeSetting } from "./PlayerPoolSizeSetting";
-import { CourtOrderingSetting } from "./CourtOrderingSetting";
-import { PlayerPreferencesSetting } from "./PlayerPreferencesSetting";
 import { CourtNumberSetting } from "./CourtNumberSetting";
+import { EnablePlayPreferencesSetting } from "./EnablePlayPreferencesSetting";
+import { EnableScoreKeepingSetting } from "./EnableScoreKeepingSetting";
+import { PiggybackSetting } from "./PiggybackSetting";
 
 export function GeneralSettings() {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4">General Settings</h2>
-      <div className="space-y-6 text-sm sm:text-base">
-        <CourtNumberSetting />
-        <CourtOrderingSetting />
-        <PlayerPoolSizeSetting />
-        <PlayerPreferencesSetting />
-        <ScoreKeepingSetting />
-      </div>
+    <div className="flex flex-col gap-6">
+      <PlayerPoolSizeSetting />
+      <CourtNumberSetting />
+      <EnablePlayPreferencesSetting />
+      <EnableScoreKeepingSetting />
+      <PiggybackSetting />
     </div>
   );
 }

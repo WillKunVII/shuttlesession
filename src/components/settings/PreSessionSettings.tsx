@@ -1,6 +1,7 @@
 
 import React from "react";
 import { GeneralSettings } from "./GeneralSettings";
+import { PiggybackSetting } from "./PiggybackSetting"; // Add this
 
 interface PreSessionSettingsProps {
   isOpen: boolean;
@@ -21,7 +22,9 @@ export const PreSessionSettings: React.FC<PreSessionSettingsProps> = ({ isOpen, 
         <p className="mb-5 text-sm text-muted-foreground">
           Configure session settings as required before starting your session.
         </p>
-        <GeneralSettings />
+        {/* Only piggyback setting here for pre-session, not the whole GeneralSettings */}
+        <PiggybackSetting />
+        {/* ... you could add other individual settings as desired */}
       </div>
     </div>
   );

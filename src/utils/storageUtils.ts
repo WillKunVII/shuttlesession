@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for working with localStorage
  * Centralizes storage operations and adds error handling
@@ -87,4 +86,14 @@ export function getMembers() {
 
 export function setMembers(members: any[]) {
   setStorageItem("members", members);
+}
+
+// NEW: Piggyback enabled setting
+export function getPiggybackEnabled(): boolean {
+  const val = localStorage.getItem("piggybackEnabled");
+  // Default: true (enabled)
+  return val === null ? true : val === "true";
+}
+export function setPiggybackEnabled(enabled: boolean): void {
+  localStorage.setItem("piggybackEnabled", enabled ? "true" : "false");
 }
