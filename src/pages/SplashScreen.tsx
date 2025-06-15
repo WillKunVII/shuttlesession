@@ -35,7 +35,7 @@ const SplashScreen = () => {
     // Could record session count here if wanted for 'Player of the Month' logic elsewhere
     const sessions = parseInt(localStorage.getItem("sessionCount") || "0", 10);
     localStorage.setItem("sessionCount", String(sessions + 1));
-    navigate("/session");
+    navigate("/app/session");
   };
 
   // Open warning modal to confirm "Player of the Month" action
