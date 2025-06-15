@@ -29,6 +29,20 @@ function MembersPageContent() {
 
   const { updateActivePlayerInfo } = useDashboard();
 
+  // Helper function to check if an object is a valid Member
+  function isValidMember(obj: any): obj is Member {
+    return (
+      obj &&
+      typeof obj === "object" &&
+      typeof obj.id === "number" &&
+      typeof obj.name === "string" &&
+      (obj.gender === "male" || obj.gender === "female") &&
+      typeof obj.isGuest === "boolean" &&
+      typeof obj.wins === "number" &&
+      typeof obj.losses === "number"
+    );
+  }
+
   // Load members from localStorage on component mount
   useEffect(() => {
     const enablePref = localStorage.getItem("enablePlayerPreferences");
@@ -38,13 +52,17 @@ function MembersPageContent() {
       try {
         // Check if members have wins/losses fields, add if not
         const parsedMembers = JSON.parse(savedMembers);
+        // ---- FILTER for only valid members
+        let filteredMembers = Array.isArray(parsedMembers)
+          ? parsedMembers.filter(isValidMember)
+          : [];
         // Add a check for duplicate IDs
-        const ids = parsedMembers.map((m: any) => m.id);
+        const ids = filteredMembers.map((m: any) => m.id);
         const hasDuplicateIds = ids.length !== new Set(ids).size;
         if (hasDuplicateIds) {
           console.warn("Duplicate member IDs found in localStorage!", ids);
         }
-        const updatedMembers = parsedMembers.map((member: any) => ({
+        const updatedMembers = filteredMembers.map((member: any) => ({
           ...member,
           status: undefined,
           wins: member.wins !== undefined ? member.wins : 0,
@@ -151,7 +169,11 @@ function MembersPageContent() {
   };
   const handleDeleteMember = () => {
     if (memberToDelete !== null) {
-      const updatedMembers = members.filter(member => member.id !== memberToDelete);
+      // Only delete if there are valid members
+      const updatedMembers = members.filter(
+        (member) =>
+          isValidMember(member) && member.id !== memberToDelete
+      );
       setMembers(updatedMembers);
       setIsAlertDialogOpen(false);
       setMemberToDelete(null);
