@@ -20,14 +20,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Splash screen as default route */}
-          <Route path="/" element={<SplashScreen />} />
-          
-          {/* Main app routes */}
-          <Route path="/session" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/members" element={<AppLayout><Members /></AppLayout>} />
-          <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
-          
+          {/* Redirect root to /app */}
+          <Route path="/" element={<Navigate to="/app" replace />} />
+
+          {/* Group all main app routes under /app */}
+          <Route path="/app">
+            {/* Splash screen as /app route by default */}
+            <Route index element={<SplashScreen />} />
+            {/* Main app session routes */}
+            <Route path="session" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="members" element={<AppLayout><Members /></AppLayout>} />
+            <Route path="settings" element={<AppLayout><Settings /></AppLayout>} />
+          </Route>
+
           {/* Fallback route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
