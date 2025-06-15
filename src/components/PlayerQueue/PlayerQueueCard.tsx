@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CircleDot, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -99,13 +98,24 @@ export function PlayerQueueCard({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 ml-4">
+      {/* Responsive action buttons */}
+      <div
+        className="
+          flex 
+          flex-row gap-2 ml-4
+          md:flex-col md:gap-3 md:w-28
+        "
+      >
         {/* Only show button if not already in a pair */}
         {!pair && onOpenPiggybackModal && (
           <Button
             variant="ghost"
             size="sm"
-            className="hover:bg-purple-50 hover:text-purple-700"
+            className="
+              hover:bg-purple-50 hover:text-purple-700
+              md:w-full
+              min-h-[40px]
+            "
             onClick={e => {
               e.stopPropagation();
               onOpenPiggybackModal(player);
@@ -121,7 +131,11 @@ export function PlayerQueueCard({
           <Button
             variant="secondary"
             size="sm"
-            className="bg-purple-100 text-purple-700"
+            className="
+              bg-purple-100 text-purple-700
+              md:w-full
+              min-h-[40px]
+            "
             onClick={e => {
               e.stopPropagation();
               removePiggybackPair(player.id);
@@ -134,7 +148,11 @@ export function PlayerQueueCard({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+          className="
+            text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto
+            md:w-full
+            min-h-[40px]
+          "
           onClick={e => onPlayerLeave(player.id, e)}
         >
           Leave
