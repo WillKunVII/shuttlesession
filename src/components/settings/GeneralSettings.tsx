@@ -1,8 +1,9 @@
+
 import React from "react";
 import { PlayerPoolSizeSetting } from "./PlayerPoolSizeSetting";
 import { CourtNumberSetting } from "./CourtNumberSetting";
-import { EnablePlayPreferencesSetting } from "./EnablePlayPreferencesSetting";
-import { EnableScoreKeepingSetting } from "./EnableScoreKeepingSetting";
+import { PlayerPreferencesSetting } from "./PlayerPreferencesSetting";
+import { ScoreKeepingSetting } from "./ScoreKeepingSetting";
 import { PiggybackSetting } from "./PiggybackSetting";
 
 export function GeneralSettings() {
@@ -10,8 +11,8 @@ export function GeneralSettings() {
     <div className="flex flex-col gap-6">
       <PlayerPoolSizeSetting />
       <CourtNumberSetting />
-      <EnablePlayPreferencesSetting />
-      <EnableScoreKeepingSetting />
+      <PlayerPreferencesSetting />
+      <ScoreKeepingSetting />
       <PiggybackSetting />
     </div>
   );
