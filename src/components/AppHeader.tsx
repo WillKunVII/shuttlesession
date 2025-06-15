@@ -1,19 +1,23 @@
+
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Home, Users, Settings } from "lucide-react";
+
+// UPDATED: All nav paths now include a /app/ prefix
 const navItems = [{
   name: "Session",
-  path: "/session",
+  path: "/app/session",
   icon: Home
 }, {
   name: "Members",
-  path: "/members",
+  path: "/app/members",
   icon: Users
 }, {
   name: "Settings",
-  path: "/settings",
+  path: "/app/settings",
   icon: Settings
 }];
+
 export function AppHeader() {
   return <header className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-neutral-300 bg-neutral-000 safe-area-padding-top px-[16px] py-[16px]">
       <div className="flex items-center gap-2">
