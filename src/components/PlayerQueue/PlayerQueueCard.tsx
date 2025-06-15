@@ -98,12 +98,11 @@ export function PlayerQueueCard({
           </div>
         )}
       </div>
-      {/* Responsive action buttons */}
+      {/* Stack action buttons vertically on ALL viewports */}
       <div
         className="
-          flex 
-          flex-row gap-2 ml-4
-          md:flex-col md:gap-3 md:w-28
+          flex flex-col gap-2 w-full max-w-[150px]
+          md:w-28 md:gap-3
         "
       >
         {/* Only show button if not already in a pair */}
@@ -113,8 +112,8 @@ export function PlayerQueueCard({
             size="sm"
             className="
               hover:bg-purple-50 hover:text-purple-700
-              md:w-full
-              min-h-[40px]
+              w-full
+              min-h-[44px]
             "
             onClick={e => {
               e.stopPropagation();
@@ -133,8 +132,8 @@ export function PlayerQueueCard({
             size="sm"
             className="
               bg-purple-100 text-purple-700
-              md:w-full
-              min-h-[40px]
+              w-full
+              min-h-[44px]
             "
             onClick={e => {
               e.stopPropagation();
@@ -149,9 +148,9 @@ export function PlayerQueueCard({
           variant="ghost" 
           size="sm" 
           className="
-            text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto
-            md:w-full
-            min-h-[40px]
+            text-red-500 hover:text-red-700 hover:bg-red-50
+            w-full
+            min-h-[44px]
           "
           onClick={e => onPlayerLeave(player.id, e)}
         >
