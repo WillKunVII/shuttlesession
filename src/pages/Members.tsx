@@ -38,6 +38,12 @@ function MembersPageContent() {
       try {
         // Check if members have wins/losses fields, add if not
         const parsedMembers = JSON.parse(savedMembers);
+        // Add a check for duplicate IDs
+        const ids = parsedMembers.map((m: any) => m.id);
+        const hasDuplicateIds = ids.length !== new Set(ids).size;
+        if (hasDuplicateIds) {
+          console.warn("Duplicate member IDs found in localStorage!", ids);
+        }
         const updatedMembers = parsedMembers.map((member: any) => ({
           ...member,
           status: undefined,
@@ -76,14 +82,31 @@ function MembersPageContent() {
   };
   const handleSaveMember = (memberData: Omit<Member, "id" | "wins" | "losses">) => {
     if (editMode && editingMember) {
-      // Update existing member
-      const updatedMembers = members.map(member => member.id === editingMember.id ? {
-        ...member,
-        name: memberData.name,
-        gender: memberData.gender,
-        isGuest: memberData.isGuest,
-        playPreferences: preferencesEnabled ? memberData.playPreferences : member.playPreferences
-      } : member);
+      // --- LOG the state before update
+      console.log("Before update:", members.map(m => ({ id: m.id, name: m.name })));
+
+      // Update existing member only (verify by ID)
+      const updatedMembers = members.map(member =>
+        member.id === editingMember.id
+          ? {
+              ...member,
+              name: memberData.name,
+              gender: memberData.gender,
+              isGuest: memberData.isGuest,
+              playPreferences: preferencesEnabled ? memberData.playPreferences : member.playPreferences
+            }
+          : member
+      );
+      // --- LOG the state after update
+      console.log("After update:", updatedMembers.map(m => ({ id: m.id, name: m.name })));
+      // Also log if more than one name has changed (unexpected)
+      const changed = updatedMembers.filter(
+        (m, i) => m.name !== members[i].name || m.gender !== members[i].gender
+      );
+      if (changed.length > 1) {
+        console.warn("More than one member changed during edit! Check ID uniqueness.", changed);
+      }
+
       setMembers(updatedMembers);
       toast.success("Member updated successfully");
       // --- SYNC if player is active ---
@@ -94,9 +117,13 @@ function MembersPageContent() {
         playPreferences: preferencesEnabled ? memberData.playPreferences : [],
       });
     } else {
-      // Add new member
+      // Add new member - guarantee a new unique timestamp (retry if collision)
+      let newId = Date.now();
+      while (members.some(m => m.id === newId)) {
+        newId += 1;
+      }
       const newMember = {
-        id: Date.now(),
+        id: newId,
         name: memberData.name,
         gender: memberData.gender,
         isGuest: memberData.isGuest,
