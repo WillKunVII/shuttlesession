@@ -1,18 +1,43 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PreSessionSettings } from "@/components/settings/PreSessionSettings";
+
 const SplashScreen = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // We'll use a simple session counter in localStorage for player of the month (not shown on splash)
+  // Settings required - user must review/submit them before session can start.
+  const [sessionReady, setSessionReady] = useState(
+    !!localStorage.getItem("sawPreSessionSettings") // skip if already viewed once
+  );
+
+  const handleShowSettings = () => setSettingsOpen(true);
+
+  const handleSettingsClose = () => {
+    setSettingsOpen(false);
+    // Mark as ready, so 'Start Session' can be clicked once settings dialog has been opened/closed
+    localStorage.setItem("sawPreSessionSettings", "true");
+    setSessionReady(true);
+  };
+
   const handleStartSession = () => {
+    // Could record session count here if wanted for 'Player of the Month' logic elsewhere
+    const sessions = parseInt(localStorage.getItem("sessionCount") || "0", 10);
+    localStorage.setItem("sessionCount", String(sessions + 1));
     navigate("/session");
   };
-  return <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6 bg-shuttle-primary">
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-app-primary-700 text-neutral-000 p-6 bg-shuttle-primary">
       <div className="text-center animate-fade-in py-[120px]">
         <div className="flex justify-center mb-6">
           <div className="bg-transparent p-3 rounded-md flex items-center justify-center">
             <svg width="64" height="64" viewBox="0 0 28 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19.9979 21.9689C20.2486 23.733 21.4717 32.6751 21.2991 38.4443C21.0873 45.5213 18.6988 55.9979 17.6584 56C16.6181 55.9984 14.7354 46.1715 14.5236 39.0943C14.3561 33.4971 15.0302 24.4183 15.2064 22.1742C16.7473 22.1431 18.4647 22.0592 19.9979 21.9689Z" fill="white" />
+              <path d="M19.9979 21.9689C20.2486 23.7330 21.4717 32.6751 21.2991 38.4443C21.0873 45.5213 18.6988 55.9979 17.6584 56C16.6181 55.9984 14.7354 46.1715 14.5236 39.0943C14.3561 33.4971 15.0302 24.4183 15.2064 22.1742C16.7473 22.1431 18.4647 22.0592 19.9979 21.9689Z" fill="white" />
               <path d="M8.19579 21.9802C9.74317 22.0698 11.4593 22.1505 12.9843 22.1773C13.124 24.3632 13.6427 32.9917 13.4759 38.566C13.2642 45.6434 11.5818 55.4707 10.5415 55.4717C9.5011 55.4697 7.1126 44.993 6.90079 37.916C6.72907 32.1771 7.93648 23.7197 8.19579 21.9802Z" fill="white" />
               <path d="M3.53298 21.6604C3.53298 21.6604 4.81379 21.763 6.59519 21.8802C6.29566 22.7214 5.25841 25.9382 5.10395 30.6415C4.90465 36.7101 1.37427 42.2614 0.394125 42.2642C-0.585003 42.2642 0.593467 35.655 0.394125 29.5849C0.235801 24.7639 2.75778 22.3125 3.39091 21.7749L3.53298 21.6604Z" fill="white" />
               <path d="M24.6188 21.7821C25.2695 22.3353 27.7639 24.7909 27.6064 29.5849C27.4071 35.6535 28.5843 42.2609 27.6064 42.2642C26.6273 42.2642 23.096 36.7116 22.8966 30.6415C22.7423 25.9423 21.7071 22.723 21.4064 21.8802C22.1929 21.8284 22.8818 21.7821 23.4056 21.7429L24.4655 21.6604L24.6188 21.7821Z" fill="white" />
@@ -30,15 +55,35 @@ const SplashScreen = () => {
             Create games, manage player queues and keep your badminton sessions running smoothly.
           </p>
           
-          <Button onClick={handleStartSession} className="w-full py-6 text-lg bg-neutral-000 text-app-primary-700 hover:bg-neutral-100 transition-colors">
-            Start Session
-          </Button>
+          <div className="flex flex-col space-y-2">
+            <Button
+              variant="secondary"
+              className="w-full py-4 text-base bg-white text-app-primary-700 hover:bg-neutral-100 transition-colors border border-gray-200"
+              onClick={handleShowSettings}
+            >
+              Edit Game Settings
+            </Button>
+            <Button
+              onClick={handleStartSession}
+              disabled={!sessionReady}
+              className="w-full py-6 text-lg bg-neutral-000 text-app-primary-700 hover:bg-neutral-100 transition-colors"
+            >
+              Start Session
+            </Button>
+            {!sessionReady && (
+              <p className="mt-2 text-xs text-yellow-200">
+                Please edit your game settings above before starting your session.
+              </p>
+            )}
+          </div>
         </div>
       </div>
       
       <div className="mt-auto pt-8 text-center opacity-70 text-sm">
         <p>© 2025 ShuttleSession</p>
       </div>
-    </div>;
+      <PreSessionSettings isOpen={settingsOpen} onClose={handleSettingsClose} />
+    </div>
+  );
 };
 export default SplashScreen;
