@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export function CourtNumberSetting() {
   const [courtCount, setCourtCount] = useState<number>(() => {
@@ -38,6 +39,7 @@ export function CourtNumberSetting() {
         <p className="text-sm text-muted-foreground">Configure the number of courts available (1-8)</p>
       </div>
       <div className="w-full sm:w-40">
+        <Label className="mb-1 block text-foreground font-medium">Courts</Label>
         <Select value={courtCount.toString()} onValueChange={handleValueChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select courts" />

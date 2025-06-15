@@ -2,11 +2,9 @@
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 
 export function AutoAssignmentSetting() {
   const [autoAssignment, setAutoAssignment] = useState<boolean>(false);
-  const { toast } = useToast();
 
   // Load settings on component mount
   useEffect(() => {
@@ -21,12 +19,6 @@ export function AutoAssignmentSetting() {
     const isEnabled = value === "enabled";
     setAutoAssignment(isEnabled);
     localStorage.setItem("autoAssignment", String(isEnabled));
-    
-    // Show brief success toast
-    toast({
-      title: "Setting saved",
-      description: "autoAssignment has been updated."
-    });
   };
 
   return (
@@ -43,11 +35,11 @@ export function AutoAssignmentSetting() {
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="enabled" id="enabled" />
-            <Label htmlFor="enabled">Enabled</Label>
+            <Label htmlFor="enabled" className="text-foreground font-medium">Enabled</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="disabled" id="disabled" />
-            <Label htmlFor="disabled">Disabled</Label>
+            <Label htmlFor="disabled" className="text-foreground font-medium">Disabled</Label>
           </div>
         </RadioGroup>
       </div>

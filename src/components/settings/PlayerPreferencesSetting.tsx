@@ -35,11 +35,11 @@ export function PlayerPreferencesSetting() {
       >
         <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="enabled" id="preferences-enabled" />
-          <Label htmlFor="preferences-enabled" className="cursor-pointer">Enable</Label>
+          <Label htmlFor="preferences-enabled" className="cursor-pointer text-foreground font-medium">Enable</Label>
         </div>
         <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
           <RadioGroupItem value="disabled" id="preferences-disabled" />
-          <Label htmlFor="preferences-disabled" className="cursor-pointer">Disable</Label>
+          <Label htmlFor="preferences-disabled" className="cursor-pointer text-foreground font-medium">Disable</Label>
         </div>
       </RadioGroup>
     </div>

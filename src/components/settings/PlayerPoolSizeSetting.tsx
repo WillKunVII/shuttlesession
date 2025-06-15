@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export function PlayerPoolSizeSetting() {
   const [playerPoolSize, setPlayerPoolSize] = useState<number>(8); // Default value
@@ -41,6 +42,7 @@ export function PlayerPoolSizeSetting() {
         <p className="text-sm text-muted-foreground">Number of players eligible for the next game (6-12)</p>
       </div>
       <div className="w-full sm:w-40">
+        <Label className="mb-1 block text-foreground font-medium">Pool Size</Label>
         <Select value={playerPoolSize.toString()} onValueChange={handleValueChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select size" />
