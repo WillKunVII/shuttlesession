@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { SessionControl } from "@/components/settings/SessionControl";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { PlayerOfMonthDialog } from "@/components/PlayerOfMonthDialog";
+import { PrivacyNoticeDialog } from "@/components/PrivacyNoticeDialog";
+import { Button } from "@/components/Button";
 
 export default function Settings() {
   const [showMonthDialog, setShowMonthDialog] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   // Add debug logs to track dialog open state
   useEffect(() => {
@@ -14,6 +17,14 @@ export default function Settings() {
       console.log("Settings: PlayerOfMonthDialog closed");
     }
   }, [showMonthDialog]);
+
+  const handleClearData = () => {
+    if (confirm("Are you sure? All app data (players, scores, history) will be deleted. This cannot be undone.")) {
+      localStorage.clear();
+      indexedDB.deleteDatabase("ShuttleSessionDB");
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="space-y-6 w-full col-span-full">
@@ -49,6 +60,18 @@ export default function Settings() {
         isOpen={showMonthDialog}
         onClose={() => setShowMonthDialog(false)}
       />
+
+      {/* Privacy & Data Section */}
+      <section className="mt-8">
+        <h2 className="text-xl font-bold mb-2">Privacy & Data</h2>
+        <Button onClick={handleClearData} className="bg-red-500 text-white mr-4">
+          Clear All Data
+        </Button>
+        <Button onClick={() => setPrivacyOpen(true)} variant="outline">
+          Privacy Notice
+        </Button>
+        <PrivacyNoticeDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      </section>
     </div>
   );
 }

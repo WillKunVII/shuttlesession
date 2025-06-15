@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,11 +52,14 @@ export function MemberForm({
     }
   };
   
+  const isValidName = (val: string) => /^[\w\s\-.'’]{2,30}$/.test(val.trim());
+
   const handleSubmit = () => {
-    if (!name.trim()) return;
-    
+    const trimmedName = name.trim();
+    if (!isValidName(trimmedName)) return;
+
     onSave({
-      name,
+      name: trimmedName,
       gender,
       isGuest,
       playPreferences: preferencesEnabled ? playPreferences : []
@@ -78,7 +80,13 @@ export function MemberForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter member name"
+            maxLength={30}
+            pattern="^[\w\s\-.'’]{2,30}$"
+            required
           />
+          {!isValidName(name) && name.length > 0 && (
+            <span className="text-red-500 text-xs">Name must be 2–30 characters (letters, numbers, - . ' allowed)</span>
+          )}
         </div>
 
         <div className="space-y-2">

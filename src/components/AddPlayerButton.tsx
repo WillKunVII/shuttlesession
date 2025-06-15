@@ -109,59 +109,67 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     setActiveSessionNames(new Set(allNames));
   }, [isOpen]);
 
+  // Validation helper
+  const isValidName = (val: string) => /^[\w\s\-.'’]{2,30}$/.test(val.trim());
+
   const handleAddPlayer = () => {
-    if (name && onAddPlayer) {
-      // Prevent duplicates by checking name against ALL involved players (queue, nextGame, courts)
-      const dup = activeSessionNames.has(name.trim().toLowerCase());
-      if (dup) {
-        toast.error(`${name} is already participating in this session!`);
-        return;
-      }
+    const trimmedName = name.trim();
+    if (!trimmedName || !isValidName(trimmedName)) {
+      toast.error("Please enter a valid name (2–30 letters/numbers, no special characters)");
+      return;
+    }
+    // Prevent duplicates by checking name against ALL involved players (queue, nextGame, courts)
+    const dup = activeSessionNames.has(trimmedName.toLowerCase());
+    if (dup) {
+      toast.error(`${trimmedName} is already participating in this session!`);
+      return;
+    }
 
-      // Check queue for duplicates by name (case-insensitive)
-      const existingMember = membersList.find(
+    // Check queue for duplicates by name (case-insensitive)
+    const existingMember = membersList.find(
         member => member.name.toLowerCase() === name.toLowerCase()
-      );
+    );
 
-      // If player doesn't exist in members list, add them
-      if (!existingMember) {
-        // Create new member object
-        const newMember: Member = {
-          id: Date.now(),
-          name,
-          gender,
-          isGuest,
-          wins: 0,
-          losses: 0,
-          playPreferences: preferencesEnabled ? playPreferences : undefined
-        };
-
-        // Add to members list
-        const updatedMembers = [...membersList, newMember];
-        setMembersList(updatedMembers);
-
-        // Save to localStorage
-        localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
-
-        // Show toast notification
-        toast.success(`${name} added to members database`);
-      }
-
-      // Add player to queue (original functionality)
-      onAddPlayer({
+    // If player doesn't exist in members list, add them
+    if (!existingMember) {
+      // Create new member object
+      const newMember: Member = {
+        id: Date.now(),
         name,
+        gender,
+        isGuest,
+        wins: 0,
+        losses: 0,
+        playPreferences: preferencesEnabled ? playPreferences : undefined
+      };
+
+      // Add to members list
+      const updatedMembers = [...membersList, newMember];
+      setMembersList(updatedMembers);
+
+      // Save to localStorage
+      localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
+
+      // Show toast notification
+      toast.success(`${name} added to members database`);
+    }
+
+    // Add player to queue (original functionality)
+    if (onAddPlayer) {
+      onAddPlayer({
+        name: trimmedName,
         gender,
         isGuest,
         playPreferences: preferencesEnabled ? playPreferences : []
       });
-
-      // Reset form
-      setName("");
-      setGender("male");
-      setIsGuest(false);
-      setPlayPreferences([]);
-      setIsOpen(false);
     }
+
+    // Reset form
+    setName("");
+    setGender("male");
+    setIsGuest(false);
+    setPlayPreferences([]);
+    setIsOpen(false);
   };
 
   const selectMember = (member: Member) => {
