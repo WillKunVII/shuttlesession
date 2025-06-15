@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { getStorageItem, setStorageItem, getSessionScores, setSessionScores } from "@/utils/storageUtils";
 import { updatePlayersElo } from "@/utils/eloUtils";
-import { Player } from "@/types/player"; // Use project-wide Player type
+import { Player } from "@/types/player";
 
 interface EndGameDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  players: Player[]; // Use imported Player type
+  players: Player[];
   onSaveResults: (winnerIds: string[]) => void;
 }
 
@@ -26,19 +27,16 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
   
-  // Reset selections when dialog opens
   useEffect(() => {
     if (isOpen) {
       setSelectedWinners([]);
     }
   }, [isOpen]);
   
-  // Toggle player selection as winner
   const toggleWinner = (playerName: string) => {
     if (selectedWinners.includes(playerName)) {
       setSelectedWinners(selectedWinners.filter(name => name !== playerName));
     } else {
-      // Only allow 2 winners max
       if (selectedWinners.length < 2) {
         setSelectedWinners([...selectedWinners, playerName]);
       }
@@ -46,10 +44,9 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
   };
   
   const handleSave = () => {
-    // Get all members for total scores
+    // 1. Load FULL list of members from localStorage (never just game players)
     const membersData = localStorage.getItem("members");
     let members: any[] = [];
-    
     if (membersData) {
       try {
         members = JSON.parse(membersData);
@@ -57,12 +54,11 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
         console.error("Error parsing members data", e);
       }
     }
-    
-    // Get session scores
+
+    // 2. Get session scores
     const sessionScores = getSessionScores();
     
-    // ---- ELO RATING UPDATE: hidden ----
-    // 1. Compute new ratings for all four players
+    // 3. ELO Rating Update
     const prevRatingsLookup: Record<string, number> = {};
     players.forEach(player => {
       const memberRating =
@@ -77,41 +73,38 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       })),
       selectedWinners
     );
-    // 2. Update members' ELO in place
+    // Update ELO in full members array
     for (const upd of updated) {
       const idx = members.findIndex((m: any) => m.name === upd.name);
       if (idx !== -1) members[idx].rating = upd.rating;
     }
-    // 3. (Optional: update other stores if needed)
-    
-    // Update wins/losses for all players
+
+    // 4. Update wins/losses for game players in full members array (DO NOT FILTER OTHERS OUT)
     players.forEach(player => {
       const playerName = player.name;
       const isWinner = selectedWinners.includes(playerName);
-      
       // Update session scores
       if (!sessionScores[playerName]) {
         sessionScores[playerName] = { wins: 0, losses: 0 };
       }
-      
       if (isWinner) {
         sessionScores[playerName].wins += 1;
       } else {
         sessionScores[playerName].losses += 1;
       }
-      
-      // Update total scores in members
+      // Update existing member record if found, or add new
       const memberIndex = members.findIndex(m => m.name === playerName);
-      
       if (memberIndex !== -1) {
-        // Update existing member
         if (isWinner) {
           members[memberIndex].wins = (members[memberIndex].wins || 0) + 1;
         } else {
           members[memberIndex].losses = (members[memberIndex].losses || 0) + 1;
         }
+        // (Optionally patch gender/isGuest on existing member, if changed)
+        if (typeof player.gender === "string") members[memberIndex].gender = player.gender;
+        if (typeof player.isGuest === "boolean") members[memberIndex].isGuest = player.isGuest;
       } else {
-        // Add new member with win/loss record
+        // If truly new, add new member
         members.push({
           name: playerName,
           gender: player.gender,
@@ -122,21 +115,20 @@ export function EndGameDialog({ isOpen, onClose, players, onSaveResults }: EndGa
       }
     });
     
-    // Save updated scores and ELO ratings
+    // 5. Save to both session scores and to full members lists in storage
     setSessionScores(sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
     localStorage.setItem("clubMembers", JSON.stringify(members)); // <-- ensures Members page sync
-    
-    // Continue with original save
+
+    // 6. Continue with onSave callback
     onSaveResults(selectedWinners);
     onClose();
   };
   
-  // If score keeping is disabled, just close without showing dialog
   if (!isScoreKeepingEnabled) {
     return null;
   }
-  
+
   return (
     <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
