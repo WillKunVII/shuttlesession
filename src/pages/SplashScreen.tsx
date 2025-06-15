@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -93,22 +92,19 @@ const SplashScreen = () => {
             )}
           </div>
 
-          {/* More section: Player of the Month action */}
-          <div className="mt-8 text-left">
-            <div className="mb-1 font-semibold opacity-70 text-[13px]">More:</div>
+          {/* Player of the Month: Subtle text link below the buttons */}
+          <div className="mt-6 flex flex-col items-center">
             <AlertDialog open={showPOMConfirm} onOpenChange={setShowPOMConfirm}>
               <AlertDialogTrigger asChild>
                 <button
                   onClick={handlePOMClick}
-                  className="flex items-center space-x-2 text-xs px-0 py-1 text-neutral-200 hover:text-yellow-300 cursor-pointer font-medium bg-transparent border-0 outline-none transition-colors"
+                  className="flex items-center space-x-2 text-xs text-neutral-200 hover:text-yellow-400 cursor-pointer py-2 bg-transparent border-0 outline-none font-medium transition-colors"
                   style={{ minHeight: 0 }}
                   aria-label="Player of the Month"
                   type="button"
                 >
-                  <Trophy className="h-4 w-4 mr-2 text-yellow-400 inline" />
-                  <span>
-                    Player of the Month <span className="text-xs opacity-60">(Resets All-Time Stats)</span>
-                  </span>
+                  <Trophy className="h-4 w-4 mr-1 text-yellow-400" />
+                  <span>Player of the Month</span>
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -152,5 +148,5 @@ const SplashScreen = () => {
     </div>
   );
 };
-export default SplashScreen;
 
+export default SplashScreen;
