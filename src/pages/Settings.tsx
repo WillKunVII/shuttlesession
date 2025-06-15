@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { SessionControl } from "@/components/settings/SessionControl";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { PlayerOfMonthDialog } from "@/components/PlayerOfMonthDialog";
 import { PrivacyNoticeDialog } from "@/components/PrivacyNoticeDialog";
-import { Button } from "@/components/Button";
+// FIX: Import from shadcn/ui location for Button
+import { Button } from "@/components/ui/button";
 
 export default function Settings() {
   const [showMonthDialog, setShowMonthDialog] = useState(false);
