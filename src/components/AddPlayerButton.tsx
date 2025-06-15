@@ -19,6 +19,9 @@ import { Member, PlayPreference } from "@/types/member";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
+import { GenderRadioGroup } from "./AddPlayer/GenderRadioGroup";
+import { PlayPreferencesSelector } from "./AddPlayer/PlayPreferencesSelector";
+import { PlayerSuggestions } from "./AddPlayer/PlayerSuggestions";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
@@ -179,85 +182,27 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
                 autoComplete="off"
               />
               
-              {/* Updated suggestion UI: Show if in queue */}
-              {showSuggestions && filteredMembers.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                  {filteredMembers.map(member => {
-                    const isInQueue = queueNameSet.has(member.name.trim().toLowerCase());
-                    return (
-                      <div 
-                        key={member.id}
-                        className={`px-4 py-2 cursor-pointer flex items-center ${
-                          isInQueue ? "text-gray-400 bg-gray-50" : "hover:bg-gray-100"
-                        }`}
-                        onClick={() => !isInQueue && selectMember(member)}
-                        style={{ pointerEvents: isInQueue ? "none" : "auto" }}
-                      >
-                        <span className={`h-2 w-2 rounded-full mr-2 ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                        <span className="font-medium">{member.name}</span>
-                        {member.isGuest && (
-                          <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                        )}
-                        {isInQueue && (
-                          <span className="ml-2 text-xs bg-yellow-200 text-yellow-900 font-semibold px-2 py-0.5 rounded">
-                            In Queue
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Suggestions dropdown extracted */}
+              <PlayerSuggestions
+                members={filteredMembers}
+                queueNameSet={queueNameSet}
+                name={name}
+                show={showSuggestions}
+                onSelect={selectMember}
+              />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label>Gender</Label>
-            <RadioGroup value={gender} onValueChange={(value) => setGender(value as "male" | "female")}>
-              <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-                <RadioGroupItem value="male" id="male" />
-                <Label htmlFor="male" className="cursor-pointer">Male</Label>
-              </div>
-              <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-                <RadioGroupItem value="female" id="female" />
-                <Label htmlFor="female" className="cursor-pointer">Female</Label>
-              </div>
-            </RadioGroup>
-          </div>
+          {/* Gender selector extracted */}
+          <GenderRadioGroup gender={gender} setGender={setGender} />
           
-          {/* Play preferences */}
+          {/* Play preferences extracted */}
           {preferencesEnabled && (
-            <div className="space-y-2">
-              <Label>Play Preferences</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-                  <Checkbox 
-                    id="open-play" 
-                    checked={playPreferences.includes("Open")}
-                    onCheckedChange={() => togglePreference("Open")}
-                  />
-                  <Label htmlFor="open-play" className="cursor-pointer">Open Play (any combination)</Label>
-                </div>
-                <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-                  <Checkbox 
-                    id="mixed-play" 
-                    checked={playPreferences.includes("Mixed")}
-                    onCheckedChange={() => togglePreference("Mixed")}
-                  />
-                  <Label htmlFor="mixed-play" className="cursor-pointer">Mixed Play (male/female pairs)</Label>
-                </div>
-                {gender === "female" && (
-                  <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-                    <Checkbox 
-                      id="ladies-play" 
-                      checked={playPreferences.includes("Ladies")}
-                      onCheckedChange={() => togglePreference("Ladies")}
-                    />
-                    <Label htmlFor="ladies-play" className="cursor-pointer">Ladies Play (females only)</Label>
-                  </div>
-                )}
-              </div>
-            </div>
+            <PlayPreferencesSelector
+              gender={gender}
+              playPreferences={playPreferences}
+              togglePreference={togglePreference}
+            />
           )}
           
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
