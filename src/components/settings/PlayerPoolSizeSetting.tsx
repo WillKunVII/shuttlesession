@@ -44,7 +44,7 @@ export function PlayerPoolSizeSetting() {
       <div className="w-full sm:w-40">
         <Label className="mb-1 block text-foreground font-medium">Pool Size</Label>
         <Select value={playerPoolSize.toString()} onValueChange={handleValueChange}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full text-foreground">
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
           <SelectContent>
@@ -59,3 +59,5 @@ export function PlayerPoolSizeSetting() {
     </div>
   );
 }
+
+// ... (no further changes needed) ...

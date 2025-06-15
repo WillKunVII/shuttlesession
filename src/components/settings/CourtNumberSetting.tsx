@@ -41,8 +41,7 @@ export function CourtNumberSetting() {
       <div className="w-full sm:w-40">
         <Label className="mb-1 block text-foreground font-medium">Courts</Label>
         <Select value={courtCount.toString()} onValueChange={handleValueChange}>
-          <SelectTrigger className="w-full">
-            {/* Instead of placeholder-only, always show selected value */}
+          <SelectTrigger className="w-full text-foreground">
             <span>
               {courtCount} {courtCount === 1 ? "court" : "courts"}
             </span>
@@ -59,3 +58,5 @@ export function CourtNumberSetting() {
     </div>
   );
 }
+
+// ... (no further changes needed) ...
