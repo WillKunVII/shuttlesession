@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,8 +34,9 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [playPreferences, setPlayPreferences] = useState<PlayPreference[]>([]);
   const [preferencesEnabled, setPreferencesEnabled] = useState(false);
-  
-  // Load members from localStorage
+  const [activeQueue, setActiveQueue] = useState<{ name: string; }[]>([]);
+
+  // Load members from localStorage + current player queue
   useEffect(() => {
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
@@ -50,15 +50,37 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     // Check if play preferences are enabled
     const enablePref = localStorage.getItem("enablePlayerPreferences");
     setPreferencesEnabled(enablePref === "true");
-  }, [isOpen]); // Reload when sheet opens
-  
+
+    // Load active player queue for duplicate checking (by name, case-insensitive)
+    const playerQueue = localStorage.getItem("playerQueue");
+    if (playerQueue) {
+      try {
+        const players = JSON.parse(playerQueue);
+        setActiveQueue(Array.isArray(players) ? players : []);
+      } catch (e) {
+        setActiveQueue([]);
+      }
+    } else {
+      setActiveQueue([]);
+    }
+  }, [isOpen]);
+
   const handleAddPlayer = () => {
     if (name && onAddPlayer) {
-      // Check if player already exists in members list
+      // Check queue for duplicates by name (case-insensitive)
+      const duplicate = activeQueue.find(
+        (player: any) => player.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
+      if (duplicate) {
+        toast.error(`${name} is already in the queue!`);
+        return;
+      }
+
+      // Check if player already exists in members list for suggestion
       const existingMember = membersList.find(
         member => member.name.toLowerCase() === name.toLowerCase()
       );
-      
+
       // If player doesn't exist in members list, add them
       if (!existingMember) {
         // Create new member object
@@ -71,18 +93,18 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
           losses: 0,
           playPreferences: preferencesEnabled ? playPreferences : undefined
         };
-        
+
         // Add to members list
         const updatedMembers = [...membersList, newMember];
         setMembersList(updatedMembers);
-        
+
         // Save to localStorage
         localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
-        
+
         // Show toast notification
         toast.success(`${name} added to members database`);
       }
-      
+
       // Add player to queue (original functionality)
       onAddPlayer({
         name,
@@ -90,7 +112,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
         isGuest,
         playPreferences: preferencesEnabled ? playPreferences : []
       });
-      
+
       // Reset form
       setName("");
       setGender("male");
@@ -116,10 +138,15 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     }
   };
 
-  const filteredMembers = membersList.filter(member => 
+  const filteredMembers = membersList.filter(member =>
     member.name.toLowerCase().includes(name.toLowerCase())
   );
-  
+
+  // Create a set of queue names (case-insensitive) for easier reference in UI
+  const queueNameSet = new Set(
+    activeQueue.map(q => (q.name || "").trim().toLowerCase())
+  );
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -149,23 +176,36 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
                   setShowSuggestions(e.target.value.length > 0);
                 }}
                 onFocus={() => setShowSuggestions(name.length > 0)}
+                autoComplete="off"
               />
               
+              {/* Updated suggestion UI: Show if in queue */}
               {showSuggestions && filteredMembers.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                  {filteredMembers.map(member => (
-                    <div 
-                      key={member.id}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center"
-                      onClick={() => selectMember(member)}
-                    >
-                      <span className={`h-2 w-2 rounded-full mr-2 ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-                      <span className="font-medium">{member.name}</span>
-                      {member.isGuest && (
-                        <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
-                      )}
-                    </div>
-                  ))}
+                  {filteredMembers.map(member => {
+                    const isInQueue = queueNameSet.has(member.name.trim().toLowerCase());
+                    return (
+                      <div 
+                        key={member.id}
+                        className={`px-4 py-2 cursor-pointer flex items-center ${
+                          isInQueue ? "text-gray-400 bg-gray-50" : "hover:bg-gray-100"
+                        }`}
+                        onClick={() => !isInQueue && selectMember(member)}
+                        style={{ pointerEvents: isInQueue ? "none" : "auto" }}
+                      >
+                        <span className={`h-2 w-2 rounded-full mr-2 ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
+                        <span className="font-medium">{member.name}</span>
+                        {member.isGuest && (
+                          <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+                        )}
+                        {isInQueue && (
+                          <span className="ml-2 text-xs bg-yellow-200 text-yellow-900 font-semibold px-2 py-0.5 rounded">
+                            In Queue
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
