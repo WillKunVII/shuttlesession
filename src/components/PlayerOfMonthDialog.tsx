@@ -23,9 +23,30 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
   const { topPlayers, hasScores } = useAllTimePlayerRankings(isOpen);
   const [resetting, setResetting] = useState(false);
 
+  // Reset all-time stats and also reset wins/losses in localStorage for all members
   const handleClose = async () => {
     setResetting(true);
     await gameHistoryDB.clearAllPlayerStats();
+
+    // Reset wins/losses for all members, preserving other info and ratings
+    const membersKeys = ["members", "clubMembers"];
+    membersKeys.forEach(key => {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const arr = JSON.parse(raw);
+          const resetArr = arr.map((m: any) => ({
+            ...m,
+            wins: 0,
+            losses: 0,
+          }));
+          localStorage.setItem(key, JSON.stringify(resetArr));
+        } catch (e) {
+          console.error(`Error resetting ${key} after all-time stats wipe`, e);
+        }
+      }
+    });
+
     setResetting(false);
     onClose();
   };
@@ -38,7 +59,7 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
             Player of the Month
           </DialogTitle>
           <DialogDescription className="text-center text-sm sm:text-base">
-            All-time win rate leaderboard (players with 3+ games)
+            All-time win rate leaderboard (players with 1+ games)
           </DialogDescription>
         </DialogHeader>
         <div className="py-6 space-y-6 text-sm sm:text-base">
@@ -47,9 +68,9 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
           ) : (
             <div className="flex flex-col items-center justify-center text-yellow-700 gap-3 py-8">
               <Medal className="w-9 h-9 text-yellow-400" />
-              <span className="font-medium">Not enough players have played 3 games yet!</span>
+              <span className="font-medium">Not enough players have played games yet!</span>
               <span className="text-xs text-yellow-900 text-center max-w-xs">
-                At least one player must play 3+ games for Player of the Month to be crowned.
+                At least one player must play a game for Player of the Month to be crowned.
               </span>
             </div>
           )}
