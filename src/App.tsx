@@ -10,6 +10,7 @@ import Members from "./pages/Members";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./pages/SplashScreen";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -20,8 +21,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Redirect root to /app */}
-          <Route path="/" element={<Navigate to="/app" replace />} />
+          {/* Landing page as the root */}
+          <Route path="/" element={<LandingPage />} />
 
           {/* Group all main app routes under /app */}
           <Route path="/app">
