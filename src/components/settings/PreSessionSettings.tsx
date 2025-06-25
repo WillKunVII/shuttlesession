@@ -5,6 +5,15 @@ import { CourtNumberSetting } from "./CourtNumberSetting";
 import { PlayerPreferencesSetting } from "./PlayerPreferencesSetting";
 import { ScoreKeepingSetting } from "./ScoreKeepingSetting";
 import { PiggybackSetting } from "./PiggybackSetting";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetFooter 
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface PreSessionSettingsProps {
   isOpen: boolean;
@@ -12,20 +21,17 @@ interface PreSessionSettingsProps {
 }
 
 export const PreSessionSettings: React.FC<PreSessionSettingsProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-lg"
-          aria-label="Close"
-        >×</button>
-        <h2 className="text-2xl font-semibold text-foreground mb-4">Session Settings</h2>
-        <p className="mb-5 text-sm text-muted-foreground">
-          Configure session settings as required before starting your session.
-        </p>
-        <div className="bg-white rounded-xl shadow-sm p-4 border mb-2">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-2xl font-semibold text-foreground">Session Settings</SheetTitle>
+          <SheetDescription className="text-sm text-muted-foreground">
+            Configure session settings as required before starting your session.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="bg-white rounded-xl shadow-sm p-4 border mb-4">
           <h3 className="text-lg font-semibold mb-3 text-foreground">General Game Settings</h3>
           <div className="flex flex-col gap-5">
             <PlayerPoolSizeSetting />
@@ -35,7 +41,13 @@ export const PreSessionSettings: React.FC<PreSessionSettingsProps> = ({ isOpen, 
             <PiggybackSetting />
           </div>
         </div>
-      </div>
-    </div>
+
+        <SheetFooter className="pt-4">
+          <Button onClick={onClose} className="w-full">
+            Done
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
