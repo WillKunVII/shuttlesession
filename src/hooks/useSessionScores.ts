@@ -70,23 +70,23 @@ export function useSessionScores(isOpen: boolean) {
         }));
       }
 
-      // Calculate win rate for all players (even with 0 games)
-      const playersWithWinRate = playersList.map(player => {
+      // Calculate total wins (wins - losses) for all players
+      const playersWithTotalWins = playersList.map(player => {
         const wins = player.wins ?? 0;
         const losses = player.losses ?? 0;
+        const totalWins = wins - losses; // This can be negative
         const gamesPlayed = wins + losses;
-        const winRate = gamesPlayed > 0 ? wins / gamesPlayed : 0;
         return {
           ...player,
-          winRate,
+          totalWins,
           gamesPlayed,
         };
       });
 
-      // Sort by win rate descending, then by most games played (descending), then by wins (descending)
-      const sortedPlayers = playersWithWinRate.sort((a, b) => {
-        if (b.winRate !== a.winRate) {
-          return b.winRate - a.winRate;
+      // Sort by total wins descending, then by most games played (descending), then by wins (descending)
+      const sortedPlayers = playersWithTotalWins.sort((a, b) => {
+        if (b.totalWins !== a.totalWins) {
+          return b.totalWins - a.totalWins;
         }
         if (b.gamesPlayed !== a.gamesPlayed) {
           return b.gamesPlayed - a.gamesPlayed;
@@ -95,22 +95,22 @@ export function useSessionScores(isOpen: boolean) {
         return (b.wins ?? 0) - (a.wins ?? 0);
       });
 
-      // Group players into Gold, Silver, Bronze based on win rate
+      // Group players into Gold, Silver, Bronze based on total wins
       const gold: Player[] = [];
       const silver: Player[] = [];
       const bronze: Player[] = [];
 
-      // Get the win rates for 1st, 2nd, and 3rd place
-      // Only consider unique win rates
-      const winRates = Array.from(new Set(sortedPlayers.map(p => p.winRate))).slice(0, 3);
+      // Get the total wins for 1st, 2nd, and 3rd place
+      // Only consider unique total wins values
+      const totalWinsValues = Array.from(new Set(sortedPlayers.map(p => p.totalWins))).slice(0, 3);
 
       // Assign players to their respective medals
       sortedPlayers.forEach(player => {
-        if (player.winRate === winRates[0]) {
+        if (player.totalWins === totalWinsValues[0]) {
           gold.push(player);
-        } else if (winRates.length > 1 && player.winRate === winRates[1]) {
+        } else if (totalWinsValues.length > 1 && player.totalWins === totalWinsValues[1]) {
           silver.push(player);
-        } else if (winRates.length > 2 && player.winRate === winRates[2]) {
+        } else if (totalWinsValues.length > 2 && player.totalWins === totalWinsValues[2]) {
           bronze.push(player);
         }
       });
