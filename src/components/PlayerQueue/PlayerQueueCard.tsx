@@ -1,3 +1,4 @@
+
 import React from "react";
 import { CircleDot, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { getPiggybackEnabled } from "@/utils/storageUtils";
 
 interface PlayerQueueCardProps {
   player: Player;
-  players: Player[]; // new: all players in queue
+  players: Player[];
   selected: boolean;
   isNextGameReady: boolean;
   scoreKeepingEnabled: boolean;
@@ -20,11 +21,12 @@ interface PlayerQueueCardProps {
   onPlayerSelect: (player: Player) => void;
   onPlayerLeave: (playerId: number, e: React.MouseEvent) => void;
   setPiggybackManualWarningShown?: (b: boolean) => void;
+  queuePosition: number; // Add queue position prop
 }
 
 export function PlayerQueueCard({
   player,
-  players, // now available
+  players,
   selected,
   isNextGameReady,
   scoreKeepingEnabled,
@@ -35,7 +37,8 @@ export function PlayerQueueCard({
   findPiggybackPair,
   onPlayerSelect,
   onPlayerLeave,
-  setPiggybackManualWarningShown
+  setPiggybackManualWarningShown,
+  queuePosition
 }: PlayerQueueCardProps) {
   // Find piggyback data for this player (if any)
   const piggybackEnabled = getPiggybackEnabled();
@@ -61,7 +64,11 @@ export function PlayerQueueCard({
       }`}
       onClick={() => onPlayerSelect(player)}
     >
-      <div className="flex items-center gap-2 flex-wrap min-w-0">
+      <div className="flex items-center gap-3 flex-wrap min-w-0">
+        {/* Queue Position Number */}
+        <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-semibold text-gray-700">
+          {queuePosition}
+        </div>
         <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
         <span className="font-medium truncate max-w-[100px]">{player.name}</span>
         {player.isGuest && (

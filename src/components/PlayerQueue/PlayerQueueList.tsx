@@ -66,6 +66,7 @@ export function PlayerQueueList({
             onPlayerSelect={onPlayerSelect}
             onPlayerLeave={onPlayerLeave}
             setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
+            queuePosition={index + 1}
           />
         </div>
       ))}

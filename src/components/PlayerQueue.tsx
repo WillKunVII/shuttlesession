@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AddPlayerButton } from "@/components/AddPlayerButton";
@@ -58,7 +59,7 @@ export function PlayerQueue(props: any) {
   const piggybackEnabled = getPiggybackEnabled();
 
   return (
-    <div className="space-y-4 max-h-[calc(100vh-24rem)]">
+    <div className="space-y-4 h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Player Queue</h2>
         <div className="flex gap-2">
@@ -87,7 +88,7 @@ export function PlayerQueue(props: any) {
           No players in queue
         </div>
       ) : (
-        <ScrollArea className="h-[calc(100vh-30rem)]">
+        <ScrollArea className="flex-1 min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
           <PlayerQueueList
             players={players}
             selected={selected}
