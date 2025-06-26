@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ export function SessionControl() {
     clearSessionScores();
     
     // Navigate back to splash screen
-    navigate("/");
+    navigate("/app");
     
     // Show success toast
     toast({
