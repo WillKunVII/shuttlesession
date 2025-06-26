@@ -1,17 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { getSessionScores, setSessionScores } from "@/utils/storageUtils";
 import { updatePlayersElo } from "@/utils/eloUtils";
 import { Player } from "@/types/player";
@@ -143,14 +142,14 @@ export function EndGameDialog({
   }
 
   return (
-    <Dialog open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Record Game Results</DialogTitle>
-          <DialogDescription>
+    <Sheet open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
+      <SheetContent side="bottom" className="max-h-[80vh]">
+        <SheetHeader>
+          <SheetTitle>Record Game Results</SheetTitle>
+          <SheetDescription>
             Select the two players who won the game. This will update their win/loss record.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div className="grid gap-2 py-4">
           {players.map((player) => (
@@ -183,18 +182,19 @@ export function EndGameDialog({
           ))}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <SheetFooter className="flex flex-row gap-2">
+          <Button variant="outline" onClick={onClose} className="flex-1">
             <X className="h-4 w-4 mr-2" /> Cancel
           </Button>
           <Button
             disabled={selectedWinners.length !== 2}
             onClick={handleSave}
+            className="flex-1"
           >
             <Trophy className="h-4 w-4 mr-2" /> Save and End Game
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
