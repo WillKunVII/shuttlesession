@@ -17,6 +17,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PlayerRankings } from "./PlayerOfSession/PlayerRankings";
 import { useSessionScores } from "@/hooks/useSessionScores";
@@ -45,6 +52,7 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
     </>
   );
 
+  // Mobile: Use Drawer
   if (isMobile) {
     return (
       <Drawer open={isOpen && hasScores} onOpenChange={onClose}>
@@ -63,18 +71,21 @@ export function PlayerOfSessionDialog({ isOpen, onClose }: PlayerOfSessionDialog
     );
   }
 
+  // Desktop/Tablet: Use Sheet
   return (
-    <Dialog open={isOpen && hasScores} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl sm:text-2xl md:text-3xl">Player of the Session</DialogTitle>
-          <DialogDescription className="text-center text-sm sm:text-base">
+    <Sheet open={isOpen && hasScores} onOpenChange={onClose}>
+      <SheetContent side="right" className="w-[400px] sm:w-[500px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-center text-xl sm:text-2xl md:text-3xl">Player of the Session</SheetTitle>
+          <SheetDescription className="text-center text-sm sm:text-base">
             Congratulations to our top players of this session!
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         
-        {content}
-      </DialogContent>
-    </Dialog>
+        <div className="mt-6">
+          {content}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
