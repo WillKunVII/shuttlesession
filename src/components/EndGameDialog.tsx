@@ -9,16 +9,22 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Player } from "@/types/player";
 import { useWinnerSelection } from "@/hooks/useWinnerSelection";
 import { saveGameResults } from "@/utils/gameResultsHandler";
 import { WinnerSelectionList } from "./EndGameDialog/WinnerSelectionList";
 
+interface CourtPlayer {
+  id: number;
+  name: string;
+  gender: "male" | "female";
+  isGuest?: boolean;
+}
+
 interface EndGameDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  players: Player[];
-  onSaveResults: (winnerIds: string[]) => void;
+  players: CourtPlayer[]; // Court players with IDs
+  onSaveResults: (winnerNames: string[]) => void;
 }
 
 export function EndGameDialog({
@@ -30,9 +36,25 @@ export function EndGameDialog({
   const { selectedWinners, toggleWinner, isValidSelection } = useWinnerSelection(isOpen);
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
 
+  console.log("EndGameDialog: Received players", players.map(p => ({ id: p.id, name: p.name })));
+
   const handleSave = async () => {
     try {
-      await saveGameResults(players, selectedWinners);
+      console.log("EndGameDialog: Saving game results", { 
+        players: players.map(p => ({ id: p.id, name: p.name })), 
+        selectedWinners 
+      });
+      
+      // Convert court players to Player format for saveGameResults
+      const playersForSaving = players.map(p => ({
+        id: p.id,
+        name: p.name,
+        gender: p.gender,
+        waitingTime: 0,
+        isGuest: p.isGuest || false,
+      }));
+      
+      await saveGameResults(playersForSaving, selectedWinners);
       onSaveResults(selectedWinners);
       onClose();
     } catch (error) {
@@ -47,6 +69,15 @@ export function EndGameDialog({
     return null;
   }
 
+  // Convert court players to Player format for WinnerSelectionList
+  const playersForSelection = players.map(p => ({
+    id: p.id,
+    name: p.name,
+    gender: p.gender,
+    waitingTime: 0,
+    isGuest: p.isGuest || false,
+  }));
+
   return (
     <Sheet open={isOpen && isScoreKeepingEnabled} onOpenChange={onClose}>
       <SheetContent side="bottom" className="max-h-[80vh]">
@@ -58,7 +89,7 @@ export function EndGameDialog({
         </SheetHeader>
 
         <WinnerSelectionList
-          players={players}
+          players={playersForSelection}
           selectedWinners={selectedWinners}
           onToggleWinner={toggleWinner}
         />

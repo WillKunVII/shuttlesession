@@ -6,7 +6,6 @@ import { PlayerQueueSection } from "@/components/dashboard/PlayerQueueSection";
 import { EndGameDialog } from "@/components/EndGameDialog";
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { useState } from "react";
-// Removed: import { PreSessionSettings } from "@/components/settings/PreSessionSettings";
 
 // Inner component that uses the dashboard context
 function DashboardContent() {
@@ -17,9 +16,6 @@ function DashboardContent() {
     finishEndGame 
   } = useDashboard();
 
-  // Removed: Session Settings dialog button and modal
-  // const [showSessionSettings, setShowSessionSettings] = useState(false);
-
   // Always provide a fallback for players
   const courtPlayers = currentCourtPlayers && Array.isArray(currentCourtPlayers.players) 
     ? currentCourtPlayers.players 
@@ -28,19 +24,10 @@ function DashboardContent() {
     ? currentCourtPlayers.id
     : 0;
 
-  // Convert CourtPlayer[] to Player[] for EndGameDialog
-  const courtPlayersAsPlayers = courtPlayers.map((p, idx) => ({
-    id: Date.now() + idx, // Use timestamp + idx as dummy unique id
-    name: p.name,
-    gender: p.gender,
-    waitingTime: 0,
-    isGuest: p.isGuest,
-  }));
+  console.log("Dashboard: Court players for EndGameDialog", courtPlayers);
 
   return (
     <>
-      {/* Removed "Edit Game Settings" button and PreSessionSettings dialog */}
-
       {/* Left column: Courts - stacked vertically */}
       <div className="flex flex-col space-y-3">
         <CourtStatusList />
@@ -52,12 +39,15 @@ function DashboardContent() {
         {/* Bottom of right column: Player Queue */}
         <PlayerQueueSection />
       </div>
-      {/* End Game Dialog */}
+      {/* End Game Dialog - now using actual court players with preserved IDs */}
       <EndGameDialog 
         isOpen={endGameDialogOpen} 
         onClose={() => setEndGameDialogOpen(false)} 
-        players={courtPlayersAsPlayers}
-        onSaveResults={winnerNames => finishEndGame(courtId, winnerNames)} 
+        players={courtPlayers} // Use actual court players with their IDs
+        onSaveResults={winnerNames => {
+          console.log("Dashboard: Saving results with winner names:", winnerNames);
+          finishEndGame(courtId, winnerNames);
+        }} 
       />
     </>
   );

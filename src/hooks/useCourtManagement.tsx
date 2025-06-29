@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Court } from "@/types/DashboardTypes";
 
@@ -83,15 +84,19 @@ export function useCourtManagement() {
     });
   };
 
-  // Function to assign players to a court
+  // Function to assign players to a court - now preserves full player data with IDs
   const assignPlayersToCourtById = (courtId: number, players: any[]) => {
     if (players.length === 4) {
+      console.log("useCourtManagement: Assigning players to court", courtId, players.map(p => ({ id: p.id, name: p.name })));
+      
       setCourts(courts.map(court => {
         if (court.id === courtId) {
           return {
             ...court,
             status: "occupied" as const,
+            // Store complete player data including IDs
             players: players.map(p => ({
+              id: p.id, // Preserve the player ID
               name: p.name, 
               gender: p.gender,
               isGuest: p.isGuest
@@ -106,11 +111,13 @@ export function useCourtManagement() {
     return false;
   };
 
-  // Function to end a game on a court
+  // Function to end a game on a court - returns players with their IDs
   const endGameOnCourt = (courtId: number) => {
     const courtToEnd = courts.find(c => c.id === courtId);
     
     if (courtToEnd && courtToEnd.status === "occupied") {
+      console.log("useCourtManagement: Ending game on court", courtId, "players:", courtToEnd.players);
+      
       // Update court status
       setCourts(courts.map(court => {
         if (court.id === courtId) {
@@ -124,27 +131,37 @@ export function useCourtManagement() {
         return court;
       }));
       
+      // Return the players with their preserved IDs
       return courtToEnd.players;
     }
     
     return [];
   };
 
-  // Update a player's info in all courts by name
-  const updateCourtPlayerInfo = (updated: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: any[] }) => {
+  // Update a player's info in all courts by ID (preferred) or name (fallback)
+  const updateCourtPlayerInfo = (updated: { 
+    id?: number; 
+    name: string; 
+    gender?: "male" | "female"; 
+    isGuest?: boolean; 
+    playPreferences?: any[] 
+  }) => {
     setCourts((prevCourts) =>
       prevCourts.map((court) => ({
         ...court,
-        players: court.players.map((p: any) =>
-          p.name === updated.name
+        players: court.players.map((p: any) => {
+          // Use ID for matching if available, otherwise fall back to name
+          const matches = updated.id ? p.id === updated.id : p.name === updated.name;
+          return matches
             ? {
                 ...p,
+                name: updated.name,
                 ...(updated.gender && { gender: updated.gender }),
                 ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
                 ...(updated.playPreferences && { playPreferences: updated.playPreferences })
               }
-            : p
-        )
+            : p;
+        })
       }))
     );
   };
@@ -154,6 +171,6 @@ export function useCourtManagement() {
     getSortedCourts,
     assignPlayersToCourtById,
     endGameOnCourt,
-    updateCourtPlayerInfo // <--- Expose updater
+    updateCourtPlayerInfo
   };
 }
