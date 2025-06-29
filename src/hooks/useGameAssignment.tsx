@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Player } from "../types/player";
 import { PlayPreference } from "@/types/member";
+import { determineBestGameType } from "@/utils/gameValidation";
 
 export function useGameAssignment() {
   const [nextGamePlayers, setNextGamePlayers] = useState<Player[]>([]);
@@ -48,26 +49,10 @@ export function useGameAssignment() {
     return Array.isArray(nextGamePlayers) && nextGamePlayers.length === 4;
   };
 
-  // Determine the game type based on players
+  // Determine the game type based on players using standardized function
   const getGameType = (): PlayPreference => {
     if (!isNextGameReady()) return "";
-    
-    const isMixedPossible = 
-      nextGamePlayers.filter(p => p.gender === "male").length === 2 && 
-      nextGamePlayers.filter(p => p.gender === "female").length === 2;
-    
-    const isLadiesPossible = 
-      nextGamePlayers.filter(p => p.gender === "female").length === 4;
-    
-    const allPreferences = nextGamePlayers.flatMap(p => p.playPreferences || []);
-    
-    if (isMixedPossible && allPreferences.includes("Mixed")) {
-      return "Mixed";
-    } else if (isLadiesPossible && allPreferences.includes("Ladies")) {
-      return "Ladies";
-    } else {
-      return "Open";
-    }
+    return determineBestGameType(nextGamePlayers) || "Open";
   };
 
   return {

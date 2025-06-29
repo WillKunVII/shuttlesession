@@ -1,8 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { PlayPreference } from "@/types/member";
 import { CheckCircle } from "lucide-react";
 import { PlayerCardSmall } from "./PlayerCardSmall";
+import { determineBestGameType } from "@/utils/gameValidation";
 
 interface Player {
   id: number;
@@ -37,25 +39,8 @@ export function NextGame({
   
   useEffect(() => {
     if (safePlayers.length === 4) {
-      // Determine game type
-      const isMixedPossible = safePlayers.filter(p => p.gender === "male").length === 2 && safePlayers.filter(p => p.gender === "female").length === 2;
-      const isLadiesPossible = safePlayers.filter(p => p.gender === "female").length === 4;
-
-      // Check preferences
-      const allPreferences = safePlayers.flatMap(p => p.playPreferences || []);
-      const hasOpenPreference = allPreferences.includes("Open");
-      const hasMixedPreference = allPreferences.includes("Mixed");
-      const hasLadiesPreference = allPreferences.includes("Ladies");
-      let type: PlayPreference = "Open";
-
-      // Priority: Mixed > Ladies > Open
-      if (isMixedPossible && hasMixedPreference) {
-        type = "Mixed";
-      } else if (isLadiesPossible && hasLadiesPreference) {
-        type = "Ladies";
-      } else {
-        type = "Open";
-      }
+      // Use the standardized game type detection
+      const type = determineBestGameType(safePlayers) || "Open";
       setGameType(type);
 
       // Sort players based on game type
@@ -67,12 +52,8 @@ export function NextGame({
         const females = safePlayers.filter(p => p.gender === "female");
         team1 = [males[0], females[0]];
         team2 = [males[1], females[1]];
-      } else if (type === "Ladies") {
-        // For ladies games, just split the players
-        team1 = [safePlayers[0], safePlayers[1]];
-        team2 = [safePlayers[2], safePlayers[3]];
       } else {
-        // For open games, just split the players
+        // For ladies and open games, just split the players
         team1 = [safePlayers[0], safePlayers[1]];
         team2 = [safePlayers[2], safePlayers[3]];
       }
