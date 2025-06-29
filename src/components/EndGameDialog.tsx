@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { getSessionScores, setSessionScores } from "@/utils/storageUtils";
 import { updatePlayersElo } from "@/utils/eloUtils";
+import { recordGame } from "@/utils/gameUtils";
 import { Player } from "@/types/player";
 
 interface EndGameDialogProps {
@@ -48,11 +50,12 @@ export function EndGameDialog({
   };
 
   /**
-   * When saving—only update win/losses and session scores in localStorage.
-   * No IndexedDB writes.
+   * Enhanced save function that records to both localStorage and IndexedDB
    */
-  const handleSave = () => {
-    // 1. Load the full list of members from localStorage (for totals, not for session games)
+  const handleSave = async () => {
+    console.log("EndGameDialog: Starting to save game results", { players, selectedWinners });
+
+    // 1. Load the full list of members from localStorage
     const membersData = localStorage.getItem("members");
     let members: any[] = [];
     if (membersData) {
@@ -63,10 +66,10 @@ export function EndGameDialog({
       }
     }
 
-    // 2. Session score tracking (localStorage, not IndexedDB)
+    // 2. Session score tracking (localStorage)
     const sessionScores = getSessionScores();
 
-    // 3. ELO calculation only updates in-memory objects for display—ELO writes also just update localStorage
+    // 3. ELO calculation and sync
     const prevRatingsLookup: Record<string, number> = {};
     players.forEach((player) => {
       const memberRating =
@@ -75,7 +78,6 @@ export function EndGameDialog({
       prevRatingsLookup[player.name] = memberRating;
     });
 
-    // ELO - update and sync the members array (localStorage only)
     const updated = updatePlayersElo(
       players.map((p) => ({
         name: p.name,
@@ -88,7 +90,7 @@ export function EndGameDialog({
       if (idx !== -1) members[idx].rating = upd.rating;
     }
 
-    // 4. Update wins/losses for just the involved players in the full members array
+    // 4. Update wins/losses for players in the full members array
     players.forEach((player) => {
       const playerName = player.name;
       const isWinner = selectedWinners.includes(playerName);
@@ -118,21 +120,48 @@ export function EndGameDialog({
       } else {
         // Add new if doesn't exist
         members.push({
+          id: player.id || Date.now(),
           name: playerName,
           gender: player.gender,
           isGuest: player.isGuest,
           wins: isWinner ? 1 : 0,
           losses: isWinner ? 0 : 1,
+          rating: prevRatingsLookup[playerName] || 1000,
         });
       }
     });
 
-    // 5. Save to session scores & members in localStorage (NO IndexedDB writes here)
+    // 5. Save to localStorage
     setSessionScores(sessionScores);
     localStorage.setItem("members", JSON.stringify(members));
-    localStorage.setItem("clubMembers", JSON.stringify(members)); // keep clubMembers in sync
+    localStorage.setItem("clubMembers", JSON.stringify(members));
 
-    // 6. Continue with callback
+    // 6. NEW: Record game to IndexedDB with proper winner IDs
+    try {
+      // Convert winner names to winner IDs
+      const winnerIds = selectedWinners
+        .map(winnerName => {
+          const player = players.find(p => p.name === winnerName);
+          return player?.id;
+        })
+        .filter((id): id is number => typeof id === "number");
+
+      console.log("EndGameDialog: Recording game to IndexedDB", { 
+        playerNames: players.map(p => p.name),
+        playerIds: players.map(p => p.id),
+        winnerNames: selectedWinners,
+        winnerIds 
+      });
+
+      // Record the game with full player objects and winner IDs
+      await recordGame(players, winnerIds);
+      console.log("EndGameDialog: Successfully recorded game to IndexedDB");
+    } catch (error) {
+      console.error("EndGameDialog: Failed to record game to IndexedDB", error);
+      // Don't fail the entire operation if IndexedDB write fails
+    }
+
+    // 7. Continue with callback
     onSaveResults(selectedWinners);
     onClose();
   };

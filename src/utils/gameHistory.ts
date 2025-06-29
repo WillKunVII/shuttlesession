@@ -25,10 +25,15 @@ export const getGameHistory = async (): Promise<any[]> => {
 };
 
 /**
- * Records a new game in IndexedDB (with fallback). Now expects complete player objects (with ID)
+ * Records a new game in IndexedDB (with fallback). Now expects complete player objects (with ID) and winner IDs
  */
 export const recordGame = async (players: Player[], winnerIds?: number[]): Promise<void> => {
   try {
+    console.log("gameHistory.recordGame: Recording game", { 
+      players: players.map(p => ({ id: p.id, name: p.name })), 
+      winnerIds 
+    });
+    
     await gameHistoryDB.addGame(players, undefined, undefined, winnerIds);
     console.log("Game recorded in IndexedDB (IDs)");
   } catch (e) {
@@ -39,7 +44,8 @@ export const recordGame = async (players: Player[], winnerIds?: number[]): Promi
       const history = await getGameHistory();
       const newGame = {
         playerIds: players.map(p => p.id),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        winners: winnerIds || []
       };
       const updatedHistory = [newGame, ...history].slice(0, 50);
       localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));

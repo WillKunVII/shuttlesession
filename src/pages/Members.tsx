@@ -29,18 +29,27 @@ function MembersPageContent() {
 
   const { updateActivePlayerInfo } = useDashboard();
 
-  // Helper function to check if an object is a valid Member
-  function isValidMember(obj: any): obj is Member {
+  // Helper function to check if an object has the basic member structure
+  function hasBasicMemberStructure(obj: any): boolean {
     return (
       obj &&
       typeof obj === "object" &&
       typeof obj.id === "number" &&
       typeof obj.name === "string" &&
       (obj.gender === "male" || obj.gender === "female") &&
-      typeof obj.isGuest === "boolean" &&
-      typeof obj.wins === "number" &&
-      typeof obj.losses === "number"
+      typeof obj.isGuest === "boolean"
     );
+  }
+
+  // Helper function to ensure member has all required fields
+  function ensureMemberFields(obj: any): Member {
+    return {
+      ...obj,
+      wins: typeof obj.wins === "number" ? obj.wins : 0,
+      losses: typeof obj.losses === "number" ? obj.losses : 0,
+      playPreferences: Array.isArray(obj.playPreferences) ? obj.playPreferences : [],
+      rating: typeof obj.rating === "number" ? obj.rating : 1000
+    };
   }
 
   // Load members from localStorage on component mount
@@ -50,29 +59,30 @@ function MembersPageContent() {
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
       try {
-        // Check if members have wins/losses fields, add if not
         const parsedMembers = JSON.parse(savedMembers);
-        // ---- FILTER for only valid members
-        let filteredMembers = Array.isArray(parsedMembers)
-          ? parsedMembers.filter(isValidMember)
+        console.log("Raw parsed members:", parsedMembers);
+        
+        // Filter for basic structure first, then ensure all fields
+        let validMembers = Array.isArray(parsedMembers)
+          ? parsedMembers
+              .filter(hasBasicMemberStructure)
+              .map(ensureMemberFields)
           : [];
-        // Add a check for duplicate IDs
-        const ids = filteredMembers.map((m: any) => m.id);
+        
+        console.log("Valid members after processing:", validMembers);
+        
+        // Check for duplicate IDs and warn
+        const ids = validMembers.map((m: any) => m.id);
         const hasDuplicateIds = ids.length !== new Set(ids).size;
         if (hasDuplicateIds) {
           console.warn("Duplicate member IDs found in localStorage!", ids);
         }
-        const updatedMembers = filteredMembers.map((member: any) => ({
-          ...member,
-          status: undefined,
-          wins: member.wins !== undefined ? member.wins : 0,
-          losses: member.losses !== undefined ? member.losses : 0,
-          playPreferences: member.playPreferences || [],
-          rating: typeof member.rating === "number" ? member.rating : 1000
-        }));
-        setMembers(updatedMembers);
-        // Save the updated members back to localStorage
-        localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
+        
+        setMembers(validMembers);
+        
+        // Save the processed members back to localStorage to ensure consistency
+        localStorage.setItem("clubMembers", JSON.stringify(validMembers));
+        localStorage.setItem("members", JSON.stringify(validMembers)); // Keep both in sync
       } catch (e) {
         console.error("Error parsing members from localStorage", e);
       }
@@ -82,22 +92,26 @@ function MembersPageContent() {
   // Save members to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("clubMembers", JSON.stringify(members));
+    localStorage.setItem("members", JSON.stringify(members)); // Keep both in sync
   }, [members]);
 
   // Sort members alphabetically by name
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => a.name.localeCompare(b.name));
   }, [members]);
+
   const handleAddMember = () => {
     setEditMode(false);
     setEditingMember(null);
     setIsDialogOpen(true);
   };
+
   const handleEditClick = (member: Member) => {
     setEditingMember(member);
     setEditMode(true);
     setIsDialogOpen(true);
   };
+
   const handleSaveMember = (memberData: Omit<Member, "id" | "wins" | "losses">) => {
     if (editMode && editingMember) {
       // --- LOG the state before update
@@ -147,7 +161,8 @@ function MembersPageContent() {
         isGuest: memberData.isGuest,
         wins: 0,
         losses: 0,
-        playPreferences: preferencesEnabled ? memberData.playPreferences : []
+        playPreferences: preferencesEnabled ? memberData.playPreferences : [],
+        rating: 1000
       };
       setMembers([...members, newMember]);
       toast.success("Member added successfully");
@@ -163,16 +178,17 @@ function MembersPageContent() {
     setEditMode(false);
     setEditingMember(null);
   };
+
   const confirmDeleteMember = (memberId: number) => {
     setMemberToDelete(memberId);
     setIsAlertDialogOpen(true);
   };
+
   const handleDeleteMember = () => {
     if (memberToDelete !== null) {
       // Only delete if there are valid members
       const updatedMembers = members.filter(
-        (member) =>
-          isValidMember(member) && member.id !== memberToDelete
+        (member) => member.id !== memberToDelete
       );
       setMembers(updatedMembers);
       setIsAlertDialogOpen(false);
@@ -183,7 +199,9 @@ function MembersPageContent() {
 
   // Check if score keeping is enabled
   const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") === "true";
-  return <div className="space-y-6 w-full col-span-full">
+
+  return (
+    <div className="space-y-6 w-full col-span-full">
       <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="text-2xl font-bold mb-2 text-shuttle-lightBlue">Members</h1>
@@ -193,14 +211,31 @@ function MembersPageContent() {
         <Button onClick={handleAddMember} className="text-shuttle-primary bg-shuttle-lightBlue">Add Member</Button>
       </div>
       
-      <MemberList members={sortedMembers} isScoreKeepingEnabled={isScoreKeepingEnabled} preferencesEnabled={preferencesEnabled} onEditMember={handleEditClick} onDeleteMember={confirmDeleteMember} />
+      <MemberList 
+        members={sortedMembers} 
+        isScoreKeepingEnabled={isScoreKeepingEnabled} 
+        preferencesEnabled={preferencesEnabled} 
+        onEditMember={handleEditClick} 
+        onDeleteMember={confirmDeleteMember} 
+      />
 
       {/* Add/Edit Member Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <MemberForm isEditMode={editMode} initialMember={editingMember} preferencesEnabled={preferencesEnabled} onSave={handleSaveMember} onCancel={() => setIsDialogOpen(false)} />
+        <MemberForm 
+          isEditMode={editMode} 
+          initialMember={editingMember} 
+          preferencesEnabled={preferencesEnabled} 
+          onSave={handleSaveMember} 
+          onCancel={() => setIsDialogOpen(false)} 
+        />
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog isOpen={isAlertDialogOpen} onClose={() => setIsAlertDialogOpen(false)} onConfirm={handleDeleteMember} />
-    </div>;
+      <DeleteConfirmDialog 
+        isOpen={isAlertDialogOpen} 
+        onClose={() => setIsAlertDialogOpen(false)} 
+        onConfirm={handleDeleteMember} 
+      />
+    </div>
+  );
 }
