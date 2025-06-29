@@ -6,8 +6,8 @@
  * Refactored into smaller modules for better maintainability.
  */
 
-// Re-export everything from the refactored modules
-export { GameRecord, PlayerStats } from './indexedDb/types';
+// Re-export types using 'export type' for isolatedModules compatibility
+export type { GameRecord, PlayerStats } from './indexedDb/types';
 export { GameHistoryDB } from './indexedDb/gameHistoryDB';
 
 // Export singleton instance
