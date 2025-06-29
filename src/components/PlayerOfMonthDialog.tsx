@@ -16,6 +16,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PlayerRankings } from "./PlayerOfSession/PlayerRankings";
 import { useAllTimePlayerRankings } from "@/hooks/useAllTimePlayerRankings";
@@ -85,6 +92,7 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
     </>
   );
 
+  // Mobile: Use Drawer
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={handleClose}>
@@ -105,20 +113,23 @@ export function PlayerOfMonthDialog({ isOpen, onClose }: PlayerOfMonthDialogProp
     );
   }
 
+  // Desktop/Tablet: Use Sheet
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl sm:text-2xl md:text-3xl">
+    <Sheet open={isOpen} onOpenChange={handleClose}>
+      <SheetContent side="right" className="w-[400px] sm:w-[500px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-center text-xl sm:text-2xl md:text-3xl">
             Player of the Month
-          </DialogTitle>
-          <DialogDescription className="text-center text-sm sm:text-base">
+          </SheetTitle>
+          <SheetDescription className="text-center text-sm sm:text-base">
             All-time win rate leaderboard (players with 1+ games)
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         
-        {content}
-      </DialogContent>
-    </Dialog>
+        <div className="mt-6">
+          {content}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
