@@ -38,6 +38,19 @@ export const findBestCombination = async (poolPlayers: Player[]): Promise<Player
 };
 
 /**
+ * Checks if a player accepts a specific game type based on their preferences
+ */
+function playerAcceptsGameType(player: Player, gameType: string): boolean {
+  const prefs = player.playPreferences || [];
+  
+  // If player has no preferences set, they accept all game types
+  if (prefs.length === 0) return true;
+  
+  // If player has explicit preferences, they must include this game type
+  return prefs.includes(gameType as any);
+}
+
+/**
  * Finds the best combination for a specific game type with the anchor player
  */
 async function findCombinationForGameType(
@@ -45,25 +58,46 @@ async function findCombinationForGameType(
   anchorPlayer: Player, 
   targetGameType: string
 ): Promise<Player[]> {
-  const otherPlayers = poolPlayers.slice(1); // All players except anchor
+  // First, filter players who would accept this game type
+  const eligiblePlayers = poolPlayers.filter(player => 
+    playerAcceptsGameType(player, targetGameType)
+  );
+  
+  console.log(`Auto-select: Found ${eligiblePlayers.length} players who accept ${targetGameType} games`);
+  
+  if (eligiblePlayers.length < 4) {
+    console.log(`Auto-select: Not enough players accept ${targetGameType} games`);
+    return [];
+  }
+  
+  // Ensure anchor player is in the eligible list
+  if (!eligiblePlayers.some(p => p.id === anchorPlayer.id)) {
+    console.log(`Auto-select: Anchor player doesn't accept ${targetGameType} games`);
+    return [];
+  }
+  
+  const otherEligiblePlayers = eligiblePlayers.filter(p => p.id !== anchorPlayer.id);
   const combinations: Player[][] = [];
 
-  // Generate all possible 3-player combinations from remaining players
-  for (let i = 0; i < otherPlayers.length - 2; i++) {
-    for (let j = i + 1; j < otherPlayers.length - 1; j++) {
-      for (let k = j + 1; k < otherPlayers.length; k++) {
-        const combination = [anchorPlayer, otherPlayers[i], otherPlayers[j], otherPlayers[k]];
+  // Generate all possible 3-player combinations from remaining eligible players
+  for (let i = 0; i < otherEligiblePlayers.length - 2; i++) {
+    for (let j = i + 1; j < otherEligiblePlayers.length - 1; j++) {
+      for (let k = j + 1; k < otherEligiblePlayers.length; k++) {
+        const combination = [anchorPlayer, otherEligiblePlayers[i], otherEligiblePlayers[j], otherEligiblePlayers[k]];
         
-        // Check if this combination can form the target game type
-        const gameType = determineBestGameType(combination);
-        if (gameType === targetGameType) {
+        // Check if this combination can actually form the target game type
+        const actualGameType = determineBestGameType(combination);
+        if (actualGameType === targetGameType) {
           combinations.push(combination);
         }
       }
     }
   }
 
-  if (combinations.length === 0) return [];
+  if (combinations.length === 0) {
+    console.log(`Auto-select: No valid ${targetGameType} combinations found with eligible players`);
+    return [];
+  }
 
   // Score combinations by repeat penalty (lower is better)
   const scoredCombinations = await Promise.all(
@@ -86,7 +120,7 @@ async function findCombinationForGameType(
  */
 async function findAnyCombinationWithAnchor(poolPlayers: Player[], anchorPlayer: Player): Promise<Player[]> {
   const otherPlayers = poolPlayers.slice(1);
-  const combinations: Player[][] = [];
+  const combinations: { combination: Player[], gameType: string }[] = [];
 
   // Generate all possible 3-player combinations from remaining players
   for (let i = 0; i < otherPlayers.length - 2; i++) {
@@ -94,28 +128,35 @@ async function findAnyCombinationWithAnchor(poolPlayers: Player[], anchorPlayer:
       for (let k = j + 1; k < otherPlayers.length; k++) {
         const combination = [anchorPlayer, otherPlayers[i], otherPlayers[j], otherPlayers[k]];
         
-        // Check if this is a valid game (any type)
+        // Check if this is a valid game and all players accept it
         const gameType = determineBestGameType(combination);
         if (gameType) {
-          combinations.push(combination);
+          // Verify all players in this combination accept this game type
+          const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
+          if (allAccept) {
+            combinations.push({ combination, gameType });
+          }
         }
       }
     }
   }
 
-  if (combinations.length === 0) return [];
+  if (combinations.length === 0) {
+    console.log("Auto-select: No valid combinations found that respect all player preferences");
+    return [];
+  }
 
   // Score by repeat penalty and pick the best
   const scoredCombinations = await Promise.all(
-    combinations.map(async combo => {
-      const repeatPenalty = await calculateRepeatPenalty(combo);
-      return { combination: combo, repeatPenalty };
+    combinations.map(async ({ combination, gameType }) => {
+      const repeatPenalty = await calculateRepeatPenalty(combination);
+      return { combination, repeatPenalty, gameType };
     })
   );
 
   scoredCombinations.sort((a, b) => a.repeatPenalty - b.repeatPenalty);
 
-  console.log(`Auto-select: Fallback found ${combinations.length} valid combinations, selected with penalty: ${scoredCombinations[0].repeatPenalty}`);
+  console.log(`Auto-select: Fallback found ${combinations.length} valid combinations, selected ${scoredCombinations[0].gameType} game with penalty: ${scoredCombinations[0].repeatPenalty}`);
 
   return scoredCombinations[0].combination;
 }

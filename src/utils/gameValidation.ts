@@ -11,49 +11,25 @@ export const canFormValidGame = (players: Player[]): boolean => {
   const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
   if (!prefEnabled) return true;
   
-  // Count genders
-  const maleCount = players.filter(p => p.gender === "male").length;
-  const femaleCount = players.filter(p => p.gender === "female").length;
+  // Determine the best possible game type for this combination
+  const gameType = determineBestGameType(players);
   
-  // Check if Mixed game is possible 
-  const isMixedPossible = maleCount === 2 && femaleCount === 2;
-  
-  // Check if Ladies game is possible
-  const isLadiesPossible = femaleCount === 4;
-
-  // Determine the game type based on player composition
-  let possibleGameTypes = [];
-  if (isMixedPossible) possibleGameTypes.push("Mixed");
-  if (isLadiesPossible) possibleGameTypes.push("Ladies");
-  possibleGameTypes.push("Open"); // Open is always technically possible
-  
-  // Check individual preferences - ALL players must be OK with the game type
-  const playersOkWithMixed = players.every(p => 
-    !p.playPreferences || 
-    p.playPreferences.length === 0 || 
-    p.playPreferences.includes("Mixed")
-  );
-  
-  const playersOkWithLadies = players.every(p => 
-    !p.playPreferences || 
-    p.playPreferences.length === 0 || 
-    p.playPreferences.includes("Ladies")
-  );
-  
-  const playersOkWithOpen = players.every(p => 
-    !p.playPreferences || 
-    p.playPreferences.length === 0 || 
-    p.playPreferences.includes("Open")
-  );
-  
-  // Check if any valid game type is possible with EVERYONE'S preferences
-  const acceptableGameTypes = [];
-  if (isMixedPossible && playersOkWithMixed) acceptableGameTypes.push("Mixed");
-  if (isLadiesPossible && playersOkWithLadies) acceptableGameTypes.push("Ladies");
-  if (playersOkWithOpen) acceptableGameTypes.push("Open");
-  
-  return acceptableGameTypes.length > 0;
+  // If no valid game type can be determined, the game is invalid
+  return gameType !== null;
 };
+
+/**
+ * Checks if a player accepts a specific game type based on their preferences
+ */
+function playerAcceptsGameType(player: Player, gameType: string): boolean {
+  const prefs = player.playPreferences || [];
+  
+  // If player has no preferences set, they accept all game types
+  if (prefs.length === 0) return true;
+  
+  // If player has explicit preferences, they must include this game type
+  return prefs.includes(gameType as any);
+}
 
 /**
  * Determines the best game type based on players and their preferences
@@ -77,18 +53,10 @@ export const determineBestGameType = (players: Player[]): "Mixed" | "Ladies" | "
   // Get preferences of the highest priority player (top of queue)
   const topPlayerPrefs = players[0]?.playPreferences || [];
   
-  // Check if all players are OK with each game type
-  const allAcceptMixed = players.every(p => 
-    !p.playPreferences?.length || p.playPreferences.includes("Mixed")
-  );
-  
-  const allAcceptLadies = players.every(p => 
-    !p.playPreferences?.length || p.playPreferences.includes("Ladies")
-  );
-  
-  const allAcceptOpen = players.every(p => 
-    !p.playPreferences?.length || p.playPreferences.includes("Open")
-  );
+  // Check if all players accept each game type
+  const allAcceptMixed = players.every(p => playerAcceptsGameType(p, "Mixed"));
+  const allAcceptLadies = players.every(p => playerAcceptsGameType(p, "Ladies"));
+  const allAcceptOpen = players.every(p => playerAcceptsGameType(p, "Open"));
   
   // Priority order: Try to match top player's preference first while ensuring all players accept it
   if (topPlayerPrefs.length > 0) {
@@ -101,6 +69,7 @@ export const determineBestGameType = (players: Player[]): "Mixed" | "Ladies" | "
   }
   
   // If top player has no preferences or we couldn't satisfy them, use default priority
+  // But still respect what all players can accept
   if (isMixedPossible && allAcceptMixed) return "Mixed";
   if (isLadiesPossible && allAcceptLadies) return "Ladies";
   if (allAcceptOpen) return "Open";
