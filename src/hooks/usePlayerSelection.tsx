@@ -1,6 +1,7 @@
 
 import { Player } from "../types/player";
-import { canFormValidGame, determineBestGameType, getPlayerPoolSize, findBestCombination } from "../utils/gameUtils";
+import { canFormValidGame, determineBestGameType, getPlayerPoolSize } from "../utils/gameUtils";
+import { findBestCombination } from "../utils/gameSelection";
 import { PiggybackPair } from "./usePiggybackPairs";
 
 type UsePlayerSelectionOptions = {
@@ -9,51 +10,41 @@ type UsePlayerSelectionOptions = {
 
 export function usePlayerSelection(queue: Player[], options?: UsePlayerSelectionOptions) {
   const autoSelectPlayers = async (count: number = 4): Promise<Player[]> => {
-    // Piggyback support: find pairs, treat each as a block
     const piggybackPairs = options?.piggybackPairs || [];
-    let poolPlayers = [...queue].slice(0, Math.min(getPlayerPoolSize(), queue.length));
-    let pairBlocks: Player[][] = [];
+    const poolSize = getPlayerPoolSize();
+    let poolPlayers = [...queue].slice(0, Math.min(poolSize, queue.length));
 
-    // Build pair blocks and exclude them from solo considerations
-    const pairedIds = new Set(piggybackPairs.flatMap(p => [p.master, p.partner]));
-    for (const pair of piggybackPairs) {
-      const master = poolPlayers.find(p => p.id === pair.master);
-      const partner = poolPlayers.find(p => p.id === pair.partner);
-      if (master && partner) {
-        pairBlocks.push([master, partner]);
-      }
-    }
-    // Remove paired IDs from pool for solo
-    const soloPlayers = poolPlayers.filter(p => !pairedIds.has(p.id));
+    console.log("Auto-select: Starting with pool of", poolPlayers.length, "players");
+    console.log("Auto-select: Piggyback pairs:", piggybackPairs);
 
-    // Now, try every grouping of pairs + solos that totals exactly 4
-    // Try all combinations: ([pair1]+solos), ([pair1, pair2]), (no pairs)
-    // Only include a pair if BOTH are present in queue!
-    const allCombos: Player[][] = [];
-
-    function combine(blocks: Player[][], curr: Player[], needed: number) {
-      if (needed === 0) { allCombos.push(curr); return; }
-      // Try next pair block (if it fits)
-      for (let i = 0; i < blocks.length; i++) {
-        if (blocks[i].length <= needed) {
-          const rest = blocks.slice(i + 1);
-          combine(rest, curr.concat(blocks[i]), needed - blocks[i].length);
+    // Handle piggyback pairs - if #1 player is in a pair, include their partner
+    if (piggybackPairs.length > 0 && poolPlayers.length > 0) {
+      const anchorPlayer = poolPlayers[0];
+      const anchorPair = piggybackPairs.find(p => p.master === anchorPlayer.id || p.partner === anchorPlayer.id);
+      
+      if (anchorPair) {
+        console.log("Auto-select: Anchor player is in piggyback pair");
+        const partnerId = anchorPair.master === anchorPlayer.id ? anchorPair.partner : anchorPair.master;
+        const partner = poolPlayers.find(p => p.id === partnerId);
+        
+        if (partner) {
+          // Ensure both piggyback players are at the start of the pool
+          poolPlayers = poolPlayers.filter(p => p.id !== partnerId);
+          poolPlayers = [anchorPlayer, partner, ...poolPlayers.slice(1)];
+          console.log("Auto-select: Rearranged pool to include piggyback pair at front");
         }
       }
-      // If no pair fits, fill with solos
-      if (needed <= soloPlayers.length) {
-        allCombos.push(curr.concat(soloPlayers.slice(0, needed)));
-      }
     }
-    combine(pairBlocks, [], count);
 
-    // Now, pick the first valid combination we find
-    for (const combo of allCombos) {
-      if (combo.length === 4 && canFormValidGame(combo)) {
-        return combo;
-      }
+    // Use the new selection logic that prioritizes #1 player
+    const selectedPlayers = await findBestCombination(poolPlayers);
+
+    if (selectedPlayers.length === 4) {
+      console.log("Auto-select: Successfully selected 4 players:", selectedPlayers.map(p => p.name));
+      return selectedPlayers;
     }
-    // Fallback: try normal selection for now
+
+    console.log("Auto-select: Failed to find valid combination");
     return [];
   };
 
