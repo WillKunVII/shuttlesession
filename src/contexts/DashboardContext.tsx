@@ -1,73 +1,66 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Player } from "@/types/player";
-import { Court } from "@/types/DashboardTypes";
 import { PlayPreference } from "@/types/member";
 import { useDashboardLogic } from "@/hooks/useDashboardLogic";
-import { CurrentCourtPlayers } from "@/types/DashboardTypes";
-import { DashboardContextType } from "@/types/DashboardTypes";
 import { usePiggybackPairs } from "@/hooks/usePiggybackPairs";
 
-export const DashboardContext = React.createContext<DashboardContextType | undefined>(undefined);
+interface DashboardContextType {
+  // Player queue
+  queue: Player[];
+  addPlayerToQueue: (player: Omit<Player, "id" | "waitingTime">) => void;
+  removePlayerFromQueue: (playerId: number) => void;
+  updateActivePlayerInfo: (updated: { 
+    id?: number; 
+    name: string; 
+    gender?: "male" | "female"; 
+    isGuest?: boolean; 
+    playPreferences?: PlayPreference[] 
+  }) => void;
+
+  // Next game
+  nextGamePlayers: Player[];
+  generateNextGame: () => Promise<void>;
+  clearNextGame: () => void;
+  isNextGameReady: () => boolean;
+
+  // Courts
+  sortedCourts: any[];
+  assignToFreeCourt: (courtId: number) => Promise<void>;
+  handleEndGameClick: (courtId: number) => void;
+
+  // Game management
+  handlePlayerSelect: (selectedPlayers: Player[]) => void;
+  endGameDialogOpen: boolean;
+  currentCourtPlayers: { id: number; players: any[] };
+  setEndGameDialogOpen: (open: boolean) => void;
+  finishEndGame: (courtId: number, winnerNames: string[]) => void;
+
+  // Piggyback pairs
+  piggybackPairs: { master: number; partner: number }[];
+  addPiggybackPair: (master: number, partner: number) => void;
+  removePiggybackPair: (master: number) => void;
+  findPiggybackPair: (playerId: number) => { master: number; partner: number } | undefined;
+  clearPiggybackPairs: () => void;
+}
+
+const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  // Piggyback pairs hook!
-  const piggyback = usePiggybackPairs();
+  // Piggyback pairs state
+  const {
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair,
+    clearPiggybackPairs
+  } = usePiggybackPairs();
 
-  // Pass piggybackPairs and handlers down
-  const logic = useDashboardLogic({
-    piggybackPairs: piggyback.piggybackPairs,
-    addPiggybackPair: piggyback.addPair,
-    removePiggybackPair: piggyback.removePairByMaster,
-    findPiggybackPair: piggyback.findPairOf,
-  });
-
-  // fallback no-ops
-  const noop = () => {};
-  const noopSet: React.Dispatch<React.SetStateAction<any>> = () => {};
-  const noopReturnNumber = () => 0;
-  const noopReturnBool = () => false;
-  const noopCanFormValidGame = (_players: Player[]) => false;
-
-  // Provide context values, preferring logic or fallbacks
-  const queue = logic.queue ?? [];
-  const nextGamePlayers = logic.nextGamePlayers ?? [];
-  const sortedCourts = logic.sortedCourts ?? [];
-  const endGameDialogOpen = logic.endGameDialogOpen ?? false;
-  const setEndGameDialogOpen = logic.setEndGameDialogOpen ?? noopSet;
-  const currentCourtPlayers = logic.currentCourtPlayers ?? { id: 0, players: [] };
-  const setCurrentCourtPlayers = (logic as any).setCurrentCourtPlayers ?? noopSet;
-
-  const addPlayerToQueue = logic.addPlayerToQueue ?? noop;
-  const removePlayerFromQueue = logic.removePlayerFromQueue ?? noop;
-  const generateNextGame = logic.generateNextGame ?? (async () => {});
-  const assignToFreeCourt = logic.assignToFreeCourt ?? (async () => {});
-  const handleEndGameClick = logic.handleEndGameClick ?? noop;
-  const handlePlayerSelect = logic.handlePlayerSelect ?? noop;
-  const clearNextGame = logic.clearNextGame ?? noop;
-  const finishEndGame = logic.finishEndGame ?? noop;
-  const isNextGameReady = logic.isNextGameReady ?? noopReturnBool;
-  const getPlayerPoolSize = (logic as any).getPlayerPoolSize ?? noopReturnNumber;
-  const canFormValidGame = (logic as any).canFormValidGame ?? noopCanFormValidGame;
-
-  const updateActivePlayerInfo = (memberUpdate: {
-    name: string;
-    gender?: "male" | "female";
-    isGuest?: boolean;
-    playPreferences?: any[];
-  }) => {
-    const updatePlayerInfo = (logic as any).updatePlayerInfo ?? (() => {});
-    const updateCourtPlayerInfo = (logic as any).updateCourtPlayerInfo ?? (() => {});
-    updatePlayerInfo(memberUpdate);
-    updateCourtPlayerInfo(memberUpdate);
-  };
-
-  // In your value, provide piggyback state & handlers:
-  const value: DashboardContextType = {
+  // Main dashboard logic
+  const {
     queue,
     nextGamePlayers,
     sortedCourts,
     endGameDialogOpen,
-    setEndGameDialogOpen,
     currentCourtPlayers,
     addPlayerToQueue,
     removePlayerFromQueue,
@@ -76,17 +69,127 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     handleEndGameClick,
     handlePlayerSelect,
     clearNextGame,
+    setEndGameDialogOpen,
     finishEndGame,
-    isNextGameReady,
+    isNextGameReady
+  } = useDashboardLogic({
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair
+  });
+
+  // State for managing active players
+  const [nextGamePlayersState, setNextGamePlayers] = useState<Player[]>(nextGamePlayers);
+  const [queueState, setQueue] = useState<Player[]>(queue);
+  const [courtsState, setCourts] = useState<any[]>(sortedCourts);
+
+  // Sync state with hook values
+  useEffect(() => {
+    setNextGamePlayers(nextGamePlayers);
+  }, [nextGamePlayers]);
+
+  useEffect(() => {
+    setQueue(queue);
+  }, [queue]);
+
+  useEffect(() => {
+    setCourts(sortedCourts);
+  }, [sortedCourts]);
+
+  // Updated updateActivePlayerInfo function to handle ID-based updates
+  const updateActivePlayerInfo = (updated: { 
+    id?: number; 
+    name: string; 
+    gender?: "male" | "female"; 
+    isGuest?: boolean; 
+    playPreferences?: PlayPreference[] 
+  }) => {
+    console.log("DashboardContext: Updating active player info", updated);
+    
+    // Update player queue - use ID if available, fallback to name
+    const updatedQueue = queueState.map(player => {
+      const matches = updated.id ? player.id === updated.id : player.name === updated.name;
+      return matches
+        ? {
+            ...player,
+            name: updated.name,
+            ...(updated.gender && { gender: updated.gender }),
+            ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+            ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+          }
+        : player
+    });
+    
+    setQueue(updatedQueue);
+    
+    // Update next game players - use ID if available, fallback to name
+    const updatedNextGame = nextGamePlayersState.map(player => {
+      const matches = updated.id ? player.id === updated.id : player.name === updated.name;
+      return matches
+        ? {
+            ...player,
+            name: updated.name,
+            ...(updated.gender && { gender: updated.gender }),
+            ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+            ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+          }
+        : player
+    });
+    
+    setNextGamePlayers(updatedNextGame);
+    
+    // Update courts - use ID if available, fallback to name
+    const updatedCourts = courtsState.map(court => ({
+      ...court,
+      players: court.players.map(player => {
+        const matches = updated.id ? player.id === updated.id : player.name === updated.name;
+        return matches
+          ? {
+              ...player,
+              name: updated.name,
+              ...(updated.gender && { gender: updated.gender }),
+              ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+              ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+            }
+          : player
+      })
+    }));
+    
+    setCourts(updatedCourts);
+  };
+
+  const value: DashboardContextType = {
+    // Player queue
+    queue: queueState,
+    addPlayerToQueue,
+    removePlayerFromQueue,
     updateActivePlayerInfo,
-    getPlayerPoolSize,
-    canFormValidGame,
-    // fixed: use piggybackPairs array for multi-pair support
-    piggybackPairs: piggyback.piggybackPairs,
-    addPiggybackPair: piggyback.addPair,
-    removePiggybackPair: piggyback.removePairByMaster,
-    findPiggybackPair: piggyback.findPairOf,
-    clearPiggybackPairs: piggyback.clearAllPairs,
+
+    // Next game
+    nextGamePlayers: nextGamePlayersState,
+    generateNextGame,
+    clearNextGame,
+    isNextGameReady,
+
+    // Courts
+    sortedCourts: courtsState,
+    assignToFreeCourt,
+    handleEndGameClick,
+
+    // Game management
+    handlePlayerSelect,
+    endGameDialogOpen,
+    currentCourtPlayers,
+    setEndGameDialogOpen,
+    finishEndGame,
+
+    // Piggyback pairs
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair,
+    clearPiggybackPairs
   };
 
   return (
@@ -96,9 +199,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useDashboard(): DashboardContextType {
+export function useDashboard() {
   const context = useContext(DashboardContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useDashboard must be used within a DashboardProvider");
   }
   return context;

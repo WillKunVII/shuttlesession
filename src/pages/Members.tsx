@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useState, useEffect, useMemo } from "react";
@@ -52,10 +53,8 @@ function MembersPageContent() {
     };
   }
 
-  // Load members from localStorage on component mount
-  useEffect(() => {
-    const enablePref = localStorage.getItem("enablePlayerPreferences");
-    setPreferencesEnabled(enablePref === "true");
+  // Function to load members from localStorage
+  const loadMembers = () => {
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
       try {
@@ -87,6 +86,26 @@ function MembersPageContent() {
         console.error("Error parsing members from localStorage", e);
       }
     }
+  };
+
+  // Load members from localStorage on component mount
+  useEffect(() => {
+    const enablePref = localStorage.getItem("enablePlayerPreferences");
+    setPreferencesEnabled(enablePref === "true");
+    loadMembers();
+  }, []);
+
+  // Listen for storage events to auto-refresh when members are added from other components
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'clubMembers' && e.newValue) {
+        console.log("Members page: Storage event detected, refreshing members list");
+        loadMembers();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Save members to localStorage whenever it changes
@@ -129,20 +148,16 @@ function MembersPageContent() {
             }
           : member
       );
+      
       // --- LOG the state after update
       console.log("After update:", updatedMembers.map(m => ({ id: m.id, name: m.name })));
-      // Also log if more than one name has changed (unexpected)
-      const changed = updatedMembers.filter(
-        (m, i) => m.name !== members[i].name || m.gender !== members[i].gender
-      );
-      if (changed.length > 1) {
-        console.warn("More than one member changed during edit! Check ID uniqueness.", changed);
-      }
-
+      
       setMembers(updatedMembers);
       toast.success("Member updated successfully");
-      // --- SYNC if player is active ---
+      
+      // --- SYNC if player is active - use ID-based update ---
       updateActivePlayerInfo({
+        id: editingMember.id,
         name: memberData.name,
         gender: memberData.gender,
         isGuest: memberData.isGuest,
@@ -166,13 +181,6 @@ function MembersPageContent() {
       };
       setMembers([...members, newMember]);
       toast.success("Member added successfully");
-      // --- SYNC new member if player is active ---
-      updateActivePlayerInfo({
-        name: memberData.name,
-        gender: memberData.gender,
-        isGuest: memberData.isGuest,
-        playPreferences: preferencesEnabled ? memberData.playPreferences : [],
-      });
     }
     setIsDialogOpen(false);
     setEditMode(false);

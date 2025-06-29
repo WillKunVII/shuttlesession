@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
   }, [isOpen]);
 
   // Validation helper
-  const isValidName = (val: string) => /^[\w\s\-.'’]{2,30}$/.test(val.trim());
+  const isValidName = (val: string) => /^[\w\s\-.'']{2,30}$/.test(val.trim());
 
   const handleAddPlayer = () => {
     const trimmedName = name.trim();
@@ -125,36 +126,49 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       return;
     }
 
-    // Check queue for duplicates by name (case-insensitive)
+    // Check if player exists in members list (case-insensitive)
     const existingMember = membersList.find(
         member => member.name.toLowerCase() === name.toLowerCase()
     );
 
+    let memberId: number;
+
     // If player doesn't exist in members list, add them
     if (!existingMember) {
-      // Create new member object
+      // Create new member object with proper ID and preferences
+      memberId = Date.now();
       const newMember: Member = {
-        id: Date.now(),
-        name,
+        id: memberId,
+        name: trimmedName,
         gender,
         isGuest,
         wins: 0,
         losses: 0,
-        playPreferences: preferencesEnabled ? playPreferences : undefined
+        playPreferences: preferencesEnabled ? playPreferences : [],
+        rating: 1000
       };
 
       // Add to members list
       const updatedMembers = [...membersList, newMember];
       setMembersList(updatedMembers);
 
-      // Save to localStorage
+      // Save to localStorage - both keys for consistency
       localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
+      localStorage.setItem("members", JSON.stringify(updatedMembers));
+
+      // Trigger a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'clubMembers',
+        newValue: JSON.stringify(updatedMembers)
+      }));
 
       // Show toast notification
-      toast.success(`${name} added to members database`);
+      toast.success(`${trimmedName} added to members database`);
+    } else {
+      memberId = existingMember.id;
     }
 
-    // Add player to queue (original functionality)
+    // Add player to queue with proper ID and preferences
     if (onAddPlayer) {
       onAddPlayer({
         name: trimmedName,

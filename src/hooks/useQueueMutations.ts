@@ -1,3 +1,4 @@
+
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
 import { getSessionScores } from "../utils/storageUtils";
@@ -12,8 +13,23 @@ export function useQueueMutations() {
     const sessionScores = getSessionScores();
     const sessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
 
+    // Try to get existing member ID from localStorage
+    let playerId = Date.now();
+    try {
+      const membersData = localStorage.getItem("members");
+      if (membersData) {
+        const members = JSON.parse(membersData);
+        const existingMember = members.find((m: any) => m.name === player.name);
+        if (existingMember && existingMember.id) {
+          playerId = existingMember.id;
+        }
+      }
+    } catch (e) {
+      console.error("Error getting member ID for player", e);
+    }
+
     const newPlayer: Player = {
-      id: Date.now(),
+      id: playerId,
       name: player.name,
       gender: player.gender,
       isGuest: player.isGuest,
@@ -34,6 +50,7 @@ export function useQueueMutations() {
             newPlayer.wins = member.wins || 0;
             newPlayer.losses = member.losses || 0;
             newPlayer.playPreferences = member.playPreferences || [];
+            newPlayer.rating = member.rating || 1000;
           }
         } catch (e) {
           console.error("Error getting member win/loss data", e);
@@ -98,18 +115,28 @@ export function useQueueMutations() {
     }
   }
 
-  // Update player info by name
-  function updatePlayerInfo(prevQueue: Player[], updated: { name: string, gender?: "male" | "female", isGuest?: boolean, playPreferences?: PlayPreference[] }) {
-    return prevQueue.map(player => (
-      player.name === updated.name
+  // Update player info by ID (preferred) or name (fallback)
+  function updatePlayerInfo(prevQueue: Player[], updated: { 
+    id?: number; 
+    name: string; 
+    gender?: "male" | "female"; 
+    isGuest?: boolean; 
+    playPreferences?: PlayPreference[] 
+  }) {
+    return prevQueue.map(player => {
+      // Use ID for matching if available, otherwise fall back to name
+      const matches = updated.id ? player.id === updated.id : player.name === updated.name;
+      
+      return matches
         ? {
             ...player,
+            name: updated.name, // Always update name
             ...(updated.gender && { gender: updated.gender }),
             ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
             ...(updated.playPreferences && { playPreferences: updated.playPreferences })
           }
-        : player
-    ));
+        : player;
+    });
   }
 
   return {
