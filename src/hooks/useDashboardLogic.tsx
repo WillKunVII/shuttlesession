@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from "react";
 import { Player } from "@/types/player";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
@@ -56,8 +55,8 @@ export function useDashboardLogic({
     players: []
   });
 
-  // Memoize sorted courts to prevent unnecessary recalculations
-  const sortedCourts = useMemo(() => getSortedCourts(), [getSortedCourts]);
+  // Use getSortedCourts directly as it's already a memoized array, not a function
+  const sortedCourts = getSortedCourts;
 
   // Optimized generate next game with performance monitoring
   const generateNextGame = useCallback(async () => {
