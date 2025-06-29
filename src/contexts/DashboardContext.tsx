@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Player } from "@/types/player";
 import { PlayPreference } from "@/types/member";
@@ -49,10 +50,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   // Piggyback pairs state
   const {
     piggybackPairs,
-    addPiggybackPair,
-    removePiggybackPair,
-    findPiggybackPair,
-    clearPiggybackPairs
+    addPair,
+    removePairByMaster,
+    findPairOf,
+    clearAllPairs
   } = usePiggybackPairs();
 
   // Main dashboard logic
@@ -74,9 +75,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     isNextGameReady
   } = useDashboardLogic({
     piggybackPairs,
-    addPiggybackPair,
-    removePiggybackPair,
-    findPiggybackPair
+    addPiggybackPair: addPair,
+    removePiggybackPair: removePairByMaster,
+    findPiggybackPair: findPairOf
   });
 
   // State for managing active players
@@ -184,12 +185,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     setEndGameDialogOpen,
     finishEndGame,
 
-    // Piggyback pairs
+    // Piggyback pairs - map to expected interface names
     piggybackPairs,
-    addPiggybackPair,
-    removePiggybackPair,
-    findPiggybackPair,
-    clearPiggybackPairs
+    addPiggybackPair: addPair,
+    removePiggybackPair: removePairByMaster,
+    findPiggybackPair: findPairOf,
+    clearPiggybackPairs: clearAllPairs
   };
 
   return (
