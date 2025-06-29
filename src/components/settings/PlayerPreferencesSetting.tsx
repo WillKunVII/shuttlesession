@@ -3,15 +3,17 @@ import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { setStorageItem, getStorageItem } from "@/utils/storageUtils";
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function PlayerPreferencesSetting() {
-  const [enablePreferences, setEnablePreferences] = useState<boolean>(false);
+  const [enablePreferences, setEnablePreferences] = useState<boolean>(true); // Default to enabled
+  const { toast } = useToast();
   const isMobile = useIsMobile();
 
   // Load preferences setting from localStorage on mount using the shared utility
   useEffect(() => {
-    const enabled = getStorageItem("enablePlayerPreferences", false);
+    const enabled = getStorageItem("enablePlayerPreferences", true); // Default to true
     setEnablePreferences(enabled);
   }, []);
 
@@ -20,6 +22,12 @@ export function PlayerPreferencesSetting() {
     const enabled = value === "enabled";
     setEnablePreferences(enabled);
     setStorageItem("enablePlayerPreferences", enabled);
+    
+    // Show brief success toast
+    toast({
+      title: "Setting saved",
+      description: "Player preferences have been updated."
+    });
   };
 
   return (
