@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useCallback, useMemo } from "react";
 import { Player } from "@/types/player";
 import { useCourtManagement } from "@/hooks/useCourtManagement";
 import { useGameAssignment } from "@/hooks/useGameAssignment";
@@ -55,17 +56,22 @@ export function useDashboardLogic({
     players: []
   });
 
-  // Get sorted courts
-  const sortedCourts = getSortedCourts();
+  // Memoize sorted courts to prevent unnecessary recalculations
+  const sortedCourts = useMemo(() => getSortedCourts(), [getSortedCourts]);
 
-  // Function to generate next game players (auto mode) - now async with better error handling
-  const generateNextGame = async () => {
+  // Optimized generate next game with performance monitoring
+  const generateNextGame = useCallback(async () => {
     if (queue.length >= 4) {
-      console.log("useDashboardLogic: Attempting to auto-select players from queue:", queue.map(p => ({ id: p.id, name: p.name })));
+      const startTime = Date.now();
+      console.log("useDashboardLogic: Starting auto-select for", queue.length, "players");
+      
       try {
         const selectedPlayers = await autoSelectPlayers(4);
-        console.log("useDashboardLogic: Auto-selected players:", selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+        const endTime = Date.now();
+        console.log(`useDashboardLogic: Auto-select completed in ${endTime - startTime}ms`);
+        
         if (selectedPlayers.length === 4) {
+          console.log("useDashboardLogic: Auto-selected players:", selectedPlayers.map(p => ({ id: p.id, name: p.name })));
           setNextGame(selectedPlayers);
         } else {
           console.log("useDashboardLogic: Auto-select failed to find 4 valid players");
@@ -74,147 +80,130 @@ export function useDashboardLogic({
         console.error("useDashboardLogic: Error during auto-select:", error);
       }
     }
-  };
+  }, [queue.length, autoSelectPlayers, setNextGame]);
 
-  // Function to assign next game to a court - improved with better state management
-  const assignToFreeCourt = async (courtId: number) => {
-    if (isNextGameReady() && nextGamePlayers.length === 4) {
-      console.log("useDashboardLogic: Assigning next game to court", courtId, "players:", nextGamePlayers.map(p => ({ id: p.id, name: p.name })));
-      
-      const success = assignPlayersToCourtById(courtId, nextGamePlayers);
-      if (success) {
-        try {
-          // Record the game in IndexedDB
-          await recordGame(nextGamePlayers);
-          console.log("useDashboardLogic: Successfully recorded game and assigned to court");
-          
-          // Clear next game only after successful assignment
-          clearGamePlayers();
-        } catch (error) {
+  // Optimized court assignment with better error handling
+  const assignToFreeCourt = useCallback(async (courtId: number) => {
+    if (!isNextGameReady() || nextGamePlayers.length !== 4) {
+      console.error("useDashboardLogic: Cannot assign - next game not ready");
+      return;
+    }
+
+    console.log("useDashboardLogic: Assigning to court", courtId);
+    
+    const success = assignPlayersToCourtById(courtId, nextGamePlayers);
+    if (success) {
+      try {
+        // Record the game in IndexedDB (non-blocking)
+        recordGame(nextGamePlayers).catch(error => {
           console.error("useDashboardLogic: Error recording game:", error);
-          // Still clear the next game even if recording fails
-          clearGamePlayers();
-        }
-      } else {
-        console.error("useDashboardLogic: Failed to assign players to court", courtId);
+        });
+        
+        // Clear next game immediately for better UX
+        clearGamePlayers();
+        console.log("useDashboardLogic: Successfully assigned and cleared next game");
+      } catch (error) {
+        console.error("useDashboardLogic: Error in assignment flow:", error);
+        clearGamePlayers(); // Still clear even if recording fails
       }
     } else {
-      console.error("useDashboardLogic: Cannot assign - next game not ready or invalid player count");
+      console.error("useDashboardLogic: Failed to assign players to court", courtId);
     }
-  };
+  }, [isNextGameReady, nextGamePlayers, assignPlayersToCourtById, clearGamePlayers]);
 
-  // Function to handle end game button click - improved logging
-  const handleEndGameClick = (courtId: number) => {
+  // Optimized end game click handler
+  const handleEndGameClick = useCallback((courtId: number) => {
     const court = sortedCourts.find(court => court.id === courtId);
     const players = court?.players || [];
     
-    console.log("useDashboardLogic: End game clicked for court", courtId, "players:", players.map(p => ({ id: p.id, name: p.name })));
+    console.log("useDashboardLogic: End game for court", courtId);
     
-    if (players.length > 0) {
-      // Check if score keeping is enabled
-      const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
-      if (isScoreKeepingEnabled) {
-        // Open dialog to select winners - ensure we pass the actual court players with IDs
-        setCurrentCourtPlayers({
-          id: courtId,
-          players: players // These should already have IDs from court assignment
-        });
-        setEndGameDialogOpen(true);
-      } else {
-        // Just end the game normally without tracking scores
-        finishEndGame(courtId, []);
-      }
-    } else {
+    if (players.length === 0) {
       console.error("useDashboardLogic: No players found on court", courtId);
+      return;
     }
-  };
 
-  // Function to finish ending the game and update records - improved player handling
-  const finishEndGame = (courtId: number, winnerNames: string[]) => {
-    console.log("useDashboardLogic: Finishing end game for court", courtId, "winners:", winnerNames);
+    const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
+    if (isScoreKeepingEnabled) {
+      setCurrentCourtPlayers({ id: courtId, players });
+      setEndGameDialogOpen(true);
+    } else {
+      finishEndGame(courtId, []);
+    }
+  }, [sortedCourts]);
+
+  // Optimized finish end game with batched operations
+  const finishEndGame = useCallback((courtId: number, winnerNames: string[]) => {
+    console.log("useDashboardLogic: Finishing end game for court", courtId);
     
     const releasedPlayers = endGameOnCourt(courtId);
-    console.log("useDashboardLogic: Released players from court:", releasedPlayers.map(p => ({ id: p.id, name: p.name })));
-    
-    if (releasedPlayers.length > 0) {
-      // Get all members to update win/loss records
-      const savedMembers = localStorage.getItem("members");
-      let members: any[] = [];
-      if (savedMembers) {
-        try {
-          members = JSON.parse(savedMembers);
-        } catch (e) {
-          console.error("Error parsing members from localStorage", e);
-        }
+    if (releasedPlayers.length === 0) {
+      console.error("useDashboardLogic: No players released from court");
+      setEndGameDialogOpen(false);
+      return;
+    }
+
+    console.log("useDashboardLogic: Released players:", releasedPlayers.map(p => ({ id: p.id, name: p.name })));
+
+    // Batch localStorage operations for better performance
+    let members: any[] = [];
+    const savedMembers = localStorage.getItem("members");
+    if (savedMembers) {
+      try {
+        members = JSON.parse(savedMembers);
+      } catch (e) {
+        console.error("Error parsing members", e);
       }
+    }
 
-      // Get session scores
-      const sessionScores = getSessionScores();
+    const sessionScores = getSessionScores();
 
-      // Add players back to the queue with proper properties - preserve IDs!
-      const playerObjects: Player[] = releasedPlayers.map((player) => {
-        // Find matching member to get their record
-        const matchingMember = members.find(m => m.name === player.name);
-        
-        // Use the player's existing ID from the court (should be preserved)
-        const playerId = player.id || matchingMember?.id || Date.now();
-        
-        console.log("useDashboardLogic: Creating player object for queue", { 
-          originalId: player.id, 
-          matchingMemberId: matchingMember?.id,
-          finalId: playerId,
-          name: player.name 
-        });
-
-        // Get the latest session scores for this player (already updated in EndGameDialog)
-        const playerSessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
-        
-        return {
-          id: playerId,
-          name: player.name,
-          gender: player.gender as "male" | "female",
-          waitingTime: 0,
-          isGuest: player.isGuest,
-          wins: matchingMember?.wins || 0,
-          losses: matchingMember?.losses || 0,
-          sessionWins: playerSessionScore.wins,
-          sessionLosses: playerSessionScore.losses
-        };
-      });
+    // Create player objects with optimized member lookups
+    const playerObjects: Player[] = releasedPlayers.map((player) => {
+      const matchingMember = members.find(m => m.name === player.name);
+      const playerId = player.id || matchingMember?.id || Date.now();
+      const playerSessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
       
-      // Add players back to the queue, with winners at the end but above losers
-      addPlayersToQueue(playerObjects, false, winnerNames);
-    }
-
-    // Close dialog if it was open
-    setEndGameDialogOpen(false);
-  };
-
-  // Handle player selection for next game - improved validation
-  const handlePlayerSelect = (selectedPlayers: Player[]) => {
-    console.log("useDashboardLogic: Player selection requested:", selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+      return {
+        id: playerId,
+        name: player.name,
+        gender: player.gender as "male" | "female",
+        waitingTime: 0,
+        isGuest: player.isGuest,
+        wins: matchingMember?.wins || 0,
+        losses: matchingMember?.losses || 0,
+        sessionWins: playerSessionScore.wins,
+        sessionLosses: playerSessionScore.losses
+      };
+    });
     
-    if (selectedPlayers.length === 4) {
-      setNextGame(selectedPlayers);
+    // Add players back to queue
+    addPlayersToQueue(playerObjects, false, winnerNames);
+    setEndGameDialogOpen(false);
+  }, [endGameOnCourt, addPlayersToQueue]);
 
-      // Remove selected players from queue
-      const playerIds = selectedPlayers.map(p => p.id);
-      console.log("useDashboardLogic: Removing player IDs from queue:", playerIds);
-      removePlayersFromQueue(playerIds);
-    } else {
-      console.error("useDashboardLogic: Invalid player selection - need exactly 4 players, got", selectedPlayers.length);
+  // Optimized player selection handler
+  const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
+    if (selectedPlayers.length !== 4) {
+      console.error("useDashboardLogic: Invalid selection, need 4 players");
+      return;
     }
-  };
 
-  // Clear next game and return players to queue - improved state management
-  const clearNextGame = () => {
-    console.log("useDashboardLogic: Clearing next game, returning players to queue");
-    // Put players back in the queue in their original positions
+    console.log("useDashboardLogic: Manual player selection:", selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+    
+    setNextGame(selectedPlayers);
+    const playerIds = selectedPlayers.map(p => p.id);
+    removePlayersFromQueue(playerIds);
+  }, [setNextGame, removePlayersFromQueue]);
+
+  // Optimized clear next game
+  const clearNextGame = useCallback(() => {
+    console.log("useDashboardLogic: Clearing next game");
     const players = clearGamePlayers();
-    console.log("useDashboardLogic: Players to return to queue:", players.map(p => ({ id: p.id, name: p.name })));
-    // Return to original positions when clearing selection
-    addPlayersToQueue(players, true);
-  };
+    if (players.length > 0) {
+      addPlayersToQueue(players, true); // Return to original positions
+    }
+  }, [clearGamePlayers, addPlayersToQueue]);
 
   return {
     queue,

@@ -1,31 +1,45 @@
+
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
 import { getSessionScores } from "../utils/storageUtils";
 import { generatePlayerId } from "../utils/playerIdGenerator";
+
+// Cache for member lookups to avoid repeated localStorage reads
+let memberCache: any[] = [];
+let memberCacheTimestamp = 0;
+const MEMBER_CACHE_TTL = 5000; // 5 seconds
+
+function getMembersFromCache(): any[] {
+  const now = Date.now();
+  if (now - memberCacheTimestamp > MEMBER_CACHE_TTL) {
+    try {
+      const membersData = localStorage.getItem("members");
+      memberCache = membersData ? JSON.parse(membersData) : [];
+      memberCacheTimestamp = now;
+    } catch (e) {
+      console.error("Error caching members data", e);
+      memberCache = [];
+    }
+  }
+  return memberCache;
+}
 
 /**
  * Returns a set of mutation helpers for the player queue.
  * Each function receives the current queue and returns a new queue.
  */
 export function useQueueMutations() {
-  // Add player to queue (expect where 'id' and 'waitingTime' are auto-assigned)
+  // Add player to queue (optimized with caching)
   function addPlayer(prevQueue: Player[], player: Omit<Player, "id" | "waitingTime">): Player[] {
     const sessionScores = getSessionScores();
     const sessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
 
-    // Try to get existing member ID from localStorage, otherwise generate new one
+    // Try to get existing member ID from cache
     let playerId = generatePlayerId();
-    try {
-      const membersData = localStorage.getItem("members");
-      if (membersData) {
-        const members = JSON.parse(membersData);
-        const existingMember = members.find((m: any) => m.name === player.name);
-        if (existingMember && existingMember.id) {
-          playerId = existingMember.id;
-        }
-      }
-    } catch (e) {
-      console.error("Error getting member ID for player", e);
+    const members = getMembersFromCache();
+    const existingMember = members.find((m: any) => m.name === player.name);
+    if (existingMember && existingMember.id) {
+      playerId = existingMember.id;
     }
 
     console.log("useQueueMutations: Adding player with ID", playerId, "name:", player.name);
@@ -43,26 +57,18 @@ export function useQueueMutations() {
 
     // Pull score keeping and member record
     if (localStorage.getItem("scoreKeeping") !== "false") {
-      const membersData = localStorage.getItem("members");
-      if (membersData) {
-        try {
-          const members = JSON.parse(membersData);
-          const member = members.find((m: any) => m.name === player.name);
-          if (member) {
-            newPlayer.wins = member.wins || 0;
-            newPlayer.losses = member.losses || 0;
-            newPlayer.playPreferences = member.playPreferences || [];
-            newPlayer.rating = member.rating || 1000;
-          }
-        } catch (e) {
-          console.error("Error getting member win/loss data", e);
-        }
+      if (existingMember) {
+        newPlayer.wins = existingMember.wins || 0;
+        newPlayer.losses = existingMember.losses || 0;
+        newPlayer.playPreferences = existingMember.playPreferences || [];
+        newPlayer.rating = existingMember.rating || 1000;
       }
     }
+    
     return [...prevQueue, newPlayer];
   }
 
-  // Remove single player
+  // Remove single player (optimized)
   function removePlayer(prevQueue: Player[], playerId: number): Player[] {
     return prevQueue.filter(player => player.id !== playerId);
   }
@@ -72,7 +78,7 @@ export function useQueueMutations() {
     return queue.filter(p => playerIds.includes(p.id));
   }
 
-  // Add multiple players to queue with proper order
+  // Add multiple players to queue with proper order (optimized)
   function addPlayersWithOrder(prevQueue: Player[], players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) {
     if (returnToOriginalPositions) {
       const originalQueueStr = localStorage.getItem("originalPlayerQueue");
@@ -85,14 +91,14 @@ export function useQueueMutations() {
         originalQueue.forEach((player, index) => {
           originalPositions.set(player.name, index);
         });
+        
+        // Optimized sorting and insertion
         const sortedReturningPlayers = [...players].sort((a, b) => {
-          const posA = originalPositions.get(a.name);
-          const posB = originalPositions.get(b.name);
-          if (posA !== undefined && posB !== undefined) return posA - posB;
-          if (posA !== undefined) return -1;
-          if (posB !== undefined) return 1;
-          return 0;
+          const posA = originalPositions.get(a.name) ?? Infinity;
+          const posB = originalPositions.get(b.name) ?? Infinity;
+          return posA - posB;
         });
+        
         let newQueue = [...prevQueue];
         for (const player of sortedReturningPlayers) {
           const originalPos = originalPositions.get(player.name);
@@ -117,7 +123,7 @@ export function useQueueMutations() {
     }
   }
 
-  // Update player info by ID (preferred) or name (fallback)
+  // Update player info by ID (optimized with reduced object spreading)
   function updatePlayerInfo(prevQueue: Player[], updated: { 
     id?: number; 
     name: string; 
@@ -126,18 +132,17 @@ export function useQueueMutations() {
     playPreferences?: PlayPreference[] 
   }) {
     return prevQueue.map(player => {
-      // Use ID for matching if available, otherwise fall back to name
       const matches = updated.id ? player.id === updated.id : player.name === updated.name;
       
-      return matches
-        ? {
-            ...player,
-            name: updated.name, // Always update name
-            ...(updated.gender && { gender: updated.gender }),
-            ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
-            ...(updated.playPreferences && { playPreferences: updated.playPreferences })
-          }
-        : player;
+      if (!matches) return player;
+      
+      // Optimized update with minimal object creation
+      const updatedPlayer = { ...player, name: updated.name };
+      if (updated.gender !== undefined) updatedPlayer.gender = updated.gender;
+      if (updated.isGuest !== undefined) updatedPlayer.isGuest = updated.isGuest;
+      if (updated.playPreferences !== undefined) updatedPlayer.playPreferences = updated.playPreferences;
+      
+      return updatedPlayer;
     });
   }
 

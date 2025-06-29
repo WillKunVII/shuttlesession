@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Court } from "@/types/DashboardTypes";
 
-// Initial courts data for up to 8 courts
+// Initial courts data for up to 8 courts (memoized)
 const predefinedCourts = [
   { id: 1, name: "Court 1", status: "available" as const, players: [], timeRemaining: 0 },
   { id: 2, name: "Court 2", status: "available" as const, players: [], timeRemaining: 0 },
@@ -19,6 +19,7 @@ export function useCourtManagement() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [courtOrdering, setCourtOrdering] = useState<CourtOrdering>("ascending");
 
+  // Optimized court initialization
   useEffect(() => {
     const courtCount = parseInt(localStorage.getItem("courtCount") || "4", 10);
     const validCourtCount = Math.max(1, Math.min(8, courtCount));
@@ -28,17 +29,22 @@ export function useCourtManagement() {
       try {
         let parsedCourts = JSON.parse(savedCourts);
         
-        if (parsedCourts.length < validCourtCount) {
-          for (let i = parsedCourts.length; i < validCourtCount; i++) {
-            parsedCourts.push(predefinedCourts[i]);
-          }
-        } else if (parsedCourts.length > validCourtCount) {
-          parsedCourts = parsedCourts.filter((court: Court, index: number) => 
-            index < validCourtCount || court.status === "occupied"
-          );
-          
-          if (parsedCourts.length > validCourtCount) {
-            parsedCourts = parsedCourts.slice(0, validCourtCount);
+        // Optimize court array adjustments
+        if (parsedCourts.length !== validCourtCount) {
+          if (parsedCourts.length < validCourtCount) {
+            // Add missing courts
+            for (let i = parsedCourts.length; i < validCourtCount; i++) {
+              parsedCourts.push(predefinedCourts[i]);
+            }
+          } else {
+            // Remove excess courts (keep occupied ones if possible)
+            const occupiedCourts = parsedCourts.filter((court: Court) => court.status === "occupied");
+            const availableCourts = parsedCourts.filter((court: Court, index: number) => 
+              court.status === "available" && index < validCourtCount
+            );
+            
+            parsedCourts = [...occupiedCourts.slice(0, validCourtCount), ...availableCourts]
+              .slice(0, validCourtCount);
           }
         }
         
@@ -57,11 +63,17 @@ export function useCourtManagement() {
     }
   }, []);
 
+  // Optimized localStorage save (debounced)
   useEffect(() => {
-    localStorage.setItem("courts", JSON.stringify(courts));
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem("courts", JSON.stringify(courts));
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [courts]);
 
-  const getSortedCourts = () => {
+  // Memoized sorted courts
+  const getSortedCourts = useMemo(() => {
     return [...courts].sort((a, b) => {
       if (courtOrdering === "ascending") {
         return a.id - b.id;
@@ -69,100 +81,95 @@ export function useCourtManagement() {
         return b.id - a.id;
       }
     });
-  };
+  }, [courts, courtOrdering]);
 
-  // Function to assign players to a court - CRITICAL: preserve player IDs properly
-  const assignPlayersToCourtById = (courtId: number, players: any[]) => {
-    if (players.length === 4) {
-      console.log("useCourtManagement: Assigning players to court", courtId);
-      console.log("useCourtManagement: Input players:", players.map(p => ({ id: p.id, name: p.name })));
-      
-      // Validate that all players have IDs
-      const playersWithIds = players.filter(p => p.id != null);
-      if (playersWithIds.length !== 4) {
-        console.error("useCourtManagement: Some players missing IDs!", {
-          totalPlayers: players.length,
-          playersWithIds: playersWithIds.length,
-          players: players.map(p => ({ id: p.id, name: p.name }))
-        });
-      }
-      
-      setCourts(courts.map(court => {
-        if (court.id === courtId) {
-          const assignedPlayers = players.map(p => {
-            const courtPlayer = {
-              id: p.id, // CRITICAL: Preserve the original player ID
-              name: p.name, 
-              gender: p.gender,
-              isGuest: p.isGuest || false
-            };
-            console.log("useCourtManagement: Assigning player to court:", courtPlayer);
-            return courtPlayer;
-          });
-
-          return {
-            ...court,
-            status: "occupied" as const,
-            players: assignedPlayers,
-            timeRemaining: 15
-          };
-        }
-        return court;
-      }));
-      return true;
+  // Optimized player assignment with proper ID preservation
+  const assignPlayersToCourtById = useCallback((courtId: number, players: any[]) => {
+    if (players.length !== 4) {
+      console.error("useCourtManagement: Need exactly 4 players, got", players.length);
+      return false;
     }
-    console.error("useCourtManagement: Cannot assign - need exactly 4 players, got", players.length);
-    return false;
-  };
 
-  // Function to end a game on a court - CRITICAL: return players with their preserved IDs
-  const endGameOnCourt = (courtId: number) => {
+    // Validate player IDs upfront
+    const invalidPlayers = players.filter(p => !p.id);
+    if (invalidPlayers.length > 0) {
+      console.error("useCourtManagement: Players missing IDs:", invalidPlayers);
+      return false;
+    }
+
+    console.log("useCourtManagement: Assigning players to court", courtId);
+    
+    setCourts(prevCourts => 
+      prevCourts.map(court => {
+        if (court.id !== courtId) return court;
+        
+        // Preserve player IDs and essential data
+        const assignedPlayers = players.map(p => ({
+          id: p.id, // CRITICAL: Preserve original ID
+          name: p.name,
+          gender: p.gender,
+          isGuest: p.isGuest || false
+        }));
+
+        console.log("useCourtManagement: Assigned players:", assignedPlayers.map(p => ({ id: p.id, name: p.name })));
+
+        return {
+          ...court,
+          status: "occupied" as const,
+          players: assignedPlayers,
+          timeRemaining: 15
+        };
+      })
+    );
+    
+    return true;
+  }, []);
+
+  // Optimized game ending with proper ID preservation
+  const endGameOnCourt = useCallback((courtId: number) => {
     const courtToEnd = courts.find(c => c.id === courtId);
     
-    if (courtToEnd && courtToEnd.status === "occupied") {
-      console.log("useCourtManagement: Ending game on court", courtId);
-      console.log("useCourtManagement: Players on court:", courtToEnd.players.map(p => ({ id: p.id, name: p.name })));
-      
-      // Validate that court players have IDs
-      const playersWithIds = courtToEnd.players.filter(p => p.id != null);
-      if (playersWithIds.length !== courtToEnd.players.length) {
-        console.error("useCourtManagement: Some court players missing IDs!", {
-          totalPlayers: courtToEnd.players.length,
-          playersWithIds: playersWithIds.length,
-          players: courtToEnd.players.map(p => ({ id: p.id, name: p.name }))
-        });
-      }
-      
-      // Update court status
-      setCourts(courts.map(court => {
-        if (court.id === courtId) {
-          return {
-            ...court,
-            status: "available" as const,
-            players: [],
-            timeRemaining: 0
-          };
-        }
-        return court;
-      }));
-      
-      // Return the players with their preserved IDs
-      const releasedPlayers = courtToEnd.players.map(p => ({
-        id: p.id, // CRITICAL: Return the preserved ID
-        name: p.name,
-        gender: p.gender,
-        isGuest: p.isGuest || false
-      }));
-      
-      console.log("useCourtManagement: Releasing players:", releasedPlayers.map(p => ({ id: p.id, name: p.name })));
-      return releasedPlayers;
+    if (!courtToEnd || courtToEnd.status !== "occupied") {
+      console.error("useCourtManagement: Cannot end game - court not occupied");
+      return [];
+    }
+
+    console.log("useCourtManagement: Ending game on court", courtId);
+    
+    // Validate player IDs before ending
+    const playersWithoutIds = courtToEnd.players.filter(p => !p.id);
+    if (playersWithoutIds.length > 0) {
+      console.error("useCourtManagement: Court players missing IDs:", playersWithoutIds);
     }
     
-    console.error("useCourtManagement: Cannot end game - court not found or not occupied");
-    return [];
-  };
+    // Store players before clearing court
+    const releasedPlayers = courtToEnd.players.map(p => ({
+      id: p.id, // CRITICAL: Preserve ID
+      name: p.name,
+      gender: p.gender,
+      isGuest: p.isGuest || false
+    }));
+    
+    // Update court status
+    setCourts(prevCourts =>
+      prevCourts.map(court => {
+        if (court.id !== courtId) return court;
+        
+        return {
+          ...court,
+          status: "available" as const,
+          players: [],
+          timeRemaining: 0
+        };
+      })
+    );
+    
+    console.log("useCourtManagement: Released players:", releasedPlayers.map(p => ({ id: p.id, name: p.name })));
+    return releasedPlayers;
+  }, [courts]);
 
-  const updateCourtPlayerInfo = (updated: { 
+  // Optimized player info update
+  const updateCourtPlayerInfo = useCallback((updated: { 
     id?: number; 
     name: string; 
     gender?: "male" | "female"; 
@@ -174,19 +181,20 @@ export function useCourtManagement() {
         ...court,
         players: court.players.map((p: any) => {
           const matches = updated.id ? p.id === updated.id : p.name === updated.name;
-          return matches
-            ? {
-                ...p,
-                name: updated.name,
-                ...(updated.gender && { gender: updated.gender }),
-                ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
-                ...(updated.playPreferences && { playPreferences: updated.playPreferences })
-              }
-            : p;
+          
+          if (!matches) return p;
+          
+          return {
+            ...p,
+            name: updated.name,
+            ...(updated.gender && { gender: updated.gender }),
+            ...(typeof updated.isGuest === "boolean" && { isGuest: updated.isGuest }),
+            ...(updated.playPreferences && { playPreferences: updated.playPreferences })
+          };
         })
       }))
     );
-  };
+  }, []);
 
   return {
     courts,
