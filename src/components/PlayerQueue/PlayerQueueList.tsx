@@ -41,7 +41,7 @@ export function PlayerQueueList({
   return (
     <div className="space-y-2 pr-4">
       {players.map((player, index) => (
-        <div key={player.id}>
+        <div key={`player-${player.id}-${index}`}>
           {index === playerPoolSize && players.length > playerPoolSize && (
             <div className="relative my-4">
               <Separator className="absolute inset-0 my-2" />

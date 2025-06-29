@@ -1,7 +1,7 @@
-
 import { Player } from "../types/player";
 import { PlayPreference } from "../types/member";
 import { getSessionScores } from "../utils/storageUtils";
+import { generatePlayerId } from "../utils/playerIdGenerator";
 
 /**
  * Returns a set of mutation helpers for the player queue.
@@ -13,8 +13,8 @@ export function useQueueMutations() {
     const sessionScores = getSessionScores();
     const sessionScore = sessionScores[player.name] || { wins: 0, losses: 0 };
 
-    // Try to get existing member ID from localStorage
-    let playerId = Date.now();
+    // Try to get existing member ID from localStorage, otherwise generate new one
+    let playerId = generatePlayerId();
     try {
       const membersData = localStorage.getItem("members");
       if (membersData) {
@@ -27,6 +27,8 @@ export function useQueueMutations() {
     } catch (e) {
       console.error("Error getting member ID for player", e);
     }
+
+    console.log("useQueueMutations: Adding player with ID", playerId, "name:", player.name);
 
     const newPlayer: Player = {
       id: playerId,

@@ -4,12 +4,17 @@ import { generateValidCombinations } from "./playerCombinations";
 import { calculateRepeatPenalty } from "./gameHistory";
 import { determineBestGameType } from "./gameValidation";
 
+// Cache for repeat penalty calculations to avoid redundant DB calls
+const repeatPenaltyCache = new Map<string, number>();
+
 /**
  * Finds the best player combination always starting with the #1 player in queue
  * and using their preferences to drive game selection.
  */
 export const findBestCombination = async (poolPlayers: Player[]): Promise<Player[]> => {
   if (poolPlayers.length < 4) return [];
+
+  console.log("Auto-select: Starting optimization with", poolPlayers.length, "players");
 
   // Always start with player #1 (first in queue)
   const anchorPlayer = poolPlayers[0];
@@ -21,11 +26,11 @@ export const findBestCombination = async (poolPlayers: Player[]): Promise<Player
   
   console.log("Auto-select: Anchor player preferences:", preferenceOrder);
 
-  // Try each preference in order
+  // Try each preference in order with optimized search
   for (const targetGameType of preferenceOrder) {
     console.log(`Auto-select: Trying to form ${targetGameType} game with anchor player`);
     
-    const combination = await findCombinationForGameType(poolPlayers, anchorPlayer, targetGameType);
+    const combination = await findCombinationForGameTypeOptimized(poolPlayers, anchorPlayer, targetGameType);
     if (combination.length === 4) {
       console.log(`Auto-select: Found ${targetGameType} game:`, combination.map(p => p.name));
       return combination;
@@ -34,7 +39,7 @@ export const findBestCombination = async (poolPlayers: Player[]): Promise<Player
 
   // If no preference-based combination worked, find any valid combination with anchor player
   console.log("Auto-select: Falling back to any valid game with anchor player");
-  return await findAnyCombinationWithAnchor(poolPlayers, anchorPlayer);
+  return await findAnyCombinationWithAnchorOptimized(poolPlayers, anchorPlayer);
 };
 
 /**
@@ -42,121 +47,145 @@ export const findBestCombination = async (poolPlayers: Player[]): Promise<Player
  */
 function playerAcceptsGameType(player: Player, gameType: string): boolean {
   const prefs = player.playPreferences || [];
-  
-  // If player has no preferences set, they accept all game types
   if (prefs.length === 0) return true;
-  
-  // If player has explicit preferences, they must include this game type
   return prefs.includes(gameType as any);
 }
 
 /**
- * Finds the best combination for a specific game type with the anchor player
+ * Generate cache key for repeat penalty calculation
  */
-async function findCombinationForGameType(
+function getCacheKey(combination: Player[]): string {
+  return combination.map(p => p.id).sort().join('-');
+}
+
+/**
+ * Optimized version that reduces database calls and uses early exit
+ */
+async function findCombinationForGameTypeOptimized(
   poolPlayers: Player[], 
   anchorPlayer: Player, 
   targetGameType: string
 ): Promise<Player[]> {
-  // First, filter players who would accept this game type
+  // Filter players who would accept this game type
   const eligiblePlayers = poolPlayers.filter(player => 
     playerAcceptsGameType(player, targetGameType)
   );
   
   console.log(`Auto-select: Found ${eligiblePlayers.length} players who accept ${targetGameType} games`);
   
-  if (eligiblePlayers.length < 4) {
-    console.log(`Auto-select: Not enough players accept ${targetGameType} games`);
-    return [];
-  }
-  
-  // Ensure anchor player is in the eligible list
-  if (!eligiblePlayers.some(p => p.id === anchorPlayer.id)) {
-    console.log(`Auto-select: Anchor player doesn't accept ${targetGameType} games`);
+  if (eligiblePlayers.length < 4 || !eligiblePlayers.some(p => p.id === anchorPlayer.id)) {
     return [];
   }
   
   const otherEligiblePlayers = eligiblePlayers.filter(p => p.id !== anchorPlayer.id);
-  const combinations: Player[][] = [];
+  
+  // Limit search to first reasonable combinations to avoid lag
+  const maxCombinations = 20;
+  let combinationsChecked = 0;
+  let bestCombination: Player[] = [];
+  let bestPenalty = Infinity;
 
-  // Generate all possible 3-player combinations from remaining eligible players
-  for (let i = 0; i < otherEligiblePlayers.length - 2; i++) {
-    for (let j = i + 1; j < otherEligiblePlayers.length - 1; j++) {
-      for (let k = j + 1; k < otherEligiblePlayers.length; k++) {
+  // Generate combinations with early exit
+  for (let i = 0; i < otherEligiblePlayers.length - 2 && combinationsChecked < maxCombinations; i++) {
+    for (let j = i + 1; j < otherEligiblePlayers.length - 1 && combinationsChecked < maxCombinations; j++) {
+      for (let k = j + 1; k < otherEligiblePlayers.length && combinationsChecked < maxCombinations; k++) {
         const combination = [anchorPlayer, otherEligiblePlayers[i], otherEligiblePlayers[j], otherEligiblePlayers[k]];
         
         // Check if this combination can actually form the target game type
         const actualGameType = determineBestGameType(combination);
         if (actualGameType === targetGameType) {
-          combinations.push(combination);
-        }
-      }
-    }
-  }
-
-  if (combinations.length === 0) {
-    console.log(`Auto-select: No valid ${targetGameType} combinations found with eligible players`);
-    return [];
-  }
-
-  // Score combinations by repeat penalty (lower is better)
-  const scoredCombinations = await Promise.all(
-    combinations.map(async combo => {
-      const repeatPenalty = await calculateRepeatPenalty(combo);
-      return { combination: combo, repeatPenalty };
-    })
-  );
-
-  // Sort by repeat penalty (ascending - less repeats first)
-  scoredCombinations.sort((a, b) => a.repeatPenalty - b.repeatPenalty);
-
-  console.log(`Auto-select: Found ${combinations.length} ${targetGameType} combinations, best penalty: ${scoredCombinations[0].repeatPenalty}`);
-
-  return scoredCombinations[0].combination;
-}
-
-/**
- * Finds any valid combination with the anchor player as fallback
- */
-async function findAnyCombinationWithAnchor(poolPlayers: Player[], anchorPlayer: Player): Promise<Player[]> {
-  const otherPlayers = poolPlayers.slice(1);
-  const combinations: { combination: Player[], gameType: string }[] = [];
-
-  // Generate all possible 3-player combinations from remaining players
-  for (let i = 0; i < otherPlayers.length - 2; i++) {
-    for (let j = i + 1; j < otherPlayers.length - 1; j++) {
-      for (let k = j + 1; k < otherPlayers.length; k++) {
-        const combination = [anchorPlayer, otherPlayers[i], otherPlayers[j], otherPlayers[k]];
-        
-        // Check if this is a valid game and all players accept it
-        const gameType = determineBestGameType(combination);
-        if (gameType) {
-          // Verify all players in this combination accept this game type
-          const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
-          if (allAccept) {
-            combinations.push({ combination, gameType });
+          combinationsChecked++;
+          
+          // Use cached penalty or calculate new one
+          const cacheKey = getCacheKey(combination);
+          let repeatPenalty = repeatPenaltyCache.get(cacheKey);
+          
+          if (repeatPenalty === undefined) {
+            repeatPenalty = await calculateRepeatPenalty(combination);
+            repeatPenaltyCache.set(cacheKey, repeatPenalty);
+          }
+          
+          if (repeatPenalty < bestPenalty) {
+            bestPenalty = repeatPenalty;
+            bestCombination = combination;
+            
+            // Early exit if we find a perfect combination (no repeats)
+            if (repeatPenalty === 0) {
+              console.log(`Auto-select: Found perfect ${targetGameType} combination with no repeats`);
+              return bestCombination;
+            }
           }
         }
       }
     }
   }
 
-  if (combinations.length === 0) {
-    console.log("Auto-select: No valid combinations found that respect all player preferences");
-    return [];
+  if (bestCombination.length === 4) {
+    console.log(`Auto-select: Found ${targetGameType} combination with penalty: ${bestPenalty}`);
   }
 
-  // Score by repeat penalty and pick the best
-  const scoredCombinations = await Promise.all(
-    combinations.map(async ({ combination, gameType }) => {
-      const repeatPenalty = await calculateRepeatPenalty(combination);
-      return { combination, repeatPenalty, gameType };
-    })
-  );
-
-  scoredCombinations.sort((a, b) => a.repeatPenalty - b.repeatPenalty);
-
-  console.log(`Auto-select: Fallback found ${combinations.length} valid combinations, selected ${scoredCombinations[0].gameType} game with penalty: ${scoredCombinations[0].repeatPenalty}`);
-
-  return scoredCombinations[0].combination;
+  return bestCombination;
 }
+
+/**
+ * Optimized fallback search with early exit
+ */
+async function findAnyCombinationWithAnchorOptimized(poolPlayers: Player[], anchorPlayer: Player): Promise<Player[]> {
+  const otherPlayers = poolPlayers.slice(1);
+  const maxCombinations = 15;
+  let combinationsChecked = 0;
+  let bestCombination: Player[] = [];
+  let bestPenalty = Infinity;
+
+  // Generate combinations with early exit
+  for (let i = 0; i < otherPlayers.length - 2 && combinationsChecked < maxCombinations; i++) {
+    for (let j = i + 1; j < otherPlayers.length - 1 && combinationsChecked < maxCombinations; j++) {
+      for (let k = j + 1; k < otherPlayers.length && combinationsChecked < maxCombinations; k++) {
+        const combination = [anchorPlayer, otherPlayers[i], otherPlayers[j], otherPlayers[k]];
+        
+        // Check if this is a valid game and all players accept it
+        const gameType = determineBestGameType(combination);
+        if (gameType) {
+          const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
+          if (allAccept) {
+            combinationsChecked++;
+            
+            // Use cached penalty or calculate new one
+            const cacheKey = getCacheKey(combination);
+            let repeatPenalty = repeatPenaltyCache.get(cacheKey);
+            
+            if (repeatPenalty === undefined) {
+              repeatPenalty = await calculateRepeatPenalty(combination);
+              repeatPenaltyCache.set(cacheKey, repeatPenalty);
+            }
+            
+            if (repeatPenalty < bestPenalty) {
+              bestPenalty = repeatPenalty;
+              bestCombination = combination;
+              
+              // Early exit for perfect combination
+              if (repeatPenalty === 0) {
+                console.log(`Auto-select: Found perfect fallback combination with no repeats`);
+                return bestCombination;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (bestCombination.length === 4) {
+    console.log(`Auto-select: Fallback found combination with penalty: ${bestPenalty}`);
+  }
+
+  return bestCombination;
+}
+
+// Clear cache periodically to prevent memory leaks
+setInterval(() => {
+  if (repeatPenaltyCache.size > 100) {
+    console.log("Auto-select: Clearing repeat penalty cache");
+    repeatPenaltyCache.clear();
+  }
+}, 60000); // Clear every minute if cache gets too large
