@@ -16,7 +16,7 @@ const updateSW = registerSW({
   onNeedRefresh() {
     console.log('New content available, updating silently...');
     // Automatically update without user intervention
-    updateSW(true);
+    updateSW();
   },
   onRegistered(registration) {
     console.log('Service worker registered successfully');
@@ -24,9 +24,6 @@ const updateSW = registerSW({
     setInterval(() => {
       registration?.update();
     }, 60000);
-  },
-  onRegisterError(error) {
-    console.error('Service worker registration failed:', error);
   },
   immediate: true
 });

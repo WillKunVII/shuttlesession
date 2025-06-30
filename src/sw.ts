@@ -65,15 +65,16 @@ self.addEventListener('message', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('Service worker: Activated and taking control');
   // @ts-ignore
-  event.waitUntil(self.clients.claim());
+  const activateEvent = event as ExtendableEvent;
+  activateEvent.waitUntil((self as any).clients.claim());
   
   // Clear old caches for critical updates
-  event.waitUntil(
+  activateEvent.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           // Keep current caches but clear outdated ones
-          if (cacheName.includes('workbox-precache') && !cacheName.includes(self.__WB_MANIFEST_VERSION || '')) {
+          if (cacheName.includes('workbox-precache')) {
             console.log('Service worker: Clearing outdated precache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -96,7 +97,7 @@ self.addEventListener('controllerchange', () => {
   console.log('Service worker: Controller changed, new version active');
   // Optionally refresh controlled clients
   // @ts-ignore
-  self.clients.matchAll().then(clients => {
+  (self as any).clients.matchAll().then((clients: any[]) => {
     clients.forEach(client => {
       client.postMessage({
         type: 'SW_UPDATED',
