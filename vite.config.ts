@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/$/, /^\/(?!app)/], // Exclude root and non-app routes
+        navigateFallbackDenylist: [/^\/api/], // Only exclude API routes, allow app routes
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
