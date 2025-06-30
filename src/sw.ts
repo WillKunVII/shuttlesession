@@ -1,4 +1,3 @@
-
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
@@ -53,10 +52,56 @@ registerRoute(
   })
 );
 
-// Skip the waiting phase to make updates apply immediately
+// Enhanced message handling for silent updates
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('Service worker: Skipping waiting phase for immediate activation');
     // @ts-ignore
     self.skipWaiting();
   }
+});
+
+// Automatic activation of new service worker
+self.addEventListener('activate', (event) => {
+  console.log('Service worker: Activated and taking control');
+  // @ts-ignore
+  event.waitUntil(self.clients.claim());
+  
+  // Clear old caches for critical updates
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          // Keep current caches but clear outdated ones
+          if (cacheName.includes('workbox-precache') && !cacheName.includes(self.__WB_MANIFEST_VERSION || '')) {
+            console.log('Service worker: Clearing outdated precache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Install event for immediate activation
+self.addEventListener('install', (event) => {
+  console.log('Service worker: Installing new version');
+  // Skip waiting to activate immediately
+  // @ts-ignore
+  self.skipWaiting();
+});
+
+// Handle controlled pages and notify about updates
+self.addEventListener('controllerchange', () => {
+  console.log('Service worker: Controller changed, new version active');
+  // Optionally refresh controlled clients
+  // @ts-ignore
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SW_UPDATED',
+        message: 'Service worker updated successfully'
+      });
+    });
+  });
 });

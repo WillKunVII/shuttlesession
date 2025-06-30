@@ -4,15 +4,26 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import './index.css';
 
-// Register service worker with improved error handling
+// Register service worker with silent auto-update
 const updateSW = registerSW({
-  onNeedRefresh() {
-    if (confirm('New content available. Reload?')) {
-      updateSW();
-    }
-  },
   onOfflineReady() {
     console.log('App is ready for offline use');
+  },
+  onRegisterError(error) {
+    console.error('Service worker registration failed:', error);
+  },
+  // Silent update handling - no user prompts
+  onNeedRefresh() {
+    console.log('New content available, updating silently...');
+    // Automatically update without user intervention
+    updateSW(true);
+  },
+  onRegistered(registration) {
+    console.log('Service worker registered successfully');
+    // Check for updates periodically (every 60 seconds)
+    setInterval(() => {
+      registration?.update();
+    }, 60000);
   },
   onRegisterError(error) {
     console.error('Service worker registration failed:', error);
