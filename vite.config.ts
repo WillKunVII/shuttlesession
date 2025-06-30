@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['favicon.ico', '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png', '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png'],
       manifest: {
         name: 'ShuttleSession',
         short_name: 'ShuttleSession',
@@ -48,24 +48,24 @@ export default defineConfig(({ mode }) => ({
         categories: ['sports', 'utilities'],
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/pwa-192x192.png',
+            src: '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png',
             sizes: '512x512',
             type: 'image/png'
           }
