@@ -1,46 +1,35 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, Trophy, Smartphone, BarChart3, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-
 export default function LandingPage() {
-  const features = [
-    {
-      icon: Users,
-      title: "Player Management",
-      description: "Add players, track preferences, and manage your badminton community effortlessly."
-    },
-    {
-      icon: Clock,
-      title: "Smart Queue System",
-      description: "Automated player queuing ensures fair rotation and maximum court utilization."
-    },
-    {
-      icon: Trophy,
-      title: "Score Tracking",
-      description: "Keep track of wins, losses, and player rankings with our built-in scoring system."
-    },
-    {
-      icon: Smartphone,
-      title: "Mobile Optimized",
-      description: "Works perfectly on all devices - phones, tablets, and desktop computers."
-    },
-    {
-      icon: BarChart3,
-      title: "Session Analytics",
-      description: "View detailed statistics and player performance over time."
-    },
-    {
-      icon: Settings,
-      title: "Customizable Settings",
-      description: "Configure court numbers, player pools, and game preferences to fit your needs."
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-app-primary-100 to-neutral-100">
+  const features = [{
+    icon: Users,
+    title: "Player Management",
+    description: "Add players, track preferences, and manage your badminton community effortlessly."
+  }, {
+    icon: Clock,
+    title: "Smart Queue System",
+    description: "Automated player queuing ensures fair rotation and maximum court utilization."
+  }, {
+    icon: Trophy,
+    title: "Score Tracking",
+    description: "Keep track of wins, losses, and player rankings with our built-in scoring system."
+  }, {
+    icon: Smartphone,
+    title: "Mobile Optimized",
+    description: "Works perfectly on all devices - phones, tablets, and desktop computers."
+  }, {
+    icon: BarChart3,
+    title: "Session Analytics",
+    description: "View detailed statistics and player performance over time."
+  }, {
+    icon: Settings,
+    title: "Customizable Settings",
+    description: "Configure court numbers, player pools, and game preferences to fit your needs."
+  }];
+  return <div className="min-h-screen bg-gradient-to-br from-app-primary-100 to-neutral-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-300 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -77,7 +66,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/app">
-              <Button size="lg" className="text-lg px-8 py-3">
+              <Button size="lg" className="px-8 py-3 text-[app-primary-700]">
                 Start Your Session
               </Button>
             </Link>
@@ -101,8 +90,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-2 border-neutral-200 hover:border-app-primary-300 transition-colors">
+            {features.map((feature, index) => <Card key={index} className="border-2 border-neutral-200 hover:border-app-primary-300 transition-colors">
                 <CardHeader>
                   <div className="w-12 h-12 bg-app-primary-100 rounded-lg flex items-center justify-center mb-4">
                     <feature.icon className="w-6 h-6 text-app-primary-700" />
@@ -114,8 +102,7 @@ export default function LandingPage() {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -184,6 +171,5 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 }
