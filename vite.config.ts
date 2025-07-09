@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      includeAssets: ['favicon.ico', '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png', '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png'],
+      includeAssets: ['favicon.ico', 'lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png', 'lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png'],
       manifest: {
         name: 'ShuttleSession',
         short_name: 'ShuttleSession',
@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => ({
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
-        start_url: '/app/',
+        start_url: '/',
         categories: ['sports', 'utilities'],
         icons: [
           {
