@@ -143,7 +143,7 @@ export default function LandingPage() {
             Join thousands of badminton enthusiasts who use ShuttleSession to organize their games.
           </p>
           <Link to="/app">
-            <Button size="lg" className="text-lg px-8 py-3 bg-app-primary-700 text-white hover:bg-app-primary-900">
+            <Button size="lg" className="text-lg px-8 py-3 bg-white text-app-primary-700 hover:bg-app-primary-100 hover:text-app-primary-900">
               Get Started Now - It's Free!
             </Button>
           </Link>
