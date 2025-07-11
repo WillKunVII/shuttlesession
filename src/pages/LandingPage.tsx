@@ -47,7 +47,7 @@ export default function LandingPage() {
             <span className="font-bold text-xl text-app-primary-700">ShuttleSession</span>
           </div>
           <Link to="/app">
-            <Button>Get Started</Button>
+            <Button className="bg-app-primary-700 text-white hover:bg-app-primary-900">Get Started</Button>
           </Link>
         </div>
       </header>
@@ -143,7 +143,7 @@ export default function LandingPage() {
             Join thousands of badminton enthusiasts who use ShuttleSession to organize their games.
           </p>
           <Link to="/app">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+            <Button size="lg" className="text-lg px-8 py-3 bg-app-primary-700 text-white hover:bg-app-primary-900">
               Get Started Now - It's Free!
             </Button>
           </Link>
