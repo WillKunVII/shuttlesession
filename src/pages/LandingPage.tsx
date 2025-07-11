@@ -66,7 +66,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/app">
-              <Button size="lg" className="px-8 py-3 text-[app-primary-700] text-shuttle-lightBlue bg-[app-primary-700]">
+              <Button size="lg" className="px-8 py-3 bg-app-primary-700 text-white hover:bg-app-primary-900">
                 Start Your Session
               </Button>
             </Link>
