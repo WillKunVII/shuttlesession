@@ -34,40 +34,36 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      includeAssets: ['favicon.ico', 'lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png', 'lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'ShuttleSession',
         short_name: 'ShuttleSession',
         description: 'Create games, manage player queues and keep your badminton sessions running smoothly.',
         theme_color: '#00702A',
-        background_color: '#00702A',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/app/',
-        start_url: '/app',
+        scope: '/',
+        start_url: '/',
         categories: ['sports', 'utilities'],
         icons: [
           {
-            src: '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png',
-            sizes: '192x192',
+            src: '/favicon.png',
+            sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable any'
+            purpose: 'any'
           },
           {
-            src: '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png',
+            src: '/apple-touch-icon.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/lovable-uploads/bb4f6fc5-d4db-4a3f-b0b3-761e8ae92496.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/lovable-uploads/ab4577a6-1058-4fc8-a788-477b08e1f957.png',
-            sizes: '512x512',
-            type: 'image/png'
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'apple-touch-icon'
           }
         ]
       }
