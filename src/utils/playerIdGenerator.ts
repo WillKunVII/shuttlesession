@@ -3,6 +3,10 @@
 let currentId = Date.now();
 const generatedIds = new Set<number>();
 
+export function generateId(): string {
+  return `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export function generatePlayerId(): number {
   let newId;
   do {

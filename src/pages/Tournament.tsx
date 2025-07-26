@@ -35,85 +35,63 @@ const Tournament = () => {
   };
 
   return (
-    <TournamentLayout title="Tournament Dashboard" showCancelButton={!!currentTournament}>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {!currentTournament ? (
-          // No tournament in progress - show creation options
-          <div className="space-y-6">
-            <div className="text-center">
-              <Trophy className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-2xl font-bold mb-2">No Tournament in Progress</h2>
-              <p className="text-muted-foreground">
-                Create a new tournament with group stages and knockout rounds
-              </p>
-            </div>
-
-            <Card className="max-w-md mx-auto">
-              <CardHeader className="text-center">
-                <CardTitle className="flex items-center justify-center space-x-2">
-                  <Plus className="h-5 w-5" />
-                  <span>Create New Tournament</span>
-                </CardTitle>
-                <CardDescription>
-                  Set up fixed pairs, groups, and manage a complete tournament
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={handleCreateTournament}
-                  className="w-full"
-                  size="lg"
-                >
-                  Start Tournament Setup
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+    <TournamentLayout title="Tournament Dashboard">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(366px,1fr)_minmax(366px,1fr)] gap-4">
+        {currentTournament ? (
+          <Card className="p-4">
+            <CardHeader className="px-0 pt-0 pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Continue Tournament
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-0 space-y-3">
+              <div>
+                <p className="font-medium">{currentTournament.name}</p>
+                <Badge variant="secondary" className="capitalize mt-1">
+                  {currentTournament.status.replace('-', ' ')}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Pairs</p>
+                  <p className="font-medium">{currentTournament.pairs.length}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Groups</p>
+                  <p className="font-medium">{currentTournament.numberOfGroups}</p>
+                </div>
+              </div>
+              <Button onClick={handleContinueTournament} className="w-full" size="sm">
+                Continue Tournament
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          // Tournament in progress - show tournament status and continue options
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Trophy className="h-5 w-5" />
-                      <span>{currentTournament.name || 'Current Tournament'}</span>
-                    </CardTitle>
-                    <CardDescription>Tournament in progress</CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="text-sm">
-                    {currentTournament.status?.replace('-', ' ').toUpperCase() || 'ACTIVE'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{currentTournament.pairs?.length || 0} Pairs</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="h-4 w-4 text-muted-foreground" />
-                    <span>{currentTournament.numberOfGroups || 0} Groups</span>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleContinueTournament}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Continue Tournament
-                </Button>
-              </CardContent>
-            </Card>
-
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Tournament data is automatically saved. You can exit and return anytime.</p>
-            </div>
-          </div>
+          <Card className="p-4">
+            <CardHeader className="px-0 pt-0 pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Plus className="h-5 w-5 text-primary" />
+                Create New Tournament
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-0 space-y-3">
+              <div className="space-y-2 text-sm">
+                <p className="text-muted-foreground">
+                  • Group stage with round-robin matches
+                </p>
+                <p className="text-muted-foreground">
+                  • Top pairs advance to knockout stage
+                </p>
+                <p className="text-muted-foreground">
+                  • Single elimination bracket
+                </p>
+              </div>
+              <Button onClick={handleCreateTournament} className="w-full" size="sm">
+                Create Tournament
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
     </TournamentLayout>

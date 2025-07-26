@@ -1,40 +1,27 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { TournamentLayout } from "@/components/TournamentLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight } from "lucide-react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowRight } from 'lucide-react';
+import { TournamentLayout } from '@/components/TournamentLayout';
+import { useTournament } from '@/hooks/useTournament';
 
-const TournamentSetup = () => {
-  const navigate = useNavigate();
-  const [tournamentName, setTournamentName] = useState("");
+export const TournamentSetup: React.FC = () => {
+  const [tournamentName, setTournamentName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
+  const { createTournament } = useTournament();
 
   const handleCreateTournament = async () => {
     if (!tournamentName.trim()) return;
-
+    
     setIsCreating(true);
     
     try {
-      // Create basic tournament structure
-      const tournament = {
-        id: Date.now().toString(),
-        name: tournamentName.trim(),
-        status: 'setup',
-        numberOfGroups: 0,
-        pairs: [],
-        groups: [],
-        createdAt: Date.now(),
-        currentStage: 'setup'
-      };
-
-      // Save to localStorage for now
-      localStorage.setItem('currentTournament', JSON.stringify(tournament));
-      
-      // Navigate to pair setup (to be created next)
-      navigate('/app/tournament/pairs');
+      await createTournament(tournamentName.trim());
+      navigate('/app/tournament/setup/pairs');
     } catch (error) {
       console.error('Error creating tournament:', error);
     } finally {

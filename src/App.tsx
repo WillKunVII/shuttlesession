@@ -12,7 +12,8 @@ import NotFound from "./pages/NotFound";
 import SplashScreen from "./pages/SplashScreen";
 import LandingPage from "./pages/LandingPage";
 import Tournament from "./pages/Tournament";
-import TournamentSetup from "./pages/TournamentSetup";
+import { TournamentSetup } from "./pages/TournamentSetup";
+import { TournamentPairSetup } from "./pages/TournamentPairSetup";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             {/* Tournament routes - independent of AppLayout */}
             <Route path="tournament" element={<Tournament />} />
             <Route path="tournament/setup" element={<TournamentSetup />} />
+            <Route path="tournament/setup/pairs" element={<TournamentPairSetup />} />
           </Route>
 
           {/* Fallback route */}
