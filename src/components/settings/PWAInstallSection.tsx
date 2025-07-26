@@ -30,8 +30,8 @@ export function PWAInstallSection() {
   }
 
   return (
-    <section>
-      <h2 className="text-xl font-bold mb-2">Install App</h2>
+    <div className="bg-white rounded-xl shadow-sm p-6 border">
+      <h2 className="text-xl font-semibold mb-3 text-foreground">Install App</h2>
       <div className="space-y-4">
         <p className="text-muted-foreground">
           Install ShuttleSession as an app for offline access and a better experience.
@@ -64,6 +64,6 @@ export function PWAInstallSection() {
           </p>
         )}
       </div>
-    </section>
+    </div>
   );
 }
