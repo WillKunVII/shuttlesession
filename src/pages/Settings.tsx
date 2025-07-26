@@ -35,16 +35,18 @@ export default function Settings() {
       <PWAInstallSection />
 
       {/* Privacy & Data Section */}
-      <section className="mt-8">
-        <h2 className="text-xl font-bold mb-2">Privacy & Data</h2>
-        <Button onClick={handleClearData} className="bg-red-500 text-white mr-4">
-          Clear All Data
-        </Button>
-        <Button onClick={() => setPrivacyOpen(true)} variant="outline">
-          Privacy Notice
-        </Button>
+      <div className="bg-white rounded-xl shadow-sm p-6 border">
+        <h2 className="text-xl font-semibold mb-3 text-foreground">Privacy & Data</h2>
+        <div className="flex gap-4">
+          <Button onClick={handleClearData} className="bg-red-500 text-white">
+            Clear All Data
+          </Button>
+          <Button onClick={() => setPrivacyOpen(true)} variant="outline">
+            Privacy Notice
+          </Button>
+        </div>
         <PrivacyNoticeDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
-      </section>
+      </div>
     </div>
   );
 }
