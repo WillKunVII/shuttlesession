@@ -119,7 +119,7 @@ const SplashScreen = () => {
             <Button
               onClick={() => navigate("/app/tournament")}
               variant="outline"
-              className="w-full py-4 text-base border-white/30 text-white hover:bg-white/10 transition-colors"
+              className="w-full py-4 text-base border-white/30 text-white bg-transparent hover:bg-white/10 hover:text-white transition-colors"
             >
               <Trophy className="w-5 h-5 mr-2" />
               Tournament Mode
