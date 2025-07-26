@@ -12,6 +12,15 @@ export const TournamentPairSetup: React.FC = () => {
   const navigate = useNavigate();
   const { currentTournament, saveTournament } = useTournament();
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('TournamentPairSetup - currentTournament changed:', {
+      tournament: currentTournament,
+      pairCount: currentTournament?.pairs.length || 0,
+      pairs: currentTournament?.pairs || []
+    });
+  }, [currentTournament]);
+
   const handleProceedToGroups = async () => {
     if (!currentTournament) return;
 
@@ -36,6 +45,14 @@ export const TournamentPairSetup: React.FC = () => {
 
   const canProceed = currentTournament && currentTournament.pairs.length >= 4;
   const suggestedGroups = currentTournament ? suggestGroupCount(currentTournament.pairs.length) : 2;
+  const pairCount = currentTournament?.pairs.length || 0;
+
+  // Debug current state
+  console.log('TournamentPairSetup render:', {
+    canProceed,
+    pairCount,
+    currentTournament: !!currentTournament
+  });
 
   return (
     <TournamentLayout title={currentTournament?.name || 'Tournament Setup'} showCancelButton>
@@ -58,7 +75,7 @@ export const TournamentPairSetup: React.FC = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Pairs Added:</span>
-                <span className="font-medium">{currentTournament?.pairs.length || 0}</span>
+                <span className="font-medium">{pairCount}</span>
               </div>
 
               {currentTournament && currentTournament.pairs.length > 0 && (
