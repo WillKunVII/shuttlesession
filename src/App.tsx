@@ -14,6 +14,7 @@ import LandingPage from "./pages/LandingPage";
 import Tournament from "./pages/Tournament";
 import { TournamentSetup } from "./pages/TournamentSetup";
 import { TournamentPairSetup } from "./pages/TournamentPairSetup";
+import TournamentGroups from "./pages/TournamentGroups";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="tournament" element={<Tournament />} />
             <Route path="tournament/setup" element={<TournamentSetup />} />
             <Route path="tournament/setup/pairs" element={<TournamentPairSetup />} />
+            <Route path="tournament/groups" element={<TournamentGroups />} />
           </Route>
 
           {/* Fallback route */}
