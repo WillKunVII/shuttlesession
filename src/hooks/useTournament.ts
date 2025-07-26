@@ -48,10 +48,13 @@ export const useTournament = () => {
   const saveTournament = useCallback(async (tournament: Tournament) => {
     try {
       setLoading(true);
+      // Update state immediately for UI responsiveness
+      setCurrentTournament(tournament);
       localStorage.setItem('currentTournament', JSON.stringify(tournament));
+      // Save to DB asynchronously without blocking UI
       await dbManager.init();
       await tournamentDB.saveTournament(tournament);
-      setCurrentTournament(tournament);
+      console.log('Tournament saved successfully:', tournament);
     } catch (error) {
       console.error('Error saving tournament:', error);
       throw error;
@@ -128,7 +131,12 @@ export const useTournament = () => {
 
   // Add pair to tournament
   const addPair = useCallback(async (player1Name: string, player2Name: string, player1Handicap: number = 0, player2Handicap: number = 0) => {
-    if (!currentTournament) return;
+    if (!currentTournament) {
+      console.error('No current tournament found');
+      return;
+    }
+
+    console.log('Adding pair:', { player1Name, player2Name, player1Handicap, player2Handicap });
 
     const player1: TournamentPlayer = {
       id: generatePlayerId(),
@@ -154,11 +162,19 @@ export const useTournament = () => {
       pairs: [...currentTournament.pairs, pair]
     };
 
+    console.log('Updated tournament pairs count:', updatedTournament.pairs.length);
+
     await saveTournament(updatedTournament);
 
     // Save individual handicaps to database
-    await updateHandicap(player1.id, player1Name, player1Handicap);
-    await updateHandicap(player2.id, player2Name, player2Handicap);
+    try {
+      await updateHandicap(player1.id, player1Name, player1Handicap);
+      await updateHandicap(player2.id, player2Name, player2Handicap);
+      console.log('Pair added and handicaps saved successfully');
+    } catch (error) {
+      console.error('Error saving handicaps:', error);
+      // Don't throw here as the pair was already added successfully
+    }
   }, [currentTournament, saveTournament, updateHandicap]);
 
   // Update pair in tournament
