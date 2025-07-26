@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { SessionControl } from "@/components/settings/SessionControl";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { PrivacyNoticeDialog } from "@/components/PrivacyNoticeDialog";
+import { PWAInstallSection } from "@/components/settings/PWAInstallSection";
 // FIX: Import from shadcn/ui location for Button
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +30,9 @@ export default function Settings() {
       
       {/* General Settings Section */}
       <GeneralSettings />
+
+      {/* PWA Install Section */}
+      <PWAInstallSection />
 
       {/* Privacy & Data Section */}
       <section className="mt-8">

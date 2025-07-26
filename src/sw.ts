@@ -87,9 +87,10 @@ self.addEventListener('activate', (event) => {
 // Install event for immediate activation
 self.addEventListener('install', (event) => {
   console.log('Service worker: Installing new version');
-  // Skip waiting to activate immediately
+  // Don't skip waiting to avoid interfering with PWA install prompts
   // @ts-ignore
-  self.skipWaiting();
+  const installEvent = event as ExtendableEvent;
+  installEvent.waitUntil((self as any).skipWaiting());
 });
 
 // Handle controlled pages and notify about updates

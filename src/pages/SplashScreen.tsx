@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +11,22 @@ const SplashScreen = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Clean up any previous session data when landing on /app
+  useEffect(() => {
+    const sessionKeys = [
+      'selectedPlayers',
+      'currentGames',
+      'gameInProgress',
+      'sessionStartTime',
+      'piggybackPairs',
+      'sessionScores'
+    ];
+    
+    sessionKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+  }, []);
 
   // We'll use a simple session counter in localStorage for player of the month (not shown on splash)
   // Settings required - user must review/submit them before session can start.
