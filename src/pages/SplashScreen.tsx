@@ -106,6 +106,24 @@ const SplashScreen = () => {
                 Please edit your game settings above before starting your session.
               </p>
             )}
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/20" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-shuttle-primary px-2 text-white/60">or</span>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => navigate("/app/tournament")}
+              variant="outline"
+              className="w-full py-4 text-base border-white/30 text-white hover:bg-white/10 transition-colors"
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              Tournament Mode
+            </Button>
           </div>
 
           {/* Player of the Month: Subtle text link below the buttons */}

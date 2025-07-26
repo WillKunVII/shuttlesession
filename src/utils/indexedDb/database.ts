@@ -6,7 +6,7 @@
 export class DatabaseManager {
   private db: IDBDatabase | null = null;
   private readonly dbName = 'ShuttleSessionDB';
-  private readonly version = 2; // bump version for store upgrade
+  private readonly version = 3; // bump version for tournament stores
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -44,6 +44,30 @@ export class DatabaseManager {
           });
           statsStore.createIndex('gamesPlayed', 'gamesPlayed', { unique: false });
           statsStore.createIndex('lastPlayed', 'lastPlayed', { unique: false });
+        }
+
+        // Create tournament stores (v3+)
+        if (!db.objectStoreNames.contains('tournaments')) {
+          const tournamentStore = db.createObjectStore('tournaments', {
+            keyPath: 'id'
+          });
+          tournamentStore.createIndex('status', 'status', { unique: false });
+          tournamentStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        if (!db.objectStoreNames.contains('tournamentMatches')) {
+          const matchStore = db.createObjectStore('tournamentMatches', {
+            keyPath: 'id'
+          });
+          matchStore.createIndex('tournamentId', 'tournamentId', { unique: false });
+          matchStore.createIndex('stage', 'stage', { unique: false });
+        }
+
+        if (!db.objectStoreNames.contains('playerHandicaps')) {
+          const handicapStore = db.createObjectStore('playerHandicaps', {
+            keyPath: 'playerId'
+          });
+          handicapStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
         }
       };
     });
