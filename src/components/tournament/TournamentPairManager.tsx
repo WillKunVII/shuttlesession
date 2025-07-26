@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Users } from 'lucide-react';
 import { TournamentPairCard } from './TournamentPairCard';
-import { HandicapEditor } from './HandicapEditor';
 import { useTournament } from '@/hooks/useTournament';
 import { useToast } from '@/hooks/use-toast';
 
 export const TournamentPairManager: React.FC = () => {
   const [player1Name, setPlayer1Name] = useState('');
   const [player2Name, setPlayer2Name] = useState('');
-  const [showHandicapEditor, setShowHandicapEditor] = useState(false);
+  const [player1Handicap, setPlayer1Handicap] = useState(0);
+  const [player2Handicap, setPlayer2Handicap] = useState(0);
   const { currentTournament, addPair, loading } = useTournament();
   const { toast } = useToast();
 
@@ -51,9 +51,11 @@ export const TournamentPairManager: React.FC = () => {
     }
 
     try {
-      await addPair(player1Name.trim(), player2Name.trim());
+      await addPair(player1Name.trim(), player2Name.trim(), player1Handicap, player2Handicap);
       setPlayer1Name('');
       setPlayer2Name('');
+      setPlayer1Handicap(0);
+      setPlayer2Handicap(0);
       toast({
         title: "Pair added",
         description: `${player1Name} & ${player2Name} added to tournament.`
@@ -78,47 +80,64 @@ export const TournamentPairManager: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="player1">Player 1</Label>
-              <Input
-                id="player1"
-                value={player1Name}
-                onChange={(e) => setPlayer1Name(e.target.value)}
-                placeholder="Enter player name"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="player1"
+                  value={player1Name}
+                  onChange={(e) => setPlayer1Name(e.target.value)}
+                  placeholder="Enter player name"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  value={player1Handicap}
+                  onChange={(e) => setPlayer1Handicap(Number(e.target.value))}
+                  placeholder="HC"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
+                  className="w-16"
+                  min="-20"
+                  max="20"
+                />
+              </div>
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="player2">Player 2</Label>
-              <Input
-                id="player2"
-                value={player2Name}
-                onChange={(e) => setPlayer2Name(e.target.value)}
-                placeholder="Enter player name"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="player2"
+                  value={player2Name}
+                  onChange={(e) => setPlayer2Name(e.target.value)}
+                  placeholder="Enter player name"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  value={player2Handicap}
+                  onChange={(e) => setPlayer2Handicap(Number(e.target.value))}
+                  placeholder="HC"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddPair()}
+                  className="w-16"
+                  min="-20"
+                  max="20"
+                />
+              </div>
             </div>
           </div>
           
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleAddPair} 
-              disabled={loading || !player1Name.trim() || !player2Name.trim()}
-              size="sm"
-              className="flex-1"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Pair
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowHandicapEditor(true)}
-              size="sm"
-            >
-              Manage Handicaps
-            </Button>
-          </div>
+          <Button 
+            onClick={handleAddPair} 
+            disabled={loading || !player1Name.trim() || !player2Name.trim()}
+            size="sm"
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Pair
+          </Button>
 
           {currentTournament && currentTournament.pairs.length > 0 && (
             <div className="space-y-2">
@@ -134,11 +153,6 @@ export const TournamentPairManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
-      <HandicapEditor 
-        open={showHandicapEditor}
-        onOpenChange={setShowHandicapEditor}
-      />
     </div>
   );
 };

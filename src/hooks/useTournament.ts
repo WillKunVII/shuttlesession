@@ -77,49 +77,6 @@ export const useTournament = () => {
     return tournament;
   }, [saveTournament]);
 
-  // Add pair to tournament
-  const addPair = useCallback(async (player1Name: string, player2Name: string) => {
-    if (!currentTournament) return;
-
-    const player1: TournamentPlayer = {
-      id: generatePlayerId(),
-      name: player1Name,
-      handicap: getPlayerHandicap(player1Name)
-    };
-
-    const player2: TournamentPlayer = {
-      id: generatePlayerId(),
-      name: player2Name,
-      handicap: getPlayerHandicap(player2Name)
-    };
-
-    const pair: TournamentPair = {
-      id: generateId(),
-      player1,
-      player2,
-      pairHandicap: calculatePairHandicap(player1.handicap, player2.handicap)
-    };
-
-    const updatedTournament = {
-      ...currentTournament,
-      pairs: [...currentTournament.pairs, pair]
-    };
-
-    await saveTournament(updatedTournament);
-  }, [currentTournament, saveTournament]);
-
-  // Remove pair from tournament
-  const removePair = useCallback(async (pairId: string) => {
-    if (!currentTournament) return;
-
-    const updatedTournament = {
-      ...currentTournament,
-      pairs: currentTournament.pairs.filter(pair => pair.id !== pairId)
-    };
-
-    await saveTournament(updatedTournament);
-  }, [currentTournament, saveTournament]);
-
   // Update player handicap
   const updateHandicap = useCallback(async (playerId: number, playerName: string, handicap: number) => {
     try {
@@ -169,6 +126,87 @@ export const useTournament = () => {
     }
   }, [currentTournament, loadHandicaps, saveTournament]);
 
+  // Add pair to tournament
+  const addPair = useCallback(async (player1Name: string, player2Name: string, player1Handicap: number = 0, player2Handicap: number = 0) => {
+    if (!currentTournament) return;
+
+    const player1: TournamentPlayer = {
+      id: generatePlayerId(),
+      name: player1Name,
+      handicap: player1Handicap
+    };
+
+    const player2: TournamentPlayer = {
+      id: generatePlayerId(),
+      name: player2Name,
+      handicap: player2Handicap
+    };
+
+    const pair: TournamentPair = {
+      id: generateId(),
+      player1,
+      player2,
+      pairHandicap: calculatePairHandicap(player1Handicap, player2Handicap)
+    };
+
+    const updatedTournament = {
+      ...currentTournament,
+      pairs: [...currentTournament.pairs, pair]
+    };
+
+    await saveTournament(updatedTournament);
+
+    // Save individual handicaps to database
+    await updateHandicap(player1.id, player1Name, player1Handicap);
+    await updateHandicap(player2.id, player2Name, player2Handicap);
+  }, [currentTournament, saveTournament, updateHandicap]);
+
+  // Update pair in tournament
+  const updatePair = useCallback(async (pairId: string, player1Name: string, player2Name: string, player1Handicap: number, player2Handicap: number) => {
+    if (!currentTournament) return;
+
+    const pairHandicap = calculatePairHandicap(player1Handicap, player2Handicap);
+
+    const updatedPairs = currentTournament.pairs.map(pair => {
+      if (pair.id === pairId) {
+        return {
+          ...pair,
+          player1: { ...pair.player1, name: player1Name, handicap: player1Handicap },
+          player2: { ...pair.player2, name: player2Name, handicap: player2Handicap },
+          pairHandicap
+        };
+      }
+      return pair;
+    });
+
+    const updatedTournament = {
+      ...currentTournament,
+      pairs: updatedPairs
+    };
+
+    await saveTournament(updatedTournament);
+
+    // Update individual handicaps in database
+    const pair = currentTournament.pairs.find(p => p.id === pairId);
+    if (pair) {
+      await updateHandicap(pair.player1.id, player1Name, player1Handicap);
+      await updateHandicap(pair.player2.id, player2Name, player2Handicap);
+    }
+  }, [currentTournament, saveTournament, updateHandicap]);
+
+  // Remove pair from tournament
+  const removePair = useCallback(async (pairId: string) => {
+    if (!currentTournament) return;
+
+    const updatedTournament = {
+      ...currentTournament,
+      pairs: currentTournament.pairs.filter(pair => pair.id !== pairId)
+    };
+
+    await saveTournament(updatedTournament);
+  }, [currentTournament, saveTournament]);
+
+
   // Get player handicap by name
   const getPlayerHandicap = useCallback((playerName: string): number => {
     const handicapRecord = handicaps.find(h => h.playerName === playerName);
@@ -187,6 +225,7 @@ export const useTournament = () => {
     loading,
     createTournament,
     addPair,
+    updatePair,
     removePair,
     updateHandicap,
     getPlayerHandicap,
