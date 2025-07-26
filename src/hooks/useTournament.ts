@@ -165,16 +165,7 @@ export const useTournament = () => {
     console.log('Updated tournament pairs count:', updatedTournament.pairs.length);
 
     await saveTournament(updatedTournament);
-
-    // Save individual handicaps to database
-    try {
-      await updateHandicap(player1.id, player1Name, player1Handicap);
-      await updateHandicap(player2.id, player2Name, player2Handicap);
-      console.log('Pair added and handicaps saved successfully');
-    } catch (error) {
-      console.error('Error saving handicaps:', error);
-      // Don't throw here as the pair was already added successfully
-    }
+    console.log('Pair added successfully');
   }, [currentTournament, saveTournament, updateHandicap]);
 
   // Update pair in tournament
