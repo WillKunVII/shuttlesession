@@ -21,6 +21,14 @@ export const TournamentPairSetup: React.FC = () => {
     });
   }, [currentTournament]);
 
+  // Force re-render when pairs change
+  const [renderKey, setRenderKey] = React.useState(0);
+  React.useEffect(() => {
+    if (currentTournament) {
+      setRenderKey(prev => prev + 1);
+    }
+  }, [currentTournament?.pairs?.length]);
+
   const handleProceedToGroups = async () => {
     if (!currentTournament) return;
 
@@ -43,15 +51,17 @@ export const TournamentPairSetup: React.FC = () => {
     }
   };
 
-  const canProceed = currentTournament && currentTournament.pairs.length >= 4;
-  const suggestedGroups = currentTournament ? suggestGroupCount(currentTournament.pairs.length) : 2;
-  const pairCount = currentTournament?.pairs.length || 0;
+  // Use useMemo to ensure proper recalculation
+  const pairCount = React.useMemo(() => currentTournament?.pairs.length || 0, [currentTournament?.pairs?.length]);
+  const canProceed = React.useMemo(() => currentTournament && currentTournament.pairs.length >= 4, [currentTournament?.pairs?.length]);
+  const suggestedGroups = React.useMemo(() => currentTournament ? suggestGroupCount(currentTournament.pairs.length) : 2, [currentTournament?.pairs?.length]);
 
   // Debug current state
   console.log('TournamentPairSetup render:', {
     canProceed,
     pairCount,
-    currentTournament: !!currentTournament
+    currentTournament: !!currentTournament,
+    renderKey
   });
 
   return (
