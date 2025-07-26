@@ -107,6 +107,49 @@ const SplashScreen = () => {
               </p>
             )}
 
+            {/* Player of the Month: Subtle text link below the session buttons */}
+            <div className="mt-4 flex flex-col items-center">
+              <AlertDialog open={showPOMConfirm} onOpenChange={setShowPOMConfirm}>
+                <AlertDialogTrigger asChild>
+                  <button
+                    onClick={handlePOMClick}
+                    className="flex items-center space-x-2 text-xs text-neutral-200 hover:text-yellow-400 cursor-pointer py-2 bg-transparent border-0 outline-none font-medium transition-colors"
+                    style={{ minHeight: 0 }}
+                    aria-label="Player of the Month"
+                    type="button"
+                  >
+                    <Trophy className="h-4 w-4 mr-1 text-yellow-400" />
+                    <span>Player of the Month</span>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset Player Records?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Crowning the <b>Player of the Month</b> will RESET all player wins/losses records.<br />
+                      <span className="text-yellow-600 font-medium">This cannot be undone.</span> <br />
+                      (Player ratings will not be erased.)
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel asChild>
+                      <Button variant="outline" className="w-1/2" onClick={() => setShowPOMConfirm(false)}>
+                        Cancel
+                      </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button
+                        className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-black"
+                        onClick={handlePOMConfirmed}
+                      >
+                        Continue
+                      </Button>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-white/20" />
@@ -124,49 +167,6 @@ const SplashScreen = () => {
               <Trophy className="w-5 h-5 mr-2" />
               Tournament Mode
             </Button>
-          </div>
-
-          {/* Player of the Month: Subtle text link below the buttons */}
-          <div className="mt-6 flex flex-col items-center">
-            <AlertDialog open={showPOMConfirm} onOpenChange={setShowPOMConfirm}>
-              <AlertDialogTrigger asChild>
-                <button
-                  onClick={handlePOMClick}
-                  className="flex items-center space-x-2 text-xs text-neutral-200 hover:text-yellow-400 cursor-pointer py-2 bg-transparent border-0 outline-none font-medium transition-colors"
-                  style={{ minHeight: 0 }}
-                  aria-label="Player of the Month"
-                  type="button"
-                >
-                  <Trophy className="h-4 w-4 mr-1 text-yellow-400" />
-                  <span>Player of the Month</span>
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Reset Player Records?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Crowning the <b>Player of the Month</b> will RESET all player wins/losses records.<br />
-                    <span className="text-yellow-600 font-medium">This cannot be undone.</span> <br />
-                    (Player ratings will not be erased.)
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel asChild>
-                    <Button variant="outline" className="w-1/2" onClick={() => setShowPOMConfirm(false)}>
-                      Cancel
-                    </Button>
-                  </AlertDialogCancel>
-                  <AlertDialogAction asChild>
-                    <Button
-                      className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-black"
-                      onClick={handlePOMConfirmed}
-                    >
-                      Continue
-                    </Button>
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
         </div>
       </div>
