@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      includeAssets: ['favicon.ico', 'lovable-uploads/357ffd0e-0828-4660-96df-166a9769a250.png', 'lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'ShuttleSession',
         short_name: 'ShuttleSession',
@@ -48,19 +48,25 @@ export default defineConfig(({ mode }) => ({
         categories: ['sports', 'utilities'],
         icons: [
           {
-            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
+            src: '/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/lovable-uploads/55cb3b3b-e914-4a52-861a-cd69e1ec3f02.png',
+            src: '/icon-512.png',
             sizes: '180x180',
             type: 'image/png',
             purpose: 'apple-touch-icon'
