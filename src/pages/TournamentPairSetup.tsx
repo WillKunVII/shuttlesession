@@ -37,7 +37,7 @@ export const TournamentPairSetup: React.FC = () => {
 
     try {
       await saveTournament(updatedTournament);
-      navigate('/tournament/groups');
+      navigate('/app/tournament/groups');
     } catch (error) {
       console.error('Error updating tournament:', error);
     }

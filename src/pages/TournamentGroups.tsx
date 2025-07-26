@@ -47,11 +47,11 @@ export default function TournamentGroups() {
   };
 
   const handleProceedToKnockout = () => {
-    navigate('/tournament/knockout');
+    navigate('/app/tournament/knockout');
   };
 
   if (!currentTournament) {
-    navigate('/tournament/setup');
+    navigate('/app/tournament/setup');
     return null;
   }
 
