@@ -11,14 +11,23 @@ export function usePWAInstall() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    // Enhanced debugging for Android 13
+    console.log('PWA: Initializing PWA install hook');
+    console.log('PWA: User agent:', navigator.userAgent);
+    console.log('PWA: Display mode:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('PWA: Service worker support:', 'serviceWorker' in navigator);
+    
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     setIsInstalled(isStandalone || isInWebAppiOS);
+    
+    console.log('PWA: Is installed?', isStandalone || isInWebAppiOS);
 
     // Listen for beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('PWA: beforeinstallprompt event fired');
+      console.log('PWA: Event details:', e);
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);

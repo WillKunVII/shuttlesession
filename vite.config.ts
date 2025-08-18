@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => ({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/app',
+        scope: '/',
         start_url: '/app',
         lang: 'en',
         categories: ['sports', 'utilities'],
