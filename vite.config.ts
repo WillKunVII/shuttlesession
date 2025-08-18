@@ -45,6 +45,7 @@ export default defineConfig(({ mode }) => ({
         orientation: 'portrait',
         scope: '/app',
         start_url: '/app',
+        lang: 'en',
         categories: ['sports', 'utilities'],
         icons: [
           {
@@ -66,10 +67,10 @@ export default defineConfig(({ mode }) => ({
             purpose: 'maskable any'
           },
           {
-            src: '/icon-512.png',
+            src: '/apple-touch-icon.png',
             sizes: '180x180',
             type: 'image/png',
-            purpose: 'apple-touch-icon'
+            purpose: 'any'
           }
         ]
       }

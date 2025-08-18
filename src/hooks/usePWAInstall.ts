@@ -18,6 +18,7 @@ export function usePWAInstall() {
 
     // Listen for beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('PWA: beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
@@ -25,6 +26,7 @@ export function usePWAInstall() {
 
     // Listen for app installed event
     const handleAppInstalled = () => {
+      console.log('PWA: App installed successfully');
       setIsInstalled(true);
       setDeferredPrompt(null);
       setIsInstallable(false);
@@ -40,11 +42,16 @@ export function usePWAInstall() {
   }, []);
 
   const installApp = async () => {
-    if (!deferredPrompt) return false;
+    if (!deferredPrompt) {
+      console.log('PWA: No deferred prompt available');
+      return false;
+    }
 
     try {
+      console.log('PWA: Showing install prompt');
       await deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
+      console.log('PWA: User choice result:', choiceResult.outcome);
       
       if (choiceResult.outcome === 'accepted') {
         setDeferredPrompt(null);
@@ -53,7 +60,7 @@ export function usePWAInstall() {
       }
       return false;
     } catch (error) {
-      console.error('Error installing app:', error);
+      console.error('PWA: Error installing app:', error);
       return false;
     }
   };
