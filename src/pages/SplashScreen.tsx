@@ -150,6 +150,7 @@ const SplashScreen = () => {
               </AlertDialog>
             </div>
 
+            {/* Tournament Mode temporarily hidden for release
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-white/20" />
@@ -167,6 +168,7 @@ const SplashScreen = () => {
               <Trophy className="w-5 h-5 mr-2" />
               Tournament Mode
             </Button>
+            */}
           </div>
         </div>
       </div>
