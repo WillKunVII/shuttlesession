@@ -21,7 +21,7 @@ export function PlayerCard({ player }: PlayerCardProps) {
           }`}
         />
         <div>
-          <p className="font-medium text-gray-900">{player.name}</p>
+          <p className="text-lg font-semibold text-gray-900">{player.name}</p>
           {player.isGuest && (
             <span className="text-xs text-gray-500 bg-gray-100 px-1 py-0.5 rounded">
               Guest

@@ -28,7 +28,7 @@ export function PlayerSuggestions({ members, queueNameSet, name, show, onSelect 
             data-testid={`suggest-${member.name}`}
           >
             <span className={`h-2 w-2 rounded-full mr-2 ${member.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
-            <span className="font-medium">{member.name}</span>
+            <span className="text-lg font-semibold">{member.name}</span>
             {member.isGuest && (
               <span className="ml-2 text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
             )}

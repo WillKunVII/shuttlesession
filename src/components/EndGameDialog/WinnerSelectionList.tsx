@@ -29,7 +29,7 @@ export function WinnerSelectionList({
           />
           <Label
             htmlFor={`winner-${player.name}`}
-            className="flex items-center text-sm font-medium gap-2 cursor-pointer flex-1"
+            className="flex items-center text-base font-semibold gap-2 cursor-pointer flex-1"
           >
             <span
               className={`h-2 w-2 rounded-full ${

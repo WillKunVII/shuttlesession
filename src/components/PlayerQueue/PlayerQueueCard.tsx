@@ -77,7 +77,7 @@ export function PlayerQueueCard({
         {player.isResting && (
           <Pause className="text-gray-500" size={16} />
         )}
-        <span className="font-medium truncate max-w-[100px]">{player.name}</span>
+        <span className="text-lg font-semibold text-gray-900 truncate">{player.name}</span>
         {player.isGuest && (
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
         )}
