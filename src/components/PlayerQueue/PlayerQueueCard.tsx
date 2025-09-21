@@ -150,18 +150,20 @@ export function PlayerQueueCard({
             <Users className="w-4 h-4 ml-1" />
           </Button>
         )}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="
-            text-red-500 hover:text-red-700 hover:bg-red-50
-            w-full
-            min-h-[44px]
-          "
-          onClick={e => onPlayerLeave(player.id, e)}
-        >
-          Leave
-        </Button>
+        {/* Add visual separation before Leave button */}
+        <div className="border-t border-gray-200 pt-2 mt-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="
+              text-red-600 border-red-200 hover:text-red-700 hover:bg-red-50 hover:border-red-300
+              w-full text-xs h-8
+            "
+            onClick={e => onPlayerLeave(player.id, e)}
+          >
+            Leave
+          </Button>
+        </div>
       </div>
     </div>
   );
