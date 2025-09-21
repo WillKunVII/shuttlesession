@@ -73,16 +73,14 @@ export function PlayerQueueCard({
         <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-semibold text-gray-700">
           {queuePosition}
         </div>
-        <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
-        {player.isResting && (
-          <Pause className="text-gray-500" size={16} />
-        )}
+        <span className={`h-2 w-2 rounded-full ${player.gender === 'male' ? 'bg-blue-500' : 'bg-pink-500'}`}></span>
         <span className="text-lg font-semibold text-gray-900 truncate">{player.name}</span>
         {player.isGuest && (
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
         )}
         {player.isResting && (
-          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600 border-gray-300">
+          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1">
+            <Pause size={12} />
             Resting
           </Badge>
         )}
