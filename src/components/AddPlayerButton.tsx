@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { GenderRadioGroup } from "./AddPlayer/GenderRadioGroup";
 import { PlayPreferencesSelector } from "./AddPlayer/PlayPreferencesSelector";
 import { PlayerSuggestions } from "./AddPlayer/PlayerSuggestions";
+import { getStorageItem } from "@/utils/storageUtils";
 
 interface AddPlayerButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
@@ -52,8 +53,8 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       }
     }
 
-    const enablePref = localStorage.getItem("enablePlayerPreferences");
-    setPreferencesEnabled(enablePref === "true");
+    const preferencesEnabled = getStorageItem("enablePlayerPreferences", true);
+    setPreferencesEnabled(preferencesEnabled);
 
     // Get player queue (names, case-insensitive)
     let queuePlayers: any[] = [];
