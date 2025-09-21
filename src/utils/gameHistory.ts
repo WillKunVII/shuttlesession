@@ -36,6 +36,10 @@ export const recordGame = async (players: Player[], winnerIds?: number[]): Promi
     
     await gameHistoryDB.addGame(players, undefined, undefined, winnerIds);
     console.log("Game recorded in IndexedDB (IDs)");
+    
+    // Also record in session tracker for enhanced auto-select
+    const { sessionTracker } = await import("./sessionTracking");
+    sessionTracker.recordGame(players);
   } catch (e) {
     console.error("Error recording game to IndexedDB:", e);
 
@@ -50,6 +54,10 @@ export const recordGame = async (players: Player[], winnerIds?: number[]): Promi
       const updatedHistory = [newGame, ...history].slice(0, 50);
       localStorage.setItem("gameHistory", JSON.stringify(updatedHistory));
       console.log("Game recorded in localStorage as fallback");
+      
+      // Also record in session tracker
+      const { sessionTracker } = await import("./sessionTracking");
+      sessionTracker.recordGame(players);
     } catch (fallbackError) {
       console.error("Error recording game to localStorage fallback:", fallbackError);
     }

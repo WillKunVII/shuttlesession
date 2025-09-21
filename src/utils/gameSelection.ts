@@ -3,6 +3,7 @@ import { Player } from "../types/player";
 import { generateValidCombinations } from "./playerCombinations";
 import { calculateRepeatPenalty } from "./gameHistory";
 import { determineBestGameType } from "./gameValidation";
+import { sessionTracker } from "./sessionTracking";
 
 // Simplified cache for repeat penalties with memory management
 const repeatPenaltyCache = new Map<string, { penalty: number; timestamp: number }>();
@@ -14,42 +15,31 @@ let autoSelectStartTime = 0;
 const PERFORMANCE_BUDGET = 2000; // 2 seconds max
 
 /**
- * Optimized version that prioritizes speed over perfect selection
+ * Enhanced version with weighted selection and session-aware mixing
  */
 export const findBestCombination = async (poolPlayers: Player[]): Promise<Player[]> => {
   if (poolPlayers.length < 4) return [];
 
   autoSelectStartTime = Date.now();
-  console.log("Auto-select: Starting optimized selection with", poolPlayers.length, "players");
+  console.log("Enhanced Auto-select: Starting with", poolPlayers.length, "players");
 
-  // Always start with player #1 (first in queue)
-  const anchorPlayer = poolPlayers[0];
-  console.log("Auto-select: Starting with anchor player #1:", anchorPlayer.name);
-
-  // Get anchor player's preferences (prioritize Mixed > Ladies > Open)
-  const anchorPrefs = anchorPlayer.playPreferences || [];
-  const preferenceOrder = anchorPrefs.length > 0 ? anchorPrefs : ["Mixed", "Ladies", "Open"];
-  
-  console.log("Auto-select: Anchor player preferences:", preferenceOrder);
-
-  // Try each preference with optimized search
-  for (const targetGameType of preferenceOrder) {
-    const combination = await findCombinationForGameTypeOptimized(poolPlayers, anchorPlayer, targetGameType);
-    if (combination.length === 4) {
-      console.log(`Auto-select: Found ${targetGameType} game in ${Date.now() - autoSelectStartTime}ms`);
-      return combination;
-    }
-    
-    // Check performance budget
-    if (Date.now() - autoSelectStartTime > PERFORMANCE_BUDGET) {
-      console.log("Auto-select: Performance budget exceeded, using fallback");
-      return findFastFallbackCombination(poolPlayers, anchorPlayer);
-    }
+  // Phase 1: Try smart selection with full pool sampling
+  const smartSelection = await findSmartCombination(poolPlayers);
+  if (smartSelection.length === 4) {
+    const elapsed = Date.now() - autoSelectStartTime;
+    console.log(`Enhanced Auto-select: Found smart combination in ${elapsed}ms`);
+    return smartSelection;
   }
 
-  // Fast fallback
-  console.log("Auto-select: Using fast fallback");
-  return findFastFallbackCombination(poolPlayers, anchorPlayer);
+  // Phase 2: Check performance budget for fallback
+  if (Date.now() - autoSelectStartTime > PERFORMANCE_BUDGET) {
+    console.log("Enhanced Auto-select: Using smart fallback due to time limit");
+    return findSmartFallbackCombination(poolPlayers);
+  }
+
+  // Phase 3: Smart fallback
+  console.log("Enhanced Auto-select: Using smart fallback");
+  return findSmartFallbackCombination(poolPlayers);
 };
 
 /**
@@ -115,65 +105,36 @@ async function getCachedRepeatPenalty(combination: Player[]): Promise<number> {
 }
 
 /**
- * Optimized version with reduced combinations and faster exit
+ * Smart combination finder using weighted selection and full pool sampling
  */
-async function findCombinationForGameTypeOptimized(
-  poolPlayers: Player[], 
-  anchorPlayer: Player, 
-  targetGameType: string
-): Promise<Player[]> {
-  // Filter players who would accept this game type
-  const eligiblePlayers = poolPlayers.filter(player => 
-    playerAcceptsGameType(player, targetGameType)
-  );
+async function findSmartCombination(poolPlayers: Player[]): Promise<Player[]> {
+  // Get weighted starting players (top 3-4 with weighted probability)
+  const startingCandidates = getWeightedStartingPlayers(poolPlayers);
   
-  if (eligiblePlayers.length < 4 || !eligiblePlayers.some(p => p.id === anchorPlayer.id)) {
-    return [];
-  }
-  
-  const otherEligiblePlayers = eligiblePlayers.filter(p => p.id !== anchorPlayer.id);
-  
-  // Reduced search space for better performance
-  const maxCombinations = 10;
-  let combinationsChecked = 0;
   let bestCombination: Player[] = [];
-  let bestPenalty = Infinity;
+  let bestScore = -Infinity;
 
-  // Generate combinations with early exit and performance checks
-  for (let i = 0; i < Math.min(otherEligiblePlayers.length - 2, 3); i++) {
-    for (let j = i + 1; j < Math.min(otherEligiblePlayers.length - 1, 5); j++) {
-      for (let k = j + 1; k < Math.min(otherEligiblePlayers.length, 7); k++) {
-        // Performance check
-        if (Date.now() - autoSelectStartTime > PERFORMANCE_BUDGET / 2) {
-          console.log("Auto-select: Half-time performance check, returning best so far");
-          return bestCombination.length === 4 ? bestCombination : [];
-        }
+  // Try each potential starting player
+  for (const startingPlayer of startingCandidates) {
+    // Generate random combinations from the full pool
+    const combinations = generateRandomCombinations(poolPlayers, startingPlayer, 20);
+    
+    for (const combination of combinations) {
+      // Performance check
+      if (Date.now() - autoSelectStartTime > PERFORMANCE_BUDGET * 0.7) {
+        console.log("Enhanced Auto-select: 70% time budget reached");
+        return bestCombination.length === 4 ? bestCombination : [];
+      }
+
+      const score = await calculateEnhancedScore(combination);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCombination = combination;
         
-        const combination = [anchorPlayer, otherEligiblePlayers[i], otherEligiblePlayers[j], otherEligiblePlayers[k]];
-        
-        // Check if this combination can actually form the target game type
-        const actualGameType = determineBestGameType(combination);
-        if (actualGameType === targetGameType) {
-          combinationsChecked++;
-          
-          // Quick penalty check (simplified for performance)
-          const repeatPenalty = await getCachedRepeatPenalty(combination);
-          
-          if (repeatPenalty < bestPenalty) {
-            bestPenalty = repeatPenalty;
-            bestCombination = combination;
-            
-            // Early exit for perfect combination
-            if (repeatPenalty === 0) {
-              console.log(`Auto-select: Found perfect ${targetGameType} combination`);
-              return bestCombination;
-            }
-          }
-          
-          if (combinationsChecked >= maxCombinations) {
-            console.log(`Auto-select: Max combinations checked (${maxCombinations})`);
-            return bestCombination;
-          }
+        // Early exit for excellent combinations
+        if (score > 50) {
+          console.log("Enhanced Auto-select: Found excellent combination");
+          return bestCombination;
         }
       }
     }
@@ -183,20 +144,127 @@ async function findCombinationForGameTypeOptimized(
 }
 
 /**
- * Ultra-fast fallback that just takes first 4 valid players
+ * Get weighted starting players instead of always choosing #1
  */
-function findFastFallbackCombination(poolPlayers: Player[], anchorPlayer: Player): Player[] {
-  const otherPlayers = poolPlayers.slice(1, 4); // Just take next 3 players
-  const combination = [anchorPlayer, ...otherPlayers];
+function getWeightedStartingPlayers(poolPlayers: Player[]): Player[] {
+  const candidates = poolPlayers.slice(0, Math.min(4, poolPlayers.length));
+  const weights = [0.4, 0.3, 0.2, 0.1]; // 40%, 30%, 20%, 10% probability
   
-  if (combination.length === 4) {
+  // Apply session balance weighting
+  const weightedCandidates = candidates.map((player, index) => {
+    const baseWeight = weights[index] || 0.1;
+    const sessionBonus = sessionTracker.getSessionBalanceScore(player.id) * 0.1;
+    const coolingPenalty = sessionTracker.isInCoolingPeriod(player.id) ? -0.2 : 0;
+    
+    return {
+      player,
+      weight: Math.max(0.05, baseWeight + sessionBonus + coolingPenalty)
+    };
+  });
+
+  // Sort by weight and return top candidates
+  return weightedCandidates
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 3)
+    .map(wc => wc.player);
+}
+
+/**
+ * Generate random combinations from the entire pool
+ */
+function generateRandomCombinations(poolPlayers: Player[], anchorPlayer: Player, count: number): Player[][] {
+  const combinations: Player[][] = [];
+  const otherPlayers = poolPlayers.filter(p => p.id !== anchorPlayer.id);
+  
+  if (otherPlayers.length < 3) return [];
+
+  for (let i = 0; i < count && combinations.length < count; i++) {
+    // Randomly select 3 other players
+    const shuffled = [...otherPlayers].sort(() => Math.random() - 0.5);
+    const selectedOthers = shuffled.slice(0, 3);
+    const combination = [anchorPlayer, ...selectedOthers];
+    
+    // Check if this combination can form a valid game
     const gameType = determineBestGameType(combination);
     if (gameType) {
       const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
       if (allAccept) {
-        console.log("Auto-select: Fast fallback successful");
-        return combination;
+        combinations.push(combination);
       }
+    }
+  }
+
+  return combinations;
+}
+
+/**
+ * Calculate enhanced score combining multiple factors
+ */
+async function calculateEnhancedScore(combination: Player[]): Promise<number> {
+  // Base score from repeat penalty (lower is better, so negate)
+  const repeatPenalty = await getCachedRepeatPenalty(combination);
+  const repeatScore = Math.max(0, 50 - repeatPenalty);
+
+  // Session balance bonus (sum of individual player balance scores)
+  const sessionBalanceBonus = combination.reduce((sum, player) => {
+    return sum + sessionTracker.getSessionBalanceScore(player.id);
+  }, 0) * 2;
+
+  // Cooling period penalty
+  const coolingPenalty = combination.reduce((penalty, player) => {
+    return penalty + (sessionTracker.isInCoolingPeriod(player.id) ? 5 : 0);
+  }, 0);
+
+  // Variety bonus for new combinations
+  const varietyBonus = sessionTracker.getVarietyBonus(combination);
+
+  const totalScore = repeatScore + sessionBalanceBonus + varietyBonus - coolingPenalty;
+  
+  return totalScore;
+}
+
+/**
+ * Smart fallback that considers session balance instead of just taking first 4
+ */
+function findSmartFallbackCombination(poolPlayers: Player[]): Player[] {
+  // Sort players by session balance (players who need more games first)
+  const sortedByBalance = [...poolPlayers].sort((a, b) => {
+    const balanceA = sessionTracker.getSessionBalanceScore(a.id);
+    const balanceB = sessionTracker.getSessionBalanceScore(b.id);
+    
+    // If balance is equal, prefer players not in cooling period
+    if (Math.abs(balanceA - balanceB) < 0.1) {
+      const coolingA = sessionTracker.isInCoolingPeriod(a.id) ? 1 : 0;
+      const coolingB = sessionTracker.isInCoolingPeriod(b.id) ? 1 : 0;
+      return coolingA - coolingB;
+    }
+    
+    return balanceB - balanceA;
+  });
+  
+  // Try combinations starting with the most balanced players
+  for (let i = 0; i <= Math.max(0, sortedByBalance.length - 4); i++) {
+    const combination = sortedByBalance.slice(i, i + 4);
+    
+    if (combination.length === 4) {
+      const gameType = determineBestGameType(combination);
+      if (gameType) {
+        const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
+        if (allAccept) {
+          console.log("Enhanced Auto-select: Smart fallback successful");
+          return combination;
+        }
+      }
+    }
+  }
+  
+  // Ultimate fallback - just take first 4 if nothing else works
+  const combination = poolPlayers.slice(0, 4);
+  if (combination.length === 4) {
+    const gameType = determineBestGameType(combination);
+    if (gameType) {
+      console.log("Enhanced Auto-select: Ultimate fallback used");
+      return combination;
     }
   }
   
