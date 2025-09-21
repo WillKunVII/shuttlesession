@@ -9,6 +9,7 @@ export function PlayerQueueSection() {
     handlePlayerSelect, 
     removePlayerFromQueue, 
     addPlayerToQueue, 
+    togglePlayerRest,
     isNextGameReady,
     piggybackPairs,
     addPiggybackPair,
@@ -23,6 +24,7 @@ export function PlayerQueueSection() {
         players={queue}
         onPlayerSelect={handlePlayerSelect}
         onPlayerLeave={removePlayerFromQueue}
+        onToggleRest={togglePlayerRest}
         onAddPlayer={player => addPlayerToQueue(player)}
         isNextGameReady={isNextGameReady()}
         piggybackPairs={piggybackPairs}

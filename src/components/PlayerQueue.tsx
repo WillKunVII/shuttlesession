@@ -17,6 +17,7 @@ interface PlayerQueueProps {
   players: Player[];
   onPlayerSelect: (selectedPlayers: Player[]) => void;
   onPlayerLeave?: (playerId: number) => void;
+  onToggleRest?: (playerId: number) => void;
   onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
   isNextGameReady?: boolean;
   piggybackPairs?: PiggybackPair[];
@@ -53,7 +54,8 @@ export function PlayerQueue(props: any) {
     players,
     isNextGameReady = false,
     piggybackPairs = [],
-    clearPiggybackPairs
+    clearPiggybackPairs,
+    onToggleRest
   } = props;
 
   const piggybackEnabled = getPiggybackEnabled();
@@ -94,6 +96,7 @@ export function PlayerQueue(props: any) {
             selected={selected}
             onPlayerSelect={togglePlayerSelection}
             onPlayerLeave={openLeaveConfirmation}
+            onToggleRest={onToggleRest || (() => {})}
             isNextGameReady={isNextGameReady}
             playerPoolSize={playerPoolSize}
             scoreKeepingEnabled={scoreKeepingEnabled}

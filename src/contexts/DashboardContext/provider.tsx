@@ -125,11 +125,23 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     setCourts(updatedCourts);
   };
 
+  // Toggle player rest status
+  const togglePlayerRest = (playerId: number) => {
+    setQueue(prevQueue => 
+      prevQueue.map(player => 
+        player.id === playerId 
+          ? { ...player, isResting: !player.isResting }
+          : player
+      )
+    );
+  };
+
   const value: DashboardContextType = {
     // Player queue
     queue: queueState,
     addPlayerToQueue,
     removePlayerFromQueue,
+    togglePlayerRest,
     updateActivePlayerInfo,
 
     // Next game

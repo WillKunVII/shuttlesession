@@ -13,4 +13,5 @@ export interface Player {
   sessionLosses?: number;
   playPreferences?: PlayPreference[];
   rating?: number; // HIDDEN ELO
+  isResting?: boolean; // Player is taking a break
 }

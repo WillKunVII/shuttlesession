@@ -12,9 +12,12 @@ export function usePlayerSelection(queue: Player[], options?: UsePlayerSelection
   const autoSelectPlayers = async (count: number = 4): Promise<Player[]> => {
     const piggybackPairs = options?.piggybackPairs || [];
     const poolSize = getPlayerPoolSize();
-    let poolPlayers = [...queue].slice(0, Math.min(poolSize, queue.length));
+    
+    // Filter out resting players first, then apply pool size limit
+    const activeQueue = queue.filter(player => !player.isResting);
+    let poolPlayers = [...activeQueue].slice(0, Math.min(poolSize, activeQueue.length));
 
-    console.log("Auto-select: Starting with pool of", poolPlayers.length, "players");
+    console.log("Auto-select: Starting with pool of", poolPlayers.length, "active players");
     console.log("Auto-select: Piggyback pairs:", piggybackPairs);
 
     // Handle piggyback pairs - if #1 player is in a pair, include their partner

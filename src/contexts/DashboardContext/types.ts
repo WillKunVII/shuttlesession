@@ -7,6 +7,7 @@ export interface DashboardContextType {
   queue: Player[];
   addPlayerToQueue: (player: Omit<Player, "id" | "waitingTime">) => void;
   removePlayerFromQueue: (playerId: number) => void;
+  togglePlayerRest: (playerId: number) => void;
   updateActivePlayerInfo: (updated: { 
     id?: number; 
     name: string; 

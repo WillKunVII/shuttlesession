@@ -1,11 +1,11 @@
 
 import React from "react";
-import { CircleDot, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircleDot, Users, Pause } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Player } from "@/types/player";
 import { PiggybackPair } from "@/hooks/usePiggybackPairs";
 import { getPiggybackEnabled } from "@/utils/storageUtils";
+import { PlayerActionsMenu } from "./PlayerActionsMenu";
 
 interface PlayerQueueCardProps {
   player: Player;
@@ -20,8 +20,9 @@ interface PlayerQueueCardProps {
   findPiggybackPair: (playerId: number) => PiggybackPair | undefined;
   onPlayerSelect: (player: Player) => void;
   onPlayerLeave: (playerId: number, e: React.MouseEvent) => void;
+  onToggleRest: (playerId: number) => void;
   setPiggybackManualWarningShown?: (b: boolean) => void;
-  queuePosition: number; // Add queue position prop
+  queuePosition: number;
 }
 
 export function PlayerQueueCard({
@@ -37,6 +38,7 @@ export function PlayerQueueCard({
   findPiggybackPair,
   onPlayerSelect,
   onPlayerLeave,
+  onToggleRest,
   setPiggybackManualWarningShown,
   queuePosition
 }: PlayerQueueCardProps) {
@@ -61,6 +63,8 @@ export function PlayerQueueCard({
           : isNextGameReady
             ? ""
             : "hover:bg-gray-50"
+      } ${
+        player.isResting ? "opacity-75 bg-gray-50" : ""
       }`}
       onClick={() => onPlayerSelect(player)}
     >
@@ -70,9 +74,17 @@ export function PlayerQueueCard({
           {queuePosition}
         </div>
         <CircleDot className={player.gender === 'male' ? 'text-blue-500' : 'text-pink-500'} size={16} />
+        {player.isResting && (
+          <Pause className="text-gray-500" size={16} />
+        )}
         <span className="font-medium truncate max-w-[100px]">{player.name}</span>
         {player.isGuest && (
           <span className="text-xs bg-gray-100 px-1 py-0.5 rounded">Guest</span>
+        )}
+        {player.isResting && (
+          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-600 border-gray-300">
+            Resting
+          </Badge>
         )}
         {/* PIGGYBACK BADGE */}
         {piggybackEnabled && pair && partnerId !== undefined && (
@@ -104,64 +116,19 @@ export function PlayerQueueCard({
           </div>
         )}
       </div>
-      {/* Stack action buttons vertically on ALL viewports */}
-      <div
-        className="
-          flex flex-col gap-2 w-full max-w-[150px]
-          md:w-28 md:gap-3
-        "
-      >
-        {/* Only show piggyback buttons if enabled and not already in a pair */}
-        {piggybackEnabled && !pair && onOpenPiggybackModal && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="
-              hover:bg-purple-50 hover:text-purple-700
-              w-full
-              min-h-[44px]
-            "
-            onClick={e => {
-              e.stopPropagation();
-              onOpenPiggybackModal(player);
-              setPiggybackManualWarningShown && setPiggybackManualWarningShown(false);
-            }}
-          >
-            Piggyback
-            <Users className="w-4 h-4 ml-1" />
-          </Button>
-        )}
-        {/* Only masters can unpiggyback */}
-        {piggybackEnabled && isMaster && removePiggybackPair && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="
-              bg-purple-100 text-purple-700
-              w-full
-              min-h-[44px]
-            "
-            onClick={e => {
-              e.stopPropagation();
-              removePiggybackPair(player.id);
-            }}
-          >
-            Unpiggyback
-            <Users className="w-4 h-4 ml-1" />
-          </Button>
-        )}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="
-            text-red-500 hover:text-red-700 hover:bg-red-50
-            w-full
-            min-h-[44px]
-          "
-          onClick={e => onPlayerLeave(player.id, e)}
-        >
-          Leave
-        </Button>
+      
+      {/* Player Actions Menu */}
+      <div className="flex-shrink-0">
+        <PlayerActionsMenu
+          player={player}
+          piggybackPairs={piggybackPairs}
+          findPiggybackPair={findPiggybackPair}
+          onToggleRest={onToggleRest}
+          onOpenPiggybackModal={onOpenPiggybackModal}
+          onRemovePiggybackPair={removePiggybackPair}
+          onPlayerLeave={onPlayerLeave}
+          setPiggybackManualWarningShown={setPiggybackManualWarningShown}
+        />
       </div>
     </div>
   );

@@ -52,7 +52,8 @@ export function useQueueMutations() {
       waitingTime: 0,
       sessionWins: sessionScore.wins,
       sessionLosses: sessionScore.losses,
-      playPreferences: player.playPreferences || []
+      playPreferences: player.playPreferences || [],
+      isResting: false
     };
 
     // Pull score keeping and member record

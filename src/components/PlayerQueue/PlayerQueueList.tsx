@@ -11,6 +11,7 @@ interface PlayerQueueListProps {
   selected: Player[];
   onPlayerSelect: (player: Player) => void;
   onPlayerLeave: (playerId: number, e: React.MouseEvent) => void;
+  onToggleRest: (playerId: number) => void;
   isNextGameReady: boolean;
   playerPoolSize: number;
   scoreKeepingEnabled: boolean;
@@ -27,6 +28,7 @@ export function PlayerQueueList({
   selected,
   onPlayerSelect,
   onPlayerLeave,
+  onToggleRest,
   isNextGameReady,
   playerPoolSize,
   scoreKeepingEnabled,
@@ -36,7 +38,7 @@ export function PlayerQueueList({
   removePiggybackPair,
   findPiggybackPair,
   setPiggybackManualWarningShown,
-}: any) {
+}: PlayerQueueListProps) {
   const piggybackEnabled = getPiggybackEnabled();
   return (
     <div className="space-y-2 pr-4">
@@ -65,6 +67,7 @@ export function PlayerQueueList({
             findPiggybackPair={piggybackEnabled ? findPiggybackPair : () => undefined}
             onPlayerSelect={onPlayerSelect}
             onPlayerLeave={onPlayerLeave}
+            onToggleRest={onToggleRest}
             setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
             queuePosition={index + 1}
           />
