@@ -42,7 +42,9 @@ export function useDashboardLogic({
   const {
     getSortedCourts,
     assignPlayersToCourtById,
-    endGameOnCourt
+    endGameOnCourt,
+    canVoidCourt,
+    voidGameOnCourt
   } = useCourtManagement();
 
   // State for end game dialog
@@ -204,6 +206,48 @@ export function useDashboardLogic({
     }
   }, [clearGamePlayers, addPlayersToQueue]);
 
+  // Void a court assignment and handle chain reactions
+  const voidCourtAssignment = useCallback((courtId: number) => {
+    if (!canVoidCourt(courtId)) {
+      console.error("useDashboardLogic: Cannot void court", courtId);
+      return;
+    }
+
+    console.log("useDashboardLogic: Voiding court assignment", courtId);
+    
+    // Get players from the court being voided
+    const voidedPlayers = voidGameOnCourt(courtId);
+    if (voidedPlayers.length === 0) {
+      console.error("useDashboardLogic: No players returned from voided court");
+      return;
+    }
+
+    // Convert court players back to full Player objects
+    const playerObjects: Player[] = voidedPlayers.map((player) => ({
+      id: player.id,
+      name: player.name,
+      gender: player.gender as "male" | "female",
+      waitingTime: 0,
+      isGuest: player.isGuest || false,
+      wins: 0,
+      losses: 0,
+      sessionWins: 0,
+      sessionLosses: 0
+    }));
+
+    // Handle chain reactions: if there are already next game players, return them to queue
+    if (isNextGameReady()) {
+      console.log("useDashboardLogic: Returning existing next game players to queue");
+      addPlayersToQueue(nextGamePlayers, true);
+      clearGamePlayers();
+    }
+
+    // Set voided players as the new next game
+    setNextGame(playerObjects);
+    
+    console.log("useDashboardLogic: Voided players set as next game:", playerObjects.map(p => ({ id: p.id, name: p.name })));
+  }, [canVoidCourt, voidGameOnCourt, isNextGameReady, nextGamePlayers, addPlayersToQueue, clearGamePlayers, setNextGame]);
+
   return {
     queue,
     nextGamePlayers,
@@ -224,5 +268,7 @@ export function useDashboardLogic({
     addPiggybackPair,
     removePiggybackPair,
     findPiggybackPair,
+    voidCourtAssignment,
+    canVoidCourt,
   };
 }

@@ -26,6 +26,8 @@ export interface DashboardContextType {
   sortedCourts: any[];
   assignToFreeCourt: (courtId: number) => Promise<void>;
   handleEndGameClick: (courtId: number) => void;
+  voidCourtAssignment: (courtId: number) => void;
+  canVoidCourt: (courtId: number) => boolean;
 
   // Game management
   handlePlayerSelect: (selectedPlayers: Player[]) => void;

@@ -37,7 +37,9 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     clearNextGame,
     setEndGameDialogOpen,
     finishEndGame,
-    isNextGameReady
+    isNextGameReady,
+    voidCourtAssignment,
+    canVoidCourt
   } = useDashboardLogic({
     piggybackPairs,
     addPiggybackPair: addPair,
@@ -154,6 +156,8 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     sortedCourts: courtsState,
     assignToFreeCourt,
     handleEndGameClick,
+    voidCourtAssignment,
+    canVoidCourt,
 
     // Game management
     handlePlayerSelect,

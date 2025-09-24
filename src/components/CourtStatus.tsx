@@ -1,20 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Court, CourtPlayer } from "@/types/DashboardTypes";
 import { PlayerCardSmall } from "./PlayerCardSmall";
+import { VoidGameConfirmDialog } from "./VoidGameConfirmDialog";
 
 interface CourtStatusProps {
   court: Court;
   onAssign: () => void;
   onEndGame: () => void;
   nextGameReady: boolean;
+  onVoidGame?: () => void;
+  canVoid?: boolean;
 }
 
-export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: CourtStatusProps) {
+export function CourtStatus({ court, onAssign, onEndGame, nextGameReady, onVoidGame, canVoid }: CourtStatusProps) {
   const isAvailable = court.status === 'available';
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false);
   
   return (
     <Card className={isAvailable ? 'border-shuttle-primary' : ''}>
@@ -26,7 +30,12 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
           </div>
           
           {!isAvailable && (
-            <EndGameButton onEndGame={onEndGame} />
+            <div className="flex gap-1">
+              {canVoid && onVoidGame && (
+                <VoidGameButton onVoidGame={() => setVoidDialogOpen(true)} />
+              )}
+              <EndGameButton onEndGame={onEndGame} />
+            </div>
           )}
         </div>
       </CardHeader>
@@ -38,6 +47,17 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady }: Court
           <PlayersList players={court.players} />
         )}
       </CardContent>
+
+      {/* Void Game Confirmation Dialog */}
+      {onVoidGame && (
+        <VoidGameConfirmDialog
+          open={voidDialogOpen}
+          onOpenChange={setVoidDialogOpen}
+          onConfirm={onVoidGame}
+          courtName={court.name}
+          players={court.players}
+        />
+      )}
     </Card>
   );
 }
@@ -54,6 +74,23 @@ function StatusBadge({ isAvailable }: StatusBadgeProps) {
     >
       {isAvailable ? 'Available' : 'Occupied'}
     </Badge>
+  );
+}
+
+interface VoidGameButtonProps {
+  onVoidGame: () => void;
+}
+
+function VoidGameButton({ onVoidGame }: VoidGameButtonProps) {
+  return (
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className="text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+      onClick={onVoidGame}
+    >
+      <X className="h-4 w-4 mr-1" /> Void
+    </Button>
   );
 }
 

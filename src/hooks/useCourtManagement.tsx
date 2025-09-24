@@ -196,11 +196,59 @@ export function useCourtManagement() {
     );
   }, []);
 
+  // Check if a court can be voided (within 3 minutes of assignment)
+  const canVoidCourt = useCallback((courtId: number) => {
+    const court = courts.find(c => c.id === courtId);
+    if (!court || court.status !== "occupied") return false;
+    
+    // For now, allow voiding any occupied court - could add time tracking later
+    return true;
+  }, [courts]);
+
+  // Void a game and return players
+  const voidGameOnCourt = useCallback((courtId: number) => {
+    const courtToVoid = courts.find(c => c.id === courtId);
+    
+    if (!courtToVoid || courtToVoid.status !== "occupied") {
+      console.error("useCourtManagement: Cannot void game - court not occupied");
+      return [];
+    }
+
+    console.log("useCourtManagement: Voiding game on court", courtId);
+    
+    // Store players before clearing court
+    const voidedPlayers = courtToVoid.players.map(p => ({
+      id: p.id,
+      name: p.name,
+      gender: p.gender,
+      isGuest: p.isGuest || false
+    }));
+    
+    // Reset court to available
+    setCourts(prevCourts =>
+      prevCourts.map(court => {
+        if (court.id !== courtId) return court;
+        
+        return {
+          ...court,
+          status: "available" as const,
+          players: [],
+          timeRemaining: 0
+        };
+      })
+    );
+    
+    console.log("useCourtManagement: Voided players:", voidedPlayers.map(p => ({ id: p.id, name: p.name })));
+    return voidedPlayers;
+  }, [courts]);
+
   return {
     courts,
     getSortedCourts,
     assignPlayersToCourtById,
     endGameOnCourt,
-    updateCourtPlayerInfo
+    updateCourtPlayerInfo,
+    canVoidCourt,
+    voidGameOnCourt
   };
 }

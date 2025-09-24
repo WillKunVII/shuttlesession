@@ -8,7 +8,9 @@ export function CourtStatusList() {
     sortedCourts, 
     assignToFreeCourt, 
     handleEndGameClick, 
-    isNextGameReady 
+    isNextGameReady,
+    voidCourtAssignment,
+    canVoidCourt
   } = useDashboard();
   
   return (
@@ -21,7 +23,9 @@ export function CourtStatusList() {
             court={court} 
             onAssign={() => assignToFreeCourt(court.id)} 
             onEndGame={() => handleEndGameClick(court.id)} 
-            nextGameReady={isNextGameReady()} 
+            nextGameReady={isNextGameReady()}
+            onVoidGame={() => voidCourtAssignment(court.id)}
+            canVoid={canVoidCourt(court.id)}
           />
         ))}
       </div>
