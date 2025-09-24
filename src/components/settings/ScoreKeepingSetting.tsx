@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ScoreKeepingSetting() {
-  const [scoreKeeping, setScoreKeeping] = useState<boolean>(false);
+  const [scoreKeeping, setScoreKeeping] = useState<boolean>(true);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 

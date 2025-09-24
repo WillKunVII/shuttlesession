@@ -89,11 +89,11 @@ export function setMembers(members: any[]) {
   setStorageItem("members", members);
 }
 
-// NEW: Piggyback enabled setting - DEFAULT TO DISABLED
+// NEW: Piggyback enabled setting - DEFAULT TO ENABLED
 export function getPiggybackEnabled(): boolean {
   const val = localStorage.getItem("piggybackEnabled");
-  // Default: false (disabled)
-  return val === null ? false : val === "true";
+  // Default: true (enabled)
+  return val === null ? true : val === "true";
 }
 export function setPiggybackEnabled(enabled: boolean): void {
   localStorage.setItem("piggybackEnabled", enabled ? "true" : "false");
