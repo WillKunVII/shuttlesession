@@ -51,8 +51,8 @@ export function usePlayerQueue(args: UsePlayerQueueArgs) {
   };
 
   // Add multiple players to queue with position control
-  const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) => {
-    setQueue(prevQueue => addPlayersWithOrder(prevQueue, players, returnToOriginalPositions, winners));
+  const addPlayersToQueue = (players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = [], priorityInsert: boolean = false) => {
+    setQueue(prevQueue => addPlayersWithOrder(prevQueue, players, returnToOriginalPositions, winners, priorityInsert));
   };
 
   // Remove multiple players from queue and return them

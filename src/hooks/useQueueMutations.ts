@@ -80,8 +80,11 @@ export function useQueueMutations() {
   }
 
   // Add multiple players to queue with proper order (optimized)
-  function addPlayersWithOrder(prevQueue: Player[], players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = []) {
-    if (returnToOriginalPositions) {
+  function addPlayersWithOrder(prevQueue: Player[], players: Player[], returnToOriginalPositions: boolean = false, winners: string[] = [], priorityInsert: boolean = false) {
+    if (priorityInsert) {
+      // Insert voided players at the front of the queue
+      return [...players, ...prevQueue];
+    } else if (returnToOriginalPositions) {
       const originalQueueStr = localStorage.getItem("originalPlayerQueue");
       if (!originalQueueStr) {
         return [...prevQueue, ...players];

@@ -56,6 +56,7 @@ export function useDashboardLogic({
     id: 0,
     players: []
   });
+  const [voidedPlayers, setVoidedPlayers] = useState(false);
 
   // Use getSortedCourts directly as it's already a memoized array, not a function
   const sortedCourts = getSortedCourts;
@@ -202,9 +203,16 @@ export function useDashboardLogic({
     console.log("useDashboardLogic: Clearing next game");
     const players = clearGamePlayers();
     if (players.length > 0) {
-      addPlayersToQueue(players, true); // Return to original positions
+      if (voidedPlayers) {
+        // Voided players go to front of queue
+        addPlayersToQueue(players, false, [], true);
+        setVoidedPlayers(false);
+      } else {
+        // Normal players return to original positions
+        addPlayersToQueue(players, true);
+      }
     }
-  }, [clearGamePlayers, addPlayersToQueue]);
+  }, [clearGamePlayers, addPlayersToQueue, voidedPlayers]);
 
   // Void a court assignment and handle chain reactions
   const voidCourtAssignment = useCallback((courtId: number) => {
@@ -242,8 +250,9 @@ export function useDashboardLogic({
       clearGamePlayers();
     }
 
-    // Set voided players as the new next game
+    // Set voided players as the new next game and mark as voided
     setNextGame(playerObjects);
+    setVoidedPlayers(true);
     
     console.log("useDashboardLogic: Voided players set as next game:", playerObjects.map(p => ({ id: p.id, name: p.name })));
   }, [canVoidCourt, voidGameOnCourt, isNextGameReady, nextGamePlayers, addPlayersToQueue, clearGamePlayers, setNextGame]);
