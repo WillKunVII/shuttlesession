@@ -2,7 +2,7 @@
 import { Player } from "../types/player";
 import { generateValidCombinations } from "./playerCombinations";
 import { calculateRepeatPenalty } from "./gameHistory";
-import { determineBestGameType } from "./gameValidation";
+import { determineBestGameType, inferPiggybackGameTypePreference } from "./gameValidation";
 import { sessionTracker } from "./sessionTracking";
 
 // Simplified cache for repeat penalties with memory management
@@ -16,15 +16,19 @@ const PERFORMANCE_BUDGET = 2000; // 2 seconds max
 
 /**
  * Enhanced version with weighted selection and session-aware mixing
+ * Now supports piggyback pair awareness
  */
-export const findBestCombination = async (poolPlayers: Player[]): Promise<Player[]> => {
+export const findBestCombination = async (
+  poolPlayers: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Promise<Player[]> => {
   if (poolPlayers.length < 4) return [];
 
   autoSelectStartTime = Date.now();
   console.log("Enhanced Auto-select: Starting with", poolPlayers.length, "players");
 
-  // Phase 1: Try smart selection with full pool sampling
-  const smartSelection = await findSmartCombination(poolPlayers);
+  // Phase 1: Try smart selection with full pool sampling and piggyback awareness
+  const smartSelection = await findSmartCombination(poolPlayers, piggybackPairs);
   if (smartSelection.length === 4) {
     const elapsed = Date.now() - autoSelectStartTime;
     console.log(`Enhanced Auto-select: Found smart combination in ${elapsed}ms`);
@@ -37,9 +41,9 @@ export const findBestCombination = async (poolPlayers: Player[]): Promise<Player
     return findSmartFallbackCombination(poolPlayers);
   }
 
-  // Phase 3: Smart fallback
+  // Phase 3: Smart fallback with piggyback awareness
   console.log("Enhanced Auto-select: Using smart fallback");
-  return findSmartFallbackCombination(poolPlayers);
+  return findSmartFallbackCombination(poolPlayers, piggybackPairs);
 };
 
 /**
@@ -106,8 +110,12 @@ async function getCachedRepeatPenalty(combination: Player[]): Promise<number> {
 
 /**
  * Smart combination finder using weighted selection and full pool sampling
+ * Enhanced with piggyback pair awareness
  */
-async function findSmartCombination(poolPlayers: Player[]): Promise<Player[]> {
+async function findSmartCombination(
+  poolPlayers: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Promise<Player[]> {
   // Get weighted starting players (top 3-4 with weighted probability)
   const startingCandidates = getWeightedStartingPlayers(poolPlayers);
   
@@ -116,8 +124,8 @@ async function findSmartCombination(poolPlayers: Player[]): Promise<Player[]> {
 
   // Try each potential starting player
   for (const startingPlayer of startingCandidates) {
-    // Generate random combinations from the full pool
-    const combinations = generateRandomCombinations(poolPlayers, startingPlayer, 20);
+    // Generate random combinations from the full pool with piggyback awareness
+    const combinations = generateRandomCombinations(poolPlayers, startingPlayer, 20, piggybackPairs);
     
     for (const combination of combinations) {
       // Performance check
@@ -126,13 +134,14 @@ async function findSmartCombination(poolPlayers: Player[]): Promise<Player[]> {
         return bestCombination.length === 4 ? bestCombination : [];
       }
 
-      const score = await calculateEnhancedScore(combination);
+      const score = await calculateEnhancedScore(combination, piggybackPairs);
       if (score > bestScore) {
         bestScore = score;
         bestCombination = combination;
         
-        // Early exit for excellent combinations
-        if (score > 50) {
+        // Early exit for excellent combinations with piggyback bonus
+        const piggybackBonus = getPiggybackMatchBonus(combination, piggybackPairs);
+        if (score > 50 || piggybackBonus > 10) {
           console.log("Enhanced Auto-select: Found excellent combination");
           return bestCombination;
         }
@@ -170,21 +179,50 @@ function getWeightedStartingPlayers(poolPlayers: Player[]): Player[] {
 }
 
 /**
- * Generate random combinations from the entire pool
+ * Generate random combinations from the entire pool with piggyback awareness
  */
-function generateRandomCombinations(poolPlayers: Player[], anchorPlayer: Player, count: number): Player[][] {
+function generateRandomCombinations(
+  poolPlayers: Player[], 
+  anchorPlayer: Player, 
+  count: number,
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Player[][] {
   const combinations: Player[][] = [];
   const otherPlayers = poolPlayers.filter(p => p.id !== anchorPlayer.id);
   
   if (otherPlayers.length < 3) return [];
 
   for (let i = 0; i < count && combinations.length < count; i++) {
-    // Randomly select 3 other players
-    const shuffled = [...otherPlayers].sort(() => Math.random() - 0.5);
-    const selectedOthers = shuffled.slice(0, 3);
+    let selectedOthers: Player[];
+    
+    // Check if anchor player is in a piggyback pair
+    const anchorPair = piggybackPairs?.find(p => p.master === anchorPlayer.id || p.partner === anchorPlayer.id);
+    
+    if (anchorPair) {
+      // If anchor is piggybacked, must include their partner
+      const partnerId = anchorPair.master === anchorPlayer.id ? anchorPair.partner : anchorPair.master;
+      const partner = otherPlayers.find(p => p.id === partnerId);
+      
+      if (partner) {
+        const remainingOthers = otherPlayers.filter(p => p.id !== partnerId);
+        if (remainingOthers.length >= 2) {
+          const shuffled = [...remainingOthers].sort(() => Math.random() - 0.5);
+          selectedOthers = [partner, ...shuffled.slice(0, 2)];
+        } else {
+          continue; // Skip if not enough players
+        }
+      } else {
+        continue; // Skip if partner not in pool
+      }
+    } else {
+      // Standard random selection
+      const shuffled = [...otherPlayers].sort(() => Math.random() - 0.5);
+      selectedOthers = shuffled.slice(0, 3);
+    }
+    
     const combination = [anchorPlayer, ...selectedOthers];
     
-    // Check if this combination can form a valid game
+    // Check if this combination can form a valid game with piggyback awareness
     const gameType = determineBestGameType(combination);
     if (gameType) {
       const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
@@ -198,9 +236,12 @@ function generateRandomCombinations(poolPlayers: Player[], anchorPlayer: Player,
 }
 
 /**
- * Calculate enhanced score combining multiple factors
+ * Calculate enhanced score combining multiple factors including piggyback bonuses
  */
-async function calculateEnhancedScore(combination: Player[]): Promise<number> {
+async function calculateEnhancedScore(
+  combination: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Promise<number> {
   // Base score from repeat penalty (lower is better, so negate)
   const repeatPenalty = await getCachedRepeatPenalty(combination);
   const repeatScore = Math.max(0, 50 - repeatPenalty);
@@ -217,16 +258,59 @@ async function calculateEnhancedScore(combination: Player[]): Promise<number> {
 
   // Variety bonus for new combinations
   const varietyBonus = sessionTracker.getVarietyBonus(combination);
+  
+  // Piggyback pair satisfaction bonus
+  const piggybackBonus = getPiggybackMatchBonus(combination, piggybackPairs);
 
-  const totalScore = repeatScore + sessionBalanceBonus + varietyBonus - coolingPenalty;
+  const totalScore = repeatScore + sessionBalanceBonus + varietyBonus + piggybackBonus - coolingPenalty;
   
   return totalScore;
 }
 
 /**
- * Smart fallback that considers session balance instead of just taking first 4
+ * Calculates bonus score for piggyback pair satisfaction
  */
-function findSmartFallbackCombination(poolPlayers: Player[]): Player[] {
+function getPiggybackMatchBonus(
+  combination: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): number {
+  if (!piggybackPairs || piggybackPairs.length === 0) return 0;
+  
+  let bonus = 0;
+  
+  for (const pair of piggybackPairs) {
+    const hasMaster = combination.some(p => p.id === pair.master);
+    const hasPartner = combination.some(p => p.id === pair.partner);
+    
+    // Big bonus for including a complete piggyback pair
+    if (hasMaster && hasPartner) {
+      bonus += 15;
+      
+      // Extra bonus if the game type matches their implied preference
+      const masterPlayer = combination.find(p => p.id === pair.master);
+      const partnerPlayer = combination.find(p => p.id === pair.partner);
+      
+      if (masterPlayer && partnerPlayer) {
+        const gameType = determineBestGameType(combination);
+        const impliedPreference = inferPiggybackGameTypePreference(masterPlayer, partnerPlayer);
+        
+        if (gameType === impliedPreference) {
+          bonus += 10; // Extra bonus for matching implied game type
+        }
+      }
+    }
+  }
+  
+  return bonus;
+}
+
+/**
+ * Smart fallback that considers session balance and piggyback pairs
+ */
+function findSmartFallbackCombination(
+  poolPlayers: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Player[] {
   // Sort players by session balance (players who need more games first)
   const sortedByBalance = [...poolPlayers].sort((a, b) => {
     const balanceA = sessionTracker.getSessionBalanceScore(a.id);
@@ -242,6 +326,34 @@ function findSmartFallbackCombination(poolPlayers: Player[]): Player[] {
     return balanceB - balanceA;
   });
   
+  // Prioritize combinations with piggyback pairs
+  if (piggybackPairs && piggybackPairs.length > 0) {
+    for (const pair of piggybackPairs) {
+      const masterPlayer = poolPlayers.find(p => p.id === pair.master);
+      const partnerPlayer = poolPlayers.find(p => p.id === pair.partner);
+      
+      if (masterPlayer && partnerPlayer) {
+        // Try to build a combination around this piggyback pair
+        const otherPlayers = poolPlayers.filter(p => p.id !== pair.master && p.id !== pair.partner);
+        
+        for (let i = 0; i < otherPlayers.length - 1; i++) {
+          for (let j = i + 1; j < otherPlayers.length; j++) {
+            const combination = [masterPlayer, partnerPlayer, otherPlayers[i], otherPlayers[j]];
+            const gameType = determineBestGameType(combination);
+            
+            if (gameType) {
+              const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
+              if (allAccept) {
+                console.log("Enhanced Auto-select: Piggyback-prioritized fallback successful");
+                return combination;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Try combinations starting with the most balanced players
   for (let i = 0; i <= Math.max(0, sortedByBalance.length - 4); i++) {
     const combination = sortedByBalance.slice(i, i + 4);

@@ -84,3 +84,82 @@ export const determineBestGameType = (players: Player[]): "Mixed" | "Ladies" | "
 export const getPlayerPoolSize = (): number => {
   return Number(localStorage.getItem("playerPoolSize")) || 8;
 };
+
+/**
+ * Infers the preferred game type from a piggyback pair based on genders
+ */
+export const inferPiggybackGameTypePreference = (masterPlayer: Player, partnerPlayer: Player): "Mixed" | "Ladies" | "Open" | null => {
+  if (!masterPlayer || !partnerPlayer) return null;
+  
+  const masterGender = masterPlayer.gender;
+  const partnerGender = partnerPlayer.gender;
+  
+  // Two females → prefer Ladies match
+  if (masterGender === "female" && partnerGender === "female") {
+    return "Ladies";
+  }
+  
+  // Two males → prefer Open match  
+  if (masterGender === "male" && partnerGender === "male") {
+    return "Open";
+  }
+  
+  // One male, one female → prefer Mixed match
+  if ((masterGender === "male" && partnerGender === "female") || 
+      (masterGender === "female" && partnerGender === "male")) {
+    return "Mixed";
+  }
+  
+  return null;
+};
+
+/**
+ * Enhanced game type determination that considers piggyback pair preferences
+ */
+export const determineBestGameTypeWithPiggyback = (
+  players: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): "Mixed" | "Ladies" | "Open" | null => {
+  if (players.length !== 4) return null;
+  
+  // Check if preference feature is enabled
+  const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
+  if (!prefEnabled) return "Open"; // Default when preferences aren't enabled
+  
+  // Count genders
+  const maleCount = players.filter(p => p.gender === "male").length;
+  const femaleCount = players.filter(p => p.gender === "female").length;
+  
+  // Determine physically possible game types
+  const isMixedPossible = maleCount === 2 && femaleCount === 2;
+  const isLadiesPossible = femaleCount === 4;
+  
+  // Check for piggyback pair preferences
+  let piggybackPreference: string | null = null;
+  if (piggybackPairs && piggybackPairs.length > 0) {
+    for (const pair of piggybackPairs) {
+      const masterPlayer = players.find(p => p.id === pair.master);
+      const partnerPlayer = players.find(p => p.id === pair.partner);
+      
+      if (masterPlayer && partnerPlayer) {
+        piggybackPreference = inferPiggybackGameTypePreference(masterPlayer, partnerPlayer);
+        break; // Use first found piggyback pair preference
+      }
+    }
+  }
+  
+  // Check if all players accept each game type
+  const allAcceptMixed = players.every(p => playerAcceptsGameType(p, "Mixed"));
+  const allAcceptLadies = players.every(p => playerAcceptsGameType(p, "Ladies"));
+  const allAcceptOpen = players.every(p => playerAcceptsGameType(p, "Open"));
+  
+  // Priority: Piggyback preference first (if valid), then top player preference, then defaults
+  if (piggybackPreference) {
+    if (piggybackPreference === "Mixed" && isMixedPossible && allAcceptMixed) return "Mixed";
+    if (piggybackPreference === "Ladies" && isLadiesPossible && allAcceptLadies) return "Ladies";
+    if (piggybackPreference === "Open" && allAcceptOpen) return "Open";
+  }
+  
+  // Fall back to original logic if piggyback preference can't be satisfied
+  return determineBestGameType(players);
+};

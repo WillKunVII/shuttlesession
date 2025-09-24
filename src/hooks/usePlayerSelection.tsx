@@ -13,34 +13,19 @@ export function usePlayerSelection(queue: Player[], options?: UsePlayerSelection
     const piggybackPairs = options?.piggybackPairs || [];
     const poolSize = getPlayerPoolSize();
     
-    // Filter out resting players first, then apply pool size limit
+    // Filter out resting players first
     const activeQueue = queue.filter(player => !player.isResting);
-    let poolPlayers = [...activeQueue].slice(0, Math.min(poolSize, activeQueue.length));
-
-    console.log("Auto-select: Starting with pool of", poolPlayers.length, "active players");
+    
+    console.log("Auto-select: Starting with", activeQueue.length, "active players");
     console.log("Auto-select: Piggyback pairs:", piggybackPairs);
 
-    // Handle piggyback pairs - if #1 player is in a pair, include their partner
-    if (piggybackPairs.length > 0 && poolPlayers.length > 0) {
-      const anchorPlayer = poolPlayers[0];
-      const anchorPair = piggybackPairs.find(p => p.master === anchorPlayer.id || p.partner === anchorPlayer.id);
-      
-      if (anchorPair) {
-        console.log("Auto-select: Anchor player is in piggyback pair");
-        const partnerId = anchorPair.master === anchorPlayer.id ? anchorPair.partner : anchorPair.master;
-        const partner = poolPlayers.find(p => p.id === partnerId);
-        
-        if (partner) {
-          // Ensure both piggyback players are at the start of the pool
-          poolPlayers = poolPlayers.filter(p => p.id !== partnerId);
-          poolPlayers = [anchorPlayer, partner, ...poolPlayers.slice(1)];
-          console.log("Auto-select: Rearranged pool to include piggyback pair at front");
-        }
-      }
-    }
+    // Apply fair piggyback positioning and create pool
+    const poolPlayers = getFairPiggybackPool(activeQueue, piggybackPairs, poolSize);
+    
+    console.log("Auto-select: Fair pool size:", poolPlayers.length);
 
-    // Use the new selection logic that prioritizes #1 player
-    const selectedPlayers = await findBestCombination(poolPlayers);
+    // Use the enhanced selection logic with piggyback awareness
+    const selectedPlayers = await findBestCombination(poolPlayers, piggybackPairs);
 
     if (selectedPlayers.length === 4) {
       console.log("Auto-select: Successfully selected 4 players:", selectedPlayers.map(p => p.name));
@@ -52,4 +37,50 @@ export function usePlayerSelection(queue: Player[], options?: UsePlayerSelection
   };
 
   return { autoSelectPlayers };
+}
+
+/**
+ * Gets fair pool positioning for piggyback pairs
+ * Both players in a pair are positioned at the lower player's queue position
+ */
+function getFairPiggybackPool(activeQueue: Player[], piggybackPairs: PiggybackPair[], poolSize: number): Player[] {
+  if (piggybackPairs.length === 0) {
+    return activeQueue.slice(0, Math.min(poolSize, activeQueue.length));
+  }
+
+  // Calculate effective positions for all players
+  const playerPositions = new Map<number, number>();
+  
+  activeQueue.forEach((player, index) => {
+    const pair = piggybackPairs.find(p => p.master === player.id || p.partner === player.id);
+    
+    if (pair) {
+      // Find both players in the pair
+      const masterIndex = activeQueue.findIndex(p => p.id === pair.master);
+      const partnerIndex = activeQueue.findIndex(p => p.id === pair.partner);
+      
+      if (masterIndex !== -1 && partnerIndex !== -1) {
+        // Both players get positioned at the lower (higher index) position
+        const effectivePosition = Math.max(masterIndex, partnerIndex);
+        playerPositions.set(pair.master, effectivePosition);
+        playerPositions.set(pair.partner, effectivePosition);
+      } else {
+        // If partner not found, use original position
+        playerPositions.set(player.id, index);
+      }
+    } else {
+      // Non-piggybacked player keeps original position
+      playerPositions.set(player.id, index);
+    }
+  });
+
+  // Sort players by their effective positions
+  const sortedPlayers = [...activeQueue].sort((a, b) => {
+    const posA = playerPositions.get(a.id) ?? activeQueue.findIndex(p => p.id === a.id);
+    const posB = playerPositions.get(b.id) ?? activeQueue.findIndex(p => p.id === b.id);
+    return posA - posB;
+  });
+
+  // Apply pool size limit to fairly positioned players
+  return sortedPlayers.slice(0, Math.min(poolSize, sortedPlayers.length));
 }
