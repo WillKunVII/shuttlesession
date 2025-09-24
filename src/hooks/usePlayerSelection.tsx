@@ -40,8 +40,8 @@ export function usePlayerSelection(queue: Player[], options?: UsePlayerSelection
 }
 
 /**
- * Gets fair pool positioning for piggyback pairs
- * Both players in a pair are positioned at the lower player's queue position
+ * Gets fair pool positioning for piggyback pairs with all-or-nothing inclusion
+ * Both players in a pair are positioned at the better player's queue position
  */
 function getFairPiggybackPool(activeQueue: Player[], piggybackPairs: PiggybackPair[], poolSize: number): Player[] {
   if (piggybackPairs.length === 0) {
@@ -50,6 +50,7 @@ function getFairPiggybackPool(activeQueue: Player[], piggybackPairs: PiggybackPa
 
   // Calculate effective positions for all players
   const playerPositions = new Map<number, number>();
+  const pairExclusions = new Set<number>(); // Track pairs that can't both fit in pool
   
   activeQueue.forEach((player, index) => {
     const pair = piggybackPairs.find(p => p.master === player.id || p.partner === player.id);
@@ -60,10 +61,21 @@ function getFairPiggybackPool(activeQueue: Player[], piggybackPairs: PiggybackPa
       const partnerIndex = activeQueue.findIndex(p => p.id === pair.partner);
       
       if (masterIndex !== -1 && partnerIndex !== -1) {
-        // Both players get positioned at the lower (higher index) position
-        const effectivePosition = Math.max(masterIndex, partnerIndex);
-        playerPositions.set(pair.master, effectivePosition);
-        playerPositions.set(pair.partner, effectivePosition);
+        // Both players get positioned at the better (lower index) position for fairness
+        const effectivePosition = Math.min(masterIndex, partnerIndex);
+        
+        // Check if both players can fit within pool size at their effective position
+        // We need to ensure both players fit, so the effective position + 1 must be within pool
+        if (effectivePosition < poolSize - 1 || (effectivePosition < poolSize && masterIndex < poolSize && partnerIndex < poolSize)) {
+          playerPositions.set(pair.master, effectivePosition);
+          playerPositions.set(pair.partner, effectivePosition);
+          console.log(`Piggyback pair included: Master ${pair.master}, Partner ${pair.partner} at effective position ${effectivePosition}`);
+        } else {
+          // Exclude both players if they can't both fit in the pool
+          pairExclusions.add(pair.master);
+          pairExclusions.add(pair.partner);
+          console.log(`Piggyback pair excluded from pool: Master ${pair.master}, Partner ${pair.partner} - pool size constraint`);
+        }
       } else {
         // If partner not found, use original position
         playerPositions.set(player.id, index);
@@ -74,13 +86,33 @@ function getFairPiggybackPool(activeQueue: Player[], piggybackPairs: PiggybackPa
     }
   });
 
-  // Sort players by their effective positions
-  const sortedPlayers = [...activeQueue].sort((a, b) => {
+  // Filter out excluded pairs and sort by effective positions
+  const eligiblePlayers = activeQueue.filter(player => !pairExclusions.has(player.id));
+  
+  const sortedPlayers = [...eligiblePlayers].sort((a, b) => {
     const posA = playerPositions.get(a.id) ?? activeQueue.findIndex(p => p.id === a.id);
     const posB = playerPositions.get(b.id) ?? activeQueue.findIndex(p => p.id === b.id);
     return posA - posB;
   });
 
   // Apply pool size limit to fairly positioned players
-  return sortedPlayers.slice(0, Math.min(poolSize, sortedPlayers.length));
+  const finalPool = sortedPlayers.slice(0, Math.min(poolSize, sortedPlayers.length));
+  
+  // Final validation: ensure no piggyback pairs are split in the final pool
+  const finalPoolIds = new Set(finalPool.map(p => p.id));
+  for (const pair of piggybackPairs) {
+    const hasMaster = finalPoolIds.has(pair.master);
+    const hasPartner = finalPoolIds.has(pair.partner);
+    
+    if ((hasMaster && !hasPartner) || (hasPartner && !hasMaster)) {
+      console.error(`CRITICAL: Piggyback pair split in final pool! Master: ${pair.master}, Partner: ${pair.partner}`);
+      // Remove the lone player to maintain integrity
+      const lonePlayerId = hasMaster ? pair.master : pair.partner;
+      const fixedPool = finalPool.filter(p => p.id !== lonePlayerId);
+      console.log(`Fixed pool by removing lone player ${lonePlayerId}`);
+      return fixedPool;
+    }
+  }
+  
+  return finalPool;
 }

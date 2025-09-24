@@ -15,6 +15,35 @@ let autoSelectStartTime = 0;
 const PERFORMANCE_BUDGET = 2000; // 2 seconds max
 
 /**
+ * Validates that no piggyback pairs are split in the given combination
+ */
+function validatePiggybackIntegrity(
+  combination: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): boolean {
+  if (!piggybackPairs || piggybackPairs.length === 0) return true;
+  
+  const playerIds = new Set(combination.map(p => p.id));
+  
+  for (const pair of piggybackPairs) {
+    const hasMaster = playerIds.has(pair.master);
+    const hasPartner = playerIds.has(pair.partner);
+    
+    // If one player from a pair is selected, the other must also be selected
+    if (hasMaster && !hasPartner) {
+      console.log(`Piggyback integrity violation: Master ${pair.master} selected without partner ${pair.partner}`);
+      return false;
+    }
+    if (hasPartner && !hasMaster) {
+      console.log(`Piggyback integrity violation: Partner ${pair.partner} selected without master ${pair.master}`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
  * Enhanced version with weighted selection and session-aware mixing
  * Now supports piggyback pair awareness
  */
@@ -134,6 +163,12 @@ async function findSmartCombination(
         return bestCombination.length === 4 ? bestCombination : [];
       }
 
+      // Early validation of piggyback integrity
+      if (!validatePiggybackIntegrity(combination, piggybackPairs)) {
+        console.log("Enhanced Auto-select: Skipping combination due to piggyback violation");
+        continue;
+      }
+
       const score = await calculateEnhancedScore(combination, piggybackPairs);
       if (score > bestScore) {
         bestScore = score;
@@ -192,7 +227,10 @@ function generateRandomCombinations(
   
   if (otherPlayers.length < 3) return [];
 
-  for (let i = 0; i < count && combinations.length < count; i++) {
+  let attempts = 0;
+  const maxAttempts = count * 3; // Safety counter to prevent infinite loops
+
+  for (let i = 0; i < count && combinations.length < count && attempts < maxAttempts; attempts++) {
     let selectedOthers: Player[];
     
     // Check if anchor player is in a piggyback pair
@@ -215,12 +253,18 @@ function generateRandomCombinations(
         continue; // Skip if partner not in pool
       }
     } else {
-      // Standard random selection
+      // Standard random selection with piggyback validation
       const shuffled = [...otherPlayers].sort(() => Math.random() - 0.5);
       selectedOthers = shuffled.slice(0, 3);
     }
     
     const combination = [anchorPlayer, ...selectedOthers];
+    
+    // Validate piggyback integrity before checking game type
+    if (!validatePiggybackIntegrity(combination, piggybackPairs)) {
+      console.log("Generate combinations: Rejecting combination due to piggyback violation");
+      continue;
+    }
     
     // Check if this combination can form a valid game with piggyback awareness
     const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
@@ -228,6 +272,7 @@ function generateRandomCombinations(
       const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
       if (allAccept) {
         combinations.push(combination);
+        i++; // Only increment when we successfully add a combination
       }
     }
   }
@@ -242,6 +287,11 @@ async function calculateEnhancedScore(
   combination: Player[], 
   piggybackPairs?: Array<{ master: number; partner: number }>
 ): Promise<number> {
+  // Early validation - immediately reject if piggyback pairs are split
+  if (!validatePiggybackIntegrity(combination, piggybackPairs)) {
+    return -Infinity;
+  }
+
   // Base score from repeat penalty (lower is better, so negate)
   const repeatPenalty = await getCachedRepeatPenalty(combination);
   const repeatScore = Math.max(0, 50 - repeatPenalty);
@@ -354,11 +404,17 @@ function findSmartFallbackCombination(
     }
   }
 
-  // Try combinations starting with the most balanced players
+  // Try combinations starting with the most balanced players with piggyback validation
   for (let i = 0; i <= Math.max(0, sortedByBalance.length - 4); i++) {
     const combination = sortedByBalance.slice(i, i + 4);
     
     if (combination.length === 4) {
+      // Validate piggyback integrity before checking game type
+      if (!validatePiggybackIntegrity(combination, piggybackPairs)) {
+        console.log("Smart fallback: Skipping combination due to piggyback violation");
+        continue;
+      }
+      
       const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
       if (gameType) {
         const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
@@ -370,15 +426,38 @@ function findSmartFallbackCombination(
     }
   }
   
-  // Ultimate fallback - just take first 4 if nothing else works
-  const combination = poolPlayers.slice(0, 4);
-  if (combination.length === 4) {
-    const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
-    if (gameType) {
-      console.log("Enhanced Auto-select: Ultimate fallback used");
-      return combination;
+  // Ultimate fallback - piggyback-aware selection
+  return findPiggybackAwareFallback(poolPlayers, piggybackPairs);
+}
+
+/**
+ * Ultimate fallback that tries to respect piggyback pairs even in last resort
+ */
+function findPiggybackAwareFallback(
+  poolPlayers: Player[], 
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): Player[] {
+  // Try different starting positions to find a valid combination
+  for (let start = 0; start <= Math.max(0, poolPlayers.length - 4); start++) {
+    const combination = poolPlayers.slice(start, start + 4);
+    
+    if (combination.length === 4) {
+      // Check piggyback integrity
+      if (validatePiggybackIntegrity(combination, piggybackPairs)) {
+        const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
+        if (gameType) {
+          console.log("Enhanced Auto-select: Piggyback-aware ultimate fallback used");
+          return combination;
+        }
+      } else {
+        console.log("Ultimate fallback: Skipping combination due to piggyback violation");
+      }
     }
   }
+  
+  // If all else fails, return empty array rather than split piggyback pairs
+  console.log("Enhanced Auto-select: No valid combination found that respects piggyback pairs");
+  return [];
   
   return [];
 }
