@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Player } from "@/types/player";
 import { PlayPreference } from "@/types/member";
@@ -12,14 +11,22 @@ interface DashboardProviderProps {
 }
 
 export function DashboardProviderLogic({ children }: { children: React.ReactNode }) {
-  // Piggyback pairs state
+  // State for managing active players
+  const [nextGamePlayersState, setNextGamePlayers] = useState<Player[]>([]);
+  const [queueState, setQueue] = useState<Player[]>([]);
+  const [courtsState, setCourts] = useState<any[]>([]);
+
+  // Piggyback pairs state with queue manipulation
   const {
     piggybackPairs,
     addPair,
     removePairByMaster,
     findPairOf,
     clearAllPairs
-  } = usePiggybackPairs();
+  } = usePiggybackPairs({
+    getQueue: () => queueState,
+    setQueue
+  });
 
   // Main dashboard logic
   const {
@@ -46,11 +53,6 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     removePiggybackPair: removePairByMaster,
     findPiggybackPair: findPairOf
   });
-
-  // State for managing active players
-  const [nextGamePlayersState, setNextGamePlayers] = useState<Player[]>(nextGamePlayers);
-  const [queueState, setQueue] = useState<Player[]>(queue);
-  const [courtsState, setCourts] = useState<any[]>(sortedCourts);
 
   // Sync state with hook values
   useEffect(() => {

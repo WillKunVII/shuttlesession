@@ -2,7 +2,7 @@
 import { Player } from "../types/player";
 import { generateValidCombinations } from "./playerCombinations";
 import { calculateRepeatPenalty } from "./gameHistory";
-import { determineBestGameType, inferPiggybackGameTypePreference } from "./gameValidation";
+import { determineBestGameType, determineBestGameTypeWithPiggyback, inferPiggybackGameTypePreference } from "./gameValidation";
 import { sessionTracker } from "./sessionTracking";
 
 // Simplified cache for repeat penalties with memory management
@@ -223,7 +223,7 @@ function generateRandomCombinations(
     const combination = [anchorPlayer, ...selectedOthers];
     
     // Check if this combination can form a valid game with piggyback awareness
-    const gameType = determineBestGameType(combination);
+    const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
     if (gameType) {
       const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
       if (allAccept) {
@@ -291,7 +291,7 @@ function getPiggybackMatchBonus(
       const partnerPlayer = combination.find(p => p.id === pair.partner);
       
       if (masterPlayer && partnerPlayer) {
-        const gameType = determineBestGameType(combination);
+        const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
         const impliedPreference = inferPiggybackGameTypePreference(masterPlayer, partnerPlayer);
         
         if (gameType === impliedPreference) {
@@ -339,7 +339,7 @@ function findSmartFallbackCombination(
         for (let i = 0; i < otherPlayers.length - 1; i++) {
           for (let j = i + 1; j < otherPlayers.length; j++) {
             const combination = [masterPlayer, partnerPlayer, otherPlayers[i], otherPlayers[j]];
-            const gameType = determineBestGameType(combination);
+            const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
             
             if (gameType) {
               const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
@@ -359,7 +359,7 @@ function findSmartFallbackCombination(
     const combination = sortedByBalance.slice(i, i + 4);
     
     if (combination.length === 4) {
-      const gameType = determineBestGameType(combination);
+      const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
       if (gameType) {
         const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
         if (allAccept) {
@@ -373,7 +373,7 @@ function findSmartFallbackCombination(
   // Ultimate fallback - just take first 4 if nothing else works
   const combination = poolPlayers.slice(0, 4);
   if (combination.length === 4) {
-    const gameType = determineBestGameType(combination);
+    const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
     if (gameType) {
       console.log("Enhanced Auto-select: Ultimate fallback used");
       return combination;
