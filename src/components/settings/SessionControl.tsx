@@ -53,6 +53,9 @@ export function SessionControl() {
     localStorage.removeItem("playerQueue");
     localStorage.removeItem("nextGamePlayers");
     
+    // Clear courts data
+    localStorage.removeItem("courts");
+    
     // Clear session-specific scores
     clearSessionScores();
     
@@ -62,7 +65,7 @@ export function SessionControl() {
     // Show success toast
     toast({
       title: "Session ended",
-      description: "Player data has been cleared. Member data is preserved."
+      description: "Player data and court assignments have been cleared. Member data is preserved."
     });
   };
 
@@ -80,7 +83,7 @@ export function SessionControl() {
               <AlertDialogTitle>End Current Session?</AlertDialogTitle>
               <AlertDialogDescription>
                 You are about to end the current session and return to the start screen. 
-                This action will clear all player queue data and session scores but preserve member information.
+                This action will clear all player queue data, court assignments, and session scores but preserve member information.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
