@@ -85,6 +85,11 @@ export function usePlayerQueue(args: UsePlayerQueueArgs) {
     );
   };
 
+  // Sync external queue changes back to internal state
+  const syncQueue = (externalQueue: Player[]) => {
+    setQueue(externalQueue);
+  };
+
   return {
     queue,
     addPlayerToQueue,
@@ -96,5 +101,6 @@ export function usePlayerQueue(args: UsePlayerQueueArgs) {
     canFormValidGame,
     updatePlayerInfo: updatePlayer,
     piggybackPairs,
+    syncQueue, // Expose sync function for external state updates
   };
 }

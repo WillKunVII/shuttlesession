@@ -29,8 +29,14 @@ export function useDashboardLogic({
     removePlayerFromQueue,
     addPlayersToQueue,
     removePlayersFromQueue,
-    autoSelectPlayers
-  } = usePlayerQueue({ piggybackPairs }); // pass as piggybackPairs
+    autoSelectPlayers,
+    syncQueue
+  } = usePlayerQueue({ 
+    piggybackPairs,
+    addPiggybackPair,
+    removePiggybackPair,
+    findPiggybackPair
+  });
 
   const {
     nextGamePlayers,
@@ -268,6 +274,7 @@ export function useDashboardLogic({
     currentCourtPlayers,
     addPlayerToQueue,
     removePlayerFromQueue,
+    syncQueue,
     generateNextGame,
     assignToFreeCourt,
     handleEndGameClick,

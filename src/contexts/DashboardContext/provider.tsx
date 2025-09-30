@@ -46,7 +46,8 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     finishEndGame,
     isNextGameReady,
     voidCourtAssignment,
-    canVoidCourt
+    canVoidCourt,
+    syncQueue
   } = useDashboardLogic({
     piggybackPairs,
     addPiggybackPair: addPair,
@@ -131,13 +132,19 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
 
   // Toggle player rest status
   const togglePlayerRest = (playerId: number) => {
-    setQueue(prevQueue => 
-      prevQueue.map(player => 
-        player.id === playerId 
-          ? { ...player, isResting: !player.isResting }
-          : player
-      )
+    const updatedQueue = queueState.map(player => 
+      player.id === playerId 
+        ? { ...player, isResting: !player.isResting }
+        : player
     );
+    
+    // Update local state
+    setQueue(updatedQueue);
+    
+    // Sync back to the queue hook to ensure consistency
+    syncQueue(updatedQueue);
+    
+    console.log("DashboardContext: Toggled rest status for player", playerId, "Updated queue:", updatedQueue);
   };
 
   const value: DashboardContextType = {
