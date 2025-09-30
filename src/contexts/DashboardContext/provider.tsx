@@ -159,7 +159,11 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     
     if (willBeResting && isInPool) {
       // Player is in pool and wants to rest - move them just after the pool boundary
-      // Find the pool boundary (index of last active player in pool)
+      // Remove player from current position first
+      const [removedPlayer] = updatedQueue.splice(playerCurrentIndex, 1);
+      removedPlayer.isResting = true;
+      
+      // Now find the pool boundary on the remaining queue
       let activeCount = 0;
       let poolBoundaryIndex = -1;
       for (let i = 0; i < updatedQueue.length; i++) {
@@ -172,12 +176,8 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
         }
       }
       
-      // Remove player from current position
-      const [removedPlayer] = updatedQueue.splice(playerCurrentIndex, 1);
-      removedPlayer.isResting = true;
-      
-      // Insert at pool boundary (will be just outside pool)
-      const insertIndex = poolBoundaryIndex >= 0 ? poolBoundaryIndex : 0;
+      // Insert just after the pool boundary
+      const insertIndex = poolBoundaryIndex >= 0 ? poolBoundaryIndex + 1 : 0;
       updatedQueue.splice(insertIndex, 0, removedPlayer);
     } else {
       // Just toggle rest status without moving (for players outside pool or unresting)
