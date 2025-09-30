@@ -186,15 +186,18 @@ export function useDashboardLogic({
 
   // Optimized player selection handler
   const handlePlayerSelect = useCallback((selectedPlayers: Player[]) => {
-    if (selectedPlayers.length !== 4) {
-      console.error("useDashboardLogic: Invalid selection, need 4 players");
+    // Filter out any resting players from the selection
+    const activePlayers = selectedPlayers.filter(p => !p.isResting);
+    
+    if (activePlayers.length !== 4) {
+      console.error("useDashboardLogic: Invalid selection, need 4 active (non-resting) players");
       return;
     }
 
-    console.log("useDashboardLogic: Manual player selection:", selectedPlayers.map(p => ({ id: p.id, name: p.name })));
+    console.log("useDashboardLogic: Manual player selection:", activePlayers.map(p => ({ id: p.id, name: p.name })));
     
-    setNextGame(selectedPlayers);
-    const playerIds = selectedPlayers.map(p => p.id);
+    setNextGame(activePlayers);
+    const playerIds = activePlayers.map(p => p.id);
     removePlayersFromQueue(playerIds);
   }, [setNextGame, removePlayersFromQueue]);
 

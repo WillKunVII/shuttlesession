@@ -54,19 +54,22 @@ export function PlayerQueueCard({
   return (
     <div
       className={`border rounded-lg p-3 flex items-center justify-between ${
-        isNextGameReady 
+        isNextGameReady || player.isResting
           ? "opacity-60 cursor-not-allowed" 
           : "cursor-pointer"
       } ${
         selected
           ? "bg-shuttle-lightBlue border-shuttle-blue"
-          : isNextGameReady
+          : isNextGameReady || player.isResting
             ? ""
             : "hover:bg-gray-50"
       } ${
-        player.isResting ? "opacity-75 bg-gray-50" : ""
+        player.isResting ? "bg-gray-100 border-gray-300" : ""
       }`}
-      onClick={() => onPlayerSelect(player)}
+      onClick={() => {
+        if (player.isResting || isNextGameReady) return;
+        onPlayerSelect(player);
+      }}
     >
       <div className="flex items-center gap-3 flex-wrap min-w-0">
         {/* Queue Position Number */}

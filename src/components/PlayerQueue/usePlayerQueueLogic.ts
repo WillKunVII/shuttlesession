@@ -58,6 +58,9 @@ export function usePlayerQueueLogic({
 
   const togglePlayerSelection = (player: Player) => {
     if (isNextGameReady) return;
+    // Don't allow selection of resting players
+    if (player.isResting) return;
+    
     if (selected.some(p => p.id === player.id)) {
       setSelected(selected.filter(p => p.id !== player.id));
     } else if (selected.length < 4) {
