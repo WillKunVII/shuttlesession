@@ -83,7 +83,7 @@ export function PlayerQueueList({
       {/* Active Pool Section - Always visible */}
       <div className="px-2 py-1">
         <span className="text-xs font-medium text-primary">
-          Active Pool ({totalActiveCount} of {playerPoolSize})
+          Active Pool ({Math.min(totalActiveCount, playerPoolSize)} of {playerPoolSize})
         </span>
       </div>
       {activePoolPlayers.map((player) => {
