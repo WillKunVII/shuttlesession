@@ -41,72 +41,77 @@ export function PlayerQueueList({
 }: PlayerQueueListProps) {
   const piggybackEnabled = getPiggybackEnabled();
   
-  // Calculate dynamic pool boundary - find the Nth active (non-resting) player
-  let activeCount = 0;
-  let poolBoundaryIndex = -1;
+  // Calculate total active (non-resting) players
+  const totalActiveCount = players.filter(p => !p.isResting).length;
   
-  for (let i = 0; i < players.length; i++) {
-    if (!players[i].isResting) {
-      activeCount++;
-      if (activeCount === playerPoolSize) {
-        poolBoundaryIndex = i;
-        break;
+  // Determine if we need to split the queue
+  const needsSplit = totalActiveCount > playerPoolSize;
+  
+  let activePoolPlayers: Player[] = [];
+  let waitingPlayers: Player[] = [];
+  
+  if (needsSplit) {
+    // Find the Nth active player to determine pool boundary
+    let activeCount = 0;
+    let poolBoundaryIndex = -1;
+    
+    for (let i = 0; i < players.length; i++) {
+      if (!players[i].isResting) {
+        activeCount++;
+        if (activeCount === playerPoolSize) {
+          poolBoundaryIndex = i;
+          break;
+        }
       }
     }
+    
+    // Split at boundary
+    players.forEach((player, index) => {
+      if (!player.isResting && poolBoundaryIndex !== -1 && index <= poolBoundaryIndex) {
+        activePoolPlayers.push(player);
+      } else {
+        waitingPlayers.push(player);
+      }
+    });
+  } else {
+    // All players stay in active pool when total active players ≤ pool limit
+    activePoolPlayers = players;
   }
-  
-  // Show all players in their original queue order
-  const activePoolPlayers: Player[] = [];
-  const waitingPlayers: Player[] = [];
-  
-  players.forEach((player, index) => {
-    // Non-resting players up to pool boundary are in active pool
-    // Resting players are shown in place but not counted in pool
-    if (!player.isResting && poolBoundaryIndex !== -1 && index <= poolBoundaryIndex) {
-      activePoolPlayers.push(player);
-    } else {
-      waitingPlayers.push(player);
-    }
-  });
 
   return (
     <div className="space-y-2 pr-4">
-      {/* Active Pool Section */}
-      {activePoolPlayers.length > 0 && (
-        <>
-          <div className="px-2 py-1">
-            <span className="text-xs font-medium text-primary">
-              Active Pool ({activePoolPlayers.length} of {playerPoolSize})
-            </span>
-          </div>
-          {activePoolPlayers.map((player) => {
-            const originalIndex = players.findIndex(p => p.id === player.id);
-            return (
-              <PlayerQueueCard
-                key={`player-${player.id}-${originalIndex}`}
-                player={player}
-                players={players}
-                selected={selected.some((p: any) => p.id === player.id)}
-                isNextGameReady={isNextGameReady}
-                scoreKeepingEnabled={scoreKeepingEnabled}
-                preferencesEnabled={preferencesEnabled}
-                piggybackPairs={piggybackEnabled ? piggybackPairs : []}
-                onOpenPiggybackModal={piggybackEnabled ? onOpenPiggybackModal : undefined}
-                removePiggybackPair={piggybackEnabled ? removePiggybackPair : undefined}
-                findPiggybackPair={piggybackEnabled ? findPiggybackPair : () => undefined}
-                onPlayerSelect={onPlayerSelect}
-                onPlayerLeave={onPlayerLeave}
-                onToggleRest={onToggleRest}
-                setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
-                queuePosition={originalIndex + 1}
-              />
-            );
-          })}
-        </>
-      )}
+      {/* Active Pool Section - Always visible */}
+      <div className="px-2 py-1">
+        <span className="text-xs font-medium text-primary">
+          Active Pool ({totalActiveCount} of {playerPoolSize})
+        </span>
+      </div>
+      {activePoolPlayers.map((player) => {
+        const originalIndex = players.findIndex(p => p.id === player.id);
+        return (
+          <PlayerQueueCard
+            key={`player-${player.id}-${originalIndex}`}
+            player={player}
+            players={players}
+            selected={selected.some((p: any) => p.id === player.id)}
+            isNextGameReady={isNextGameReady}
+            scoreKeepingEnabled={scoreKeepingEnabled}
+            preferencesEnabled={preferencesEnabled}
+            piggybackPairs={piggybackEnabled ? piggybackPairs : []}
+            onOpenPiggybackModal={piggybackEnabled ? onOpenPiggybackModal : undefined}
+            removePiggybackPair={piggybackEnabled ? removePiggybackPair : undefined}
+            findPiggybackPair={piggybackEnabled ? findPiggybackPair : () => undefined}
+            onPlayerSelect={onPlayerSelect}
+            onPlayerLeave={onPlayerLeave}
+            onToggleRest={onToggleRest}
+            setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
+            queuePosition={originalIndex + 1}
+          />
+        );
+      })}
 
-      {/* Separator between pool and waiting */}
-      {activePoolPlayers.length > 0 && waitingPlayers.length > 0 && (
+      {/* Separator between pool and waiting - only show when there's a waiting queue */}
+      {waitingPlayers.length > 0 && (
         <div className="relative my-4">
           <Separator className="absolute inset-0 my-2" />
           <div className="relative flex justify-center">
@@ -117,7 +122,7 @@ export function PlayerQueueList({
         </div>
       )}
 
-      {/* Waiting Queue Section (includes resting players in their original positions) */}
+      {/* Waiting Queue Section - only show when players exceed pool limit */}
       {waitingPlayers.length > 0 && (
         <>
           <div className="px-2 py-1">
