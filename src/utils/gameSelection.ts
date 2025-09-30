@@ -446,8 +446,14 @@ function findPiggybackAwareFallback(
       if (validatePiggybackIntegrity(combination, piggybackPairs)) {
         const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
         if (gameType) {
-          console.log("Enhanced Auto-select: Piggyback-aware ultimate fallback used");
-          return combination;
+          // CRITICAL: Validate that all players accept the determined game type
+          const allAccept = combination.every(player => playerAcceptsGameType(player, gameType));
+          if (allAccept) {
+            console.log("Enhanced Auto-select: Piggyback-aware ultimate fallback used");
+            return combination;
+          } else {
+            console.log(`Ultimate fallback: Rejecting combination - not all players accept ${gameType} game type`);
+          }
         }
       } else {
         console.log("Ultimate fallback: Skipping combination due to piggyback violation");
