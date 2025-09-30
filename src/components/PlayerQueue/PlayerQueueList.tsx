@@ -41,32 +41,28 @@ export function PlayerQueueList({
 }: PlayerQueueListProps) {
   const piggybackEnabled = getPiggybackEnabled();
   
-  // Calculate dynamic pool boundary - find the Nth active player
-  const activePlayers = players.filter(p => !p.isResting);
-  const activePoolCount = Math.min(playerPoolSize, activePlayers.length);
-  
-  // Find the index of the last active player in the pool
+  // Calculate dynamic pool boundary - find the Nth active (non-resting) player
   let activeCount = 0;
   let poolBoundaryIndex = -1;
+  
   for (let i = 0; i < players.length; i++) {
     if (!players[i].isResting) {
       activeCount++;
-      if (activeCount === activePoolCount) {
+      if (activeCount === playerPoolSize) {
         poolBoundaryIndex = i;
         break;
       }
     }
   }
   
-  // Separate players into sections
-  const restingPlayers: Player[] = [];
+  // Show all players in their original queue order
   const activePoolPlayers: Player[] = [];
   const waitingPlayers: Player[] = [];
   
   players.forEach((player, index) => {
-    if (player.isResting) {
-      restingPlayers.push(player);
-    } else if (poolBoundaryIndex !== -1 && index <= poolBoundaryIndex) {
+    // Non-resting players up to pool boundary are in active pool
+    // Resting players are shown in place but not counted in pool
+    if (!player.isResting && poolBoundaryIndex !== -1 && index <= poolBoundaryIndex) {
       activePoolPlayers.push(player);
     } else {
       waitingPlayers.push(player);
@@ -109,8 +105,8 @@ export function PlayerQueueList({
         </>
       )}
 
-      {/* Separator between pool and resting/waiting */}
-      {activePoolPlayers.length > 0 && (restingPlayers.length > 0 || waitingPlayers.length > 0) && (
+      {/* Separator between pool and waiting */}
+      {activePoolPlayers.length > 0 && waitingPlayers.length > 0 && (
         <div className="relative my-4">
           <Separator className="absolute inset-0 my-2" />
           <div className="relative flex justify-center">
@@ -121,41 +117,7 @@ export function PlayerQueueList({
         </div>
       )}
 
-      {/* Resting Players Section */}
-      {restingPlayers.length > 0 && (
-        <>
-          <div className="px-2 py-1">
-            <span className="text-xs font-medium text-orange-600">
-              Resting ({restingPlayers.length})
-            </span>
-          </div>
-          {restingPlayers.map((player) => {
-            const originalIndex = players.findIndex(p => p.id === player.id);
-            return (
-              <PlayerQueueCard
-                key={`player-${player.id}-${originalIndex}`}
-                player={player}
-                players={players}
-                selected={selected.some((p: any) => p.id === player.id)}
-                isNextGameReady={isNextGameReady}
-                scoreKeepingEnabled={scoreKeepingEnabled}
-                preferencesEnabled={preferencesEnabled}
-                piggybackPairs={piggybackEnabled ? piggybackPairs : []}
-                onOpenPiggybackModal={piggybackEnabled ? onOpenPiggybackModal : undefined}
-                removePiggybackPair={piggybackEnabled ? removePiggybackPair : undefined}
-                findPiggybackPair={piggybackEnabled ? findPiggybackPair : () => undefined}
-                onPlayerSelect={onPlayerSelect}
-                onPlayerLeave={onPlayerLeave}
-                onToggleRest={onToggleRest}
-                setPiggybackManualWarningShown={piggybackEnabled ? setPiggybackManualWarningShown : undefined}
-                queuePosition={originalIndex + 1}
-              />
-            );
-          })}
-        </>
-      )}
-
-      {/* Waiting Queue Section */}
+      {/* Waiting Queue Section (includes resting players in their original positions) */}
       {waitingPlayers.length > 0 && (
         <>
           <div className="px-2 py-1">
