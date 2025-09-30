@@ -130,21 +130,69 @@ export function DashboardProviderLogic({ children }: { children: React.ReactNode
     setCourts(updatedCourts);
   };
 
-  // Toggle player rest status
+  // Toggle player rest status with smart repositioning
   const togglePlayerRest = (playerId: number) => {
-    const updatedQueue = queueState.map(player => 
-      player.id === playerId 
-        ? { ...player, isResting: !player.isResting }
-        : player
-    );
+    const currentPlayer = queueState.find(p => p.id === playerId);
+    if (!currentPlayer) return;
+    
+    const willBeResting = !currentPlayer.isResting;
+    const playerPoolSize = Number(localStorage.getItem("playerPoolSize")) || 8;
+    
+    // Count active players in pool before this change
+    const activePlayers = queueState.filter(p => !p.isResting);
+    let activeInPool = 0;
+    let playerCurrentIndex = -1;
+    
+    for (let i = 0; i < queueState.length; i++) {
+      if (queueState[i].id === playerId) {
+        playerCurrentIndex = i;
+      }
+      if (!queueState[i].isResting && activeInPool < playerPoolSize) {
+        activeInPool++;
+        if (queueState[i].id === playerId) break;
+      }
+    }
+    
+    const isInPool = activeInPool <= playerPoolSize && activePlayers.some(p => p.id === playerId);
+    
+    let updatedQueue = [...queueState];
+    
+    if (willBeResting && isInPool) {
+      // Player is in pool and wants to rest - move them just after the pool boundary
+      // Find the pool boundary (index of last active player in pool)
+      let activeCount = 0;
+      let poolBoundaryIndex = -1;
+      for (let i = 0; i < updatedQueue.length; i++) {
+        if (!updatedQueue[i].isResting) {
+          activeCount++;
+          if (activeCount === playerPoolSize) {
+            poolBoundaryIndex = i;
+            break;
+          }
+        }
+      }
+      
+      // Remove player from current position
+      const [removedPlayer] = updatedQueue.splice(playerCurrentIndex, 1);
+      removedPlayer.isResting = true;
+      
+      // Insert at pool boundary (will be just outside pool)
+      const insertIndex = poolBoundaryIndex >= 0 ? poolBoundaryIndex : 0;
+      updatedQueue.splice(insertIndex, 0, removedPlayer);
+    } else {
+      // Just toggle rest status without moving (for players outside pool or unresting)
+      updatedQueue = updatedQueue.map(player => 
+        player.id === playerId 
+          ? { ...player, isResting: !player.isResting }
+          : player
+      );
+    }
     
     // Update local state
     setQueue(updatedQueue);
     
     // Sync back to the queue hook to ensure consistency
     syncQueue(updatedQueue);
-    
-    console.log("DashboardContext: Toggled rest status for player", playerId, "Updated queue:", updatedQueue);
   };
 
   const value: DashboardContextType = {
