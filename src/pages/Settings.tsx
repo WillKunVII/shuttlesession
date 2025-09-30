@@ -47,6 +47,23 @@ export default function Settings() {
         </div>
         <PrivacyNoticeDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       </div>
+
+      {/* Version Info Section */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border">
+        <h2 className="text-xl font-semibold mb-3 text-foreground">App Information</h2>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div className="flex justify-between items-center">
+            <span>Version:</span>
+            <span className="font-mono">{(window as any).__APP_VERSION__ || '1.0.0'}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span>Last Updated:</span>
+            <span className="font-mono">
+              {new Date((window as any).__BUILD_DATE__).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
