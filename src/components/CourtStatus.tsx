@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Court, CourtPlayer } from "@/types/DashboardTypes";
 import { PlayerCardSmall } from "./PlayerCardSmall";
 import { VoidGameConfirmDialog } from "./VoidGameConfirmDialog";
+import { CompleteGameConfirmDialog } from "./CompleteGameConfirmDialog";
 
 interface CourtStatusProps {
   court: Court;
@@ -19,6 +20,8 @@ interface CourtStatusProps {
 export function CourtStatus({ court, onAssign, onEndGame, nextGameReady, onVoidGame, canVoid }: CourtStatusProps) {
   const isAvailable = court.status === 'available';
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const isScoreKeepingEnabled = localStorage.getItem("scoreKeeping") !== "false";
   
   return (
     <Card className={isAvailable ? 'border-shuttle-primary' : ''}>
@@ -34,7 +37,7 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady, onVoidG
               {canVoid && onVoidGame && (
                 <VoidGameButton onVoidGame={() => setVoidDialogOpen(true)} />
               )}
-              <EndGameButton onEndGame={onEndGame} />
+              <EndGameButton onEndGame={() => setCompleteDialogOpen(true)} />
             </div>
           )}
         </div>
@@ -58,6 +61,16 @@ export function CourtStatus({ court, onAssign, onEndGame, nextGameReady, onVoidG
           players={court.players}
         />
       )}
+
+      {/* Complete Game Confirmation Dialog */}
+      <CompleteGameConfirmDialog
+        open={completeDialogOpen}
+        onOpenChange={setCompleteDialogOpen}
+        onConfirm={onEndGame}
+        courtName={court.name}
+        players={court.players}
+        scoreKeepingEnabled={isScoreKeepingEnabled}
+      />
     </Card>
   );
 }
@@ -103,10 +116,10 @@ function EndGameButton({ onEndGame }: EndGameButtonProps) {
     <Button 
       variant="ghost" 
       size="sm" 
-      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+      className="text-green-600 hover:text-green-700 hover:bg-green-50"
       onClick={onEndGame}
     >
-      <X className="h-4 w-4 mr-1" /> End
+      <Trophy className="h-4 w-4 mr-1" /> Complete
     </Button>
   );
 }
