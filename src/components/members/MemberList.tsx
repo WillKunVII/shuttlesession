@@ -2,7 +2,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Edit, Trash2, Info } from "lucide-react";
 import { Member } from "@/types/member";
 import { MemberRecord } from "./MemberRecord";
 
@@ -34,7 +35,25 @@ export function MemberList({
                   <th className="px-6 py-3 text-sm font-semibold">Record</th>
                 )}
                 {isScoreKeepingEnabled && (
-                  <th className="px-6 py-3 text-sm font-semibold">Rating</th>
+                  <th className="px-6 py-3 text-sm font-semibold">
+                    <div className="flex items-center gap-1">
+                      Rating
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="font-normal">
+                              ELO rating reflects skill level based on game results. 
+                              All players start at 1000. Beating higher-rated opponents gains more points, 
+                              while losing to lower-rated opponents costs more.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </th>
                 )}
                 {preferencesEnabled && (
                   <th className="px-6 py-3 text-sm font-semibold">Play Preferences</th>
