@@ -169,7 +169,7 @@ async function findSmartCombination(
         continue;
       }
 
-      const score = await calculateEnhancedScore(combination, piggybackPairs);
+      const score = await calculateEnhancedScore(combination, poolPlayers, piggybackPairs);
       if (score > bestScore) {
         bestScore = score;
         bestCombination = combination;
@@ -194,15 +194,14 @@ function getWeightedStartingPlayers(poolPlayers: Player[]): Player[] {
   const candidates = poolPlayers.slice(0, Math.min(4, poolPlayers.length));
   const weights = [0.4, 0.3, 0.2, 0.1]; // 40%, 30%, 20%, 10% probability
   
-  // Apply session balance weighting
+  // Apply cooling period penalty only (session balance removed for fairness)
   const weightedCandidates = candidates.map((player, index) => {
     const baseWeight = weights[index] || 0.1;
-    const sessionBonus = sessionTracker.getSessionBalanceScore(player.id) * 0.1;
     const coolingPenalty = sessionTracker.isInCoolingPeriod(player.id) ? -0.2 : 0;
     
     return {
       player,
-      weight: Math.max(0.05, baseWeight + sessionBonus + coolingPenalty)
+      weight: Math.max(0.05, baseWeight + coolingPenalty)
     };
   });
 
@@ -211,6 +210,37 @@ function getWeightedStartingPlayers(poolPlayers: Player[]): Player[] {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 3)
     .map(wc => wc.player);
+}
+
+/**
+ * Calculate queue position bonus - rewards players waiting longer
+ */
+function getQueuePositionBonus(combination: Player[], poolPlayers: Player[]): number {
+  return combination.reduce((bonus, player) => {
+    const position = poolPlayers.findIndex(p => p.id === player.id);
+    if (position === 0 || position === 1) return bonus + 20;
+    if (position === 2 || position === 3) return bonus + 15;
+    if (position === 4 || position === 5) return bonus + 10;
+    if (position === 6 || position === 7) return bonus + 5;
+    return bonus;
+  }, 0);
+}
+
+/**
+ * Calculate gender balance bonus - prefers 2M+2L mixed games
+ */
+function getGenderBalanceBonus(combination: Player[]): number {
+  const males = combination.filter(p => p.gender === 'male').length;
+  const females = combination.filter(p => p.gender === 'female').length;
+  
+  // Ideal mixed game: 2 males + 2 females
+  if (males === 2 && females === 2) return 15;
+  
+  // Valid ladies game: 4 females
+  if (females === 4) return 10;
+  
+  // Unbalanced but valid (3+1 split)
+  return 0;
 }
 
 /**
@@ -285,6 +315,7 @@ function generateRandomCombinations(
  */
 async function calculateEnhancedScore(
   combination: Player[], 
+  poolPlayers: Player[],
   piggybackPairs?: Array<{ master: number; partner: number }>
 ): Promise<number> {
   // Early validation - immediately reject if piggyback pairs are split
@@ -296,10 +327,11 @@ async function calculateEnhancedScore(
   const repeatPenalty = await getCachedRepeatPenalty(combination);
   const repeatScore = Math.max(0, 50 - repeatPenalty);
 
-  // Session balance bonus (sum of individual player balance scores)
-  const sessionBalanceBonus = combination.reduce((sum, player) => {
-    return sum + sessionTracker.getSessionBalanceScore(player.id);
-  }, 0) * 2;
+  // Queue position bonus - rewards players waiting longer
+  const queuePositionBonus = getQueuePositionBonus(combination, poolPlayers);
+
+  // Gender balance bonus - prefers 2M+2L mixed games
+  const genderBalanceBonus = getGenderBalanceBonus(combination);
 
   // Cooling period penalty
   const coolingPenalty = combination.reduce((penalty, player) => {
@@ -312,7 +344,7 @@ async function calculateEnhancedScore(
   // Piggyback pair satisfaction bonus
   const piggybackBonus = getPiggybackMatchBonus(combination, piggybackPairs);
 
-  const totalScore = repeatScore + sessionBalanceBonus + varietyBonus + piggybackBonus - coolingPenalty;
+  const totalScore = repeatScore + queuePositionBonus + genderBalanceBonus + varietyBonus + piggybackBonus - coolingPenalty;
   
   return totalScore;
 }
