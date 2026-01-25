@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +50,16 @@ export function AddPlayerButton({
   const [activeSessionNames, setActiveSessionNames] = useState<Set<string>>(
     new Set()
   );
+  const createFormRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to create form when it expands
+  useEffect(() => {
+    if (showCreateForm && createFormRef.current) {
+      setTimeout(() => {
+        createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [showCreateForm]);
 
   // Load members and aggregate ALL active player names (queue, next game, courts)
   useEffect(() => {
@@ -274,7 +284,7 @@ export function AddPlayerButton({
                 )}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4">
+            <CollapsibleContent className="pt-4" ref={createFormRef}>
               <div className="bg-muted/30 rounded-lg p-4 border border-border">
                 <CreateMemberForm
                   initialName={searchQuery}
