@@ -217,7 +217,7 @@ export function AddPlayerButton({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 py-4 space-y-4 overflow-hidden flex flex-col">
+        <div className="flex-1 py-4 space-y-4 overflow-y-auto flex flex-col">
           {/* Search Section - Primary */}
           <div className="space-y-3">
             <Label htmlFor="search-member" className="text-sm font-medium">
