@@ -33,6 +33,9 @@ export function MemberList({
                 {isScoreKeepingEnabled && (
                   <th className="px-6 py-3 text-sm font-semibold">Record</th>
                 )}
+                {isScoreKeepingEnabled && (
+                  <th className="px-6 py-3 text-sm font-semibold">Rating</th>
+                )}
                 {preferencesEnabled && (
                   <th className="px-6 py-3 text-sm font-semibold">Play Preferences</th>
                 )}
@@ -54,6 +57,16 @@ export function MemberList({
                   {isScoreKeepingEnabled && (
                     <td className="px-6 py-4">
                       <MemberRecord wins={member.wins} losses={member.losses} />
+                    </td>
+                  )}
+                  {isScoreKeepingEnabled && (
+                    <td className="px-6 py-4">
+                      <span className={`font-mono text-sm font-medium ${
+                        (member.rating ?? 1000) >= 1100 ? "text-green-600" :
+                        (member.rating ?? 1000) <= 900 ? "text-red-500" : ""
+                      }`}>
+                        {member.rating ?? 1000}
+                      </span>
                     </td>
                   )}
                   {preferencesEnabled && (
