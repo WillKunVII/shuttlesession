@@ -1,49 +1,60 @@
-
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  Sheet, 
-  SheetClose, 
-  SheetContent, 
-  SheetDescription, 
-  SheetFooter, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Member, PlayPreference } from "@/types/member";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { GenderRadioGroup } from "./AddPlayer/GenderRadioGroup";
-import { PlayPreferencesSelector } from "./AddPlayer/PlayPreferencesSelector";
-import { PlayerSuggestions } from "./AddPlayer/PlayerSuggestions";
-import { getStorageItem } from "@/utils/storageUtils";
+import { MemberSearchList } from "./AddPlayer/MemberSearchList";
+import { CreateMemberForm } from "./AddPlayer/CreateMemberForm";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface AddPlayerButtonProps {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
-  onAddPlayer?: (player: {name: string, gender: "male" | "female", isGuest: boolean, playPreferences: PlayPreference[]}) => void;
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | null
+    | undefined;
+  onAddPlayer?: (player: {
+    name: string;
+    gender: "male" | "female";
+    isGuest: boolean;
+    playPreferences: PlayPreference[];
+  }) => void;
 }
 
-export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerButtonProps) {
-  const [name, setName] = useState("");
-  const [gender, setGender] = useState<"male" | "female">("male");
-  const [isGuest, setIsGuest] = useState(false);
+export function AddPlayerButton({
+  variant = "outline",
+  onAddPlayer,
+}: AddPlayerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [membersList, setMembersList] = useState<Member[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [playPreferences, setPlayPreferences] = useState<PlayPreference[]>([]);
-  const [preferencesEnabled, setPreferencesEnabled] = useState(false);
-  const [activeQueue, setActiveQueue] = useState<{ name: string; }[]>([]);
-  const [activeSessionNames, setActiveSessionNames] = useState<Set<string>>(new Set());
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeSessionNames, setActiveSessionNames] = useState<Set<string>>(
+    new Set()
+  );
 
   // Load members and aggregate ALL active player names (queue, next game, courts)
   useEffect(() => {
+    if (!isOpen) return;
+
     const savedMembers = localStorage.getItem("clubMembers");
     if (savedMembers) {
       try {
@@ -53,21 +64,15 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       }
     }
 
-    const preferencesEnabled = getStorageItem("enablePlayerPreferences", true);
-    setPreferencesEnabled(preferencesEnabled);
-
-    // Get player queue (names, case-insensitive)
+    // Get player queue
     let queuePlayers: any[] = [];
     const playerQueue = localStorage.getItem("playerQueue");
     if (playerQueue) {
       try {
         queuePlayers = JSON.parse(playerQueue);
-        setActiveQueue(Array.isArray(queuePlayers) ? queuePlayers : []);
       } catch (e) {
-        setActiveQueue([]);
+        queuePlayers = [];
       }
-    } else {
-      setActiveQueue([]);
     }
 
     // Get 'Next Game' players
@@ -81,7 +86,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       }
     }
 
-    // Get all court players (from 'courts')
+    // Get all court players
     let courtPlayers: any[] = [];
     const courtsRaw = localStorage.getItem("courts");
     if (courtsRaw) {
@@ -99,7 +104,7 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
       }
     }
 
-    // Combine all names (queue, next game, courts)
+    // Combine all names
     const allNames = [
       ...(Array.isArray(queuePlayers) ? queuePlayers : []),
       ...(Array.isArray(nextGamePlayers) ? nextGamePlayers : []),
@@ -111,104 +116,90 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
     setActiveSessionNames(new Set(allNames));
   }, [isOpen]);
 
-  // Validation helper
-  const isValidName = (val: string) => /^[\w\s\-.'']{2,30}$/.test(val.trim());
+  // Reset state when sheet closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery("");
+      setShowCreateForm(false);
+    }
+  }, [isOpen]);
 
-  const handleAddPlayer = () => {
-    const trimmedName = name.trim();
-    if (!trimmedName || !isValidName(trimmedName)) {
-      toast.error("Please enter a valid name (2–30 letters/numbers, no special characters)");
+  const handleSelectExistingMember = (member: Member) => {
+    // Check if already in session
+    if (activeSessionNames.has(member.name.trim().toLowerCase())) {
+      toast.error(`${member.name} is already in this session!`);
       return;
     }
-    // Prevent duplicates by checking name against ALL involved players (queue, nextGame, courts)
-    const dup = activeSessionNames.has(trimmedName.toLowerCase());
-    if (dup) {
-      toast.error(`${trimmedName} is already participating in this session!`);
-      return;
-    }
 
-    // Check if player exists in members list (case-insensitive)
-    const existingMember = membersList.find(
-        member => member.name.toLowerCase() === name.toLowerCase()
-    );
-
-    let memberId: number;
-
-    // If player doesn't exist in members list, add them
-    if (!existingMember) {
-      // Create new member object with proper ID and preferences
-      memberId = Date.now();
-      const newMember: Member = {
-        id: memberId,
-        name: trimmedName,
-        gender,
-        isGuest,
-        wins: 0,
-        losses: 0,
-        playPreferences: preferencesEnabled ? playPreferences : [],
-        rating: 1000
-      };
-
-      // Add to members list
-      const updatedMembers = [...membersList, newMember];
-      setMembersList(updatedMembers);
-
-      // Save to localStorage - both keys for consistency
-      localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
-      localStorage.setItem("members", JSON.stringify(updatedMembers));
-
-      // Trigger a storage event to notify other components
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'clubMembers',
-        newValue: JSON.stringify(updatedMembers)
-      }));
-
-      // Show toast notification
-      toast.success(`${trimmedName} added to members database`);
-    } else {
-      memberId = existingMember.id;
-    }
-
-    // Add player to queue with proper ID and preferences
     if (onAddPlayer) {
       onAddPlayer({
-        name: trimmedName,
-        gender,
-        isGuest,
-        playPreferences: preferencesEnabled ? playPreferences : []
+        name: member.name,
+        gender: member.gender,
+        isGuest: member.isGuest,
+        playPreferences: member.playPreferences || [],
       });
     }
 
-    // Reset form
-    setName("");
-    setGender("male");
-    setIsGuest(false);
-    setPlayPreferences([]);
+    toast.success(`${member.name} added to queue`);
     setIsOpen(false);
   };
 
-  const selectMember = (member: Member) => {
-    setName(member.name);
-    setGender(member.gender);
-    setIsGuest(member.isGuest);
-    setPlayPreferences(member.playPreferences || []);
-    setShowSuggestions(false);
-  };
+  const handleCreateNewMember = (data: {
+    name: string;
+    gender: "male" | "female";
+    isGuest: boolean;
+    playPreferences: PlayPreference[];
+  }) => {
+    const trimmedName = data.name.trim();
 
-  const togglePreference = (preference: PlayPreference) => {
-    if (playPreferences.includes(preference)) {
-      setPlayPreferences(playPreferences.filter(p => p !== preference));
-    } else {
-      setPlayPreferences([...playPreferences, preference]);
+    // Check if already in session
+    if (activeSessionNames.has(trimmedName.toLowerCase())) {
+      toast.error(`${trimmedName} is already in this session!`);
+      return;
     }
+
+    // Check if member already exists
+    const existingMember = membersList.find(
+      (m) => m.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (!existingMember) {
+      // Create new member
+      const newMember: Member = {
+        id: Date.now(),
+        name: trimmedName,
+        gender: data.gender,
+        isGuest: data.isGuest,
+        wins: 0,
+        losses: 0,
+        playPreferences: data.playPreferences,
+        rating: 1000,
+      };
+
+      const updatedMembers = [...membersList, newMember];
+      setMembersList(updatedMembers);
+
+      localStorage.setItem("clubMembers", JSON.stringify(updatedMembers));
+      localStorage.setItem("members", JSON.stringify(updatedMembers));
+
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "clubMembers",
+          newValue: JSON.stringify(updatedMembers),
+        })
+      );
+
+      toast.success(`${trimmedName} added to members database`);
+    }
+
+    // Add to queue
+    if (onAddPlayer) {
+      onAddPlayer(data);
+    }
+
+    toast.success(`${trimmedName} added to queue`);
+    setIsOpen(false);
   };
-
-  const filteredMembers = membersList.filter(member =>
-    member.name.toLowerCase().includes(name.toLowerCase())
-  );
-
-  // Create a set of ALL session player names for the suggestion UI
-  const sessionNameSet = activeSessionNames;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -218,69 +209,83 @@ export function AddPlayerButton({ variant = "outline", onAddPlayer }: AddPlayerB
           Add Player
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="flex flex-col">
         <SheetHeader>
-          <SheetTitle>Add New Player</SheetTitle>
+          <SheetTitle>Add Player to Queue</SheetTitle>
           <SheetDescription>
-            Add a new player to the queue for today's session
+            Select an existing member or create a new one
           </SheetDescription>
         </SheetHeader>
-        
-        <div className="py-6 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Player Name</Label>
+
+        <div className="flex-1 py-4 space-y-4 overflow-hidden flex flex-col">
+          {/* Search Section - Primary */}
+          <div className="space-y-3">
+            <Label htmlFor="search-member" className="text-sm font-medium">
+              Search Members
+            </Label>
             <div className="relative">
-              <Input 
-                id="name" 
-                placeholder="Enter player name" 
-                value={name}
-                onChange={e => {
-                  setName(e.target.value);
-                  setShowSuggestions(e.target.value.length > 0);
-                }}
-                onFocus={() => setShowSuggestions(name.length > 0)}
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="search-member"
+                placeholder="Type a name to search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
                 autoComplete="off"
               />
-              
-              {/* Suggestions dropdown extracted */}
-              <PlayerSuggestions
-                members={filteredMembers}
-                queueNameSet={sessionNameSet}
-                name={name}
-                show={showSuggestions}
-                onSelect={selectMember}
-              />
+            </div>
+
+            {/* Member List */}
+            <MemberSearchList
+              members={membersList}
+              searchQuery={searchQuery}
+              sessionNameSet={activeSessionNames}
+              onSelectMember={handleSelectExistingMember}
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                or
+              </span>
             </div>
           </div>
-          
-          {/* Gender selector extracted */}
-          <GenderRadioGroup gender={gender} setGender={setGender} />
-          
-          {/* Play preferences extracted */}
-          {preferencesEnabled && (
-            <PlayPreferencesSelector
-              gender={gender}
-              playPreferences={playPreferences}
-              togglePreference={togglePreference}
-            />
-          )}
-          
-          <div className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors">
-            <Checkbox 
-              id="guest" 
-              checked={isGuest}
-              onCheckedChange={(checked) => setIsGuest(checked === true)}
-            />
-            <Label htmlFor="guest" className="cursor-pointer">Guest</Label>
-          </div>
+
+          {/* Create New Section - Secondary */}
+          <Collapsible open={showCreateForm} onOpenChange={setShowCreateForm}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-muted-foreground hover:text-foreground"
+              >
+                <span>Player not in the list? Create new member</span>
+                {showCreateForm ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              <div className="bg-muted/30 rounded-lg p-4 border border-border">
+                <CreateMemberForm
+                  initialName={searchQuery}
+                  existingMembers={membersList}
+                  onSubmit={handleCreateNewMember}
+                  onCancel={() => setShowCreateForm(false)}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
-        
-        <SheetFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button type="submit" onClick={handleAddPlayer} disabled={!name}>
-            Add to Queue
-          </Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
