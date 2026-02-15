@@ -154,7 +154,7 @@ async function findSmartCombination(
   // Try each potential starting player
   for (const startingPlayer of startingCandidates) {
     // Generate random combinations from the full pool with piggyback awareness
-    const combinations = generateRandomCombinations(poolPlayers, startingPlayer, 20, piggybackPairs);
+    const combinations = generateRandomCombinations(poolPlayers, startingPlayer, 40, piggybackPairs);
     
     for (const combination of combinations) {
       // Performance check
@@ -218,10 +218,10 @@ function getWeightedStartingPlayers(poolPlayers: Player[]): Player[] {
 function getQueuePositionBonus(combination: Player[], poolPlayers: Player[]): number {
   return combination.reduce((bonus, player) => {
     const position = poolPlayers.findIndex(p => p.id === player.id);
-    if (position === 0 || position === 1) return bonus + 20;
-    if (position === 2 || position === 3) return bonus + 15;
-    if (position === 4 || position === 5) return bonus + 10;
-    if (position === 6 || position === 7) return bonus + 5;
+    if (position === 0 || position === 1) return bonus + 10;
+    if (position === 2 || position === 3) return bonus + 8;
+    if (position === 4 || position === 5) return bonus + 6;
+    if (position === 6 || position === 7) return bonus + 3;
     return bonus;
   }, 0);
 }
@@ -234,13 +234,43 @@ function getGenderBalanceBonus(combination: Player[]): number {
   const females = combination.filter(p => p.gender === 'female').length;
   
   // Ideal mixed game: 2 males + 2 females
-  if (males === 2 && females === 2) return 15;
+  if (males === 2 && females === 2) return 20;
   
   // Valid ladies game: 4 females
-  if (females === 4) return 10;
+  if (females === 4) return 15;
   
   // Unbalanced but valid (3+1 split)
   return 0;
+}
+
+/**
+ * Calculate preference satisfaction bonus - rewards combinations where the game type matches player preferences
+ */
+function getPreferenceSatisfactionBonus(
+  combination: Player[],
+  piggybackPairs?: Array<{ master: number; partner: number }>
+): number {
+  const prefEnabled = localStorage.getItem("enablePlayerPreferences") === "true";
+  if (!prefEnabled) return 0;
+
+  const gameType = determineBestGameTypeWithPiggyback(combination, piggybackPairs);
+  if (!gameType) return -100;
+
+  let bonus = 0;
+  for (const player of combination) {
+    const prefs = player.playPreferences || [];
+    if (prefs.length === 0) continue;
+
+    const prefIndex = prefs.indexOf(gameType as any);
+    if (prefIndex === 0) {
+      bonus += 10;
+    } else if (prefIndex > 0) {
+      bonus += 5;
+    } else {
+      bonus -= 50;
+    }
+  }
+  return bonus;
 }
 
 /**
@@ -344,7 +374,10 @@ async function calculateEnhancedScore(
   // Piggyback pair satisfaction bonus
   const piggybackBonus = getPiggybackMatchBonus(combination, piggybackPairs);
 
-  const totalScore = repeatScore + queuePositionBonus + genderBalanceBonus + varietyBonus + piggybackBonus - coolingPenalty;
+  // Preference satisfaction bonus
+  const preferenceSatisfactionBonus = getPreferenceSatisfactionBonus(combination, piggybackPairs);
+
+  const totalScore = repeatScore + queuePositionBonus + genderBalanceBonus + varietyBonus + piggybackBonus + preferenceSatisfactionBonus - coolingPenalty;
   
   return totalScore;
 }
@@ -495,8 +528,6 @@ function findPiggybackAwareFallback(
   
   // If all else fails, return empty array rather than split piggyback pairs
   console.log("Enhanced Auto-select: No valid combination found that respects piggyback pairs");
-  return [];
-  
   return [];
 }
 
